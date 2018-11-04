@@ -1,5 +1,11 @@
 #include <iostream>
+#include <string>
 
-int main() {
-    std::cout << "Hello Easy C++ project!" << std::endl;
+using namespace std;
+
+int main()
+{
+    string url;
+    getline(cin, url);
+    cout << url << endl;
 }
