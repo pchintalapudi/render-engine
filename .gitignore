@@ -34,3 +34,6 @@
 # Directories
 bin/
 lib/
+
+.vscode/
+.idea/
