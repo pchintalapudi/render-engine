@@ -4,7 +4,9 @@
 
 #ifndef FEATHER_HTML_ELEMENT_H
 #define FEATHER_HTML_ELEMENT_H
-class HtmlElement {
+
+#include "inode.h"
+class Element:INode {
 
 };
 #endif //FEATHER_HTML_ELEMENT_H
