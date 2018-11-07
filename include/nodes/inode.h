@@ -8,8 +8,11 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-#include "html_element.h"
 #include "node_type.h"
+
+class Element;
+
+class Document;
 
 class INode {
 public:
@@ -41,7 +44,7 @@ public:
 
     virtual void nodeValue(std::string *value) = 0;
 
-    virtual const INode *ownerDocument() = 0;
+    virtual const Document *ownerDocument() = 0;
 
     virtual const INode *parentNode() = 0;
 

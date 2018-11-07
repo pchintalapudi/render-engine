@@ -6,11 +6,13 @@
 #define FEATHER_TEXT_H
 
 #include <string>
-class Text {
+#include "inode.h"
+
+class Text:INode {
 public:
     std::string getText();
 
 private:
-    std::string text;
+    std::string text("");
 };
 #endif //FEATHER_TEXT_H

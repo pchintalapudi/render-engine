@@ -5,8 +5,11 @@
 #ifndef FEATHER_HTML_ELEMENT_H
 #define FEATHER_HTML_ELEMENT_H
 
+#include "utils/named_node_map.h"
 #include "inode.h"
 class Element:INode {
+public:
+    virtual const NamedNodeMap attributes() = 0;
 
 };
 #endif //FEATHER_HTML_ELEMENT_H
