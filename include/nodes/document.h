@@ -5,9 +5,9 @@
 #ifndef FEATHER_DOCUMENT_H
 #define FEATHER_DOCUMENT_H
 
-#include "inode.h"
+#include "node.h"
 
-class IDocument: INode {
+class Document: public Node {
 
 };
 #endif //FEATHER_DOCUMENT_H

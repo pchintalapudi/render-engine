@@ -5,15 +5,15 @@
 #ifndef FEATHER_NON_DOCUMENT_TYPE_CHILD_NODE_H
 #define FEATHER_NON_DOCUMENT_TYPE_CHILD_NODE_H
 
-#include "ielement.h"
+#include "element.h"
 
 class INonDocumentTypeChildNode {
 public:
-    const virtual IElement *previousElementSibling() = 0;
+    const virtual Element *previousElementSibling() = 0;
 
-    const virtual IElement *nextElementSibling() = 0;
+    const virtual Element *nextElementSibling() = 0;
 
-    virtual ~INonDocumentTypeChildNode() = default;
+    virtual ~INonDocumentTypeChildNode() {};
 };
 
 #endif //FEATHER_NON_DOCUMENT_TYPE_CHILD_NODE_H

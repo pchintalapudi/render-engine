@@ -8,6 +8,8 @@
 #include "event.h"
 
 class IEventTarget {
+public:
+    virtual ~IEventTarget() {}
 };
 
 #endif //FEATHER_EVENT_TARGET_H

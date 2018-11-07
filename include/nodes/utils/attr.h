@@ -7,28 +7,28 @@
 
 #include <string>
 
-class IElement;
+class Element;
 
 class Attr {
 public:
 
-    Attr(std::string localName, IElement &owner) : Attr(std::string(""), localName, owner, std::string("")) {
+    Attr(std::string localName, Element &owner) : Attr(std::string(""), localName, owner, std::string("")) {
     }
 
-    Attr(std::string nameSpace, std::string localName, IElement &owner) : Attr(nameSpace, localName, owner,
+    Attr(std::string nameSpace, std::string localName, Element &owner) : Attr(nameSpace, localName, owner,
                                                                               *(new std::string(""))) {}
 
-    Attr(std::string localName, IElement &owner, std::string value) : Attr("", localName, owner,
+    Attr(std::string localName, Element &owner, std::string value) : Attr("", localName, owner,
                                                                           value) {}
 
     Attr(std::string nameSpace, std::string localName,
-         IElement &owner, std::string value)
+         Element &owner, std::string value)
             : nameSpace(*new std::string(nameSpace)),
               localName(*new std::string(localName)),
               owner(owner), value(*new std::string(value)) {}
 
-    const std::string &getName() {
-        return this->nameSpace + this->localName;
+    const std::string getName() {
+        return std::string(this->nameSpace + this->localName);
     };
 
     const std::string &getNamespaceURI() {
@@ -43,7 +43,7 @@ public:
         return this->nameSpace;
     };
 
-    const IElement &getOwnerElement() {
+    const Element &getOwnerElement() {
         return this->owner;
     };
 
@@ -66,7 +66,7 @@ public:
 private:
     const std::string localName;
     const std::string nameSpace;
-    const IElement &owner;
+    const Element &owner;
     std::string value;
 };
 
