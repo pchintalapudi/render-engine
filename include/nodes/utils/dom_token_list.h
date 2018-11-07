@@ -9,8 +9,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-
-typedef std::string DOMString;
+#include "typedefs.h"
 
 class DOMTokenList {
 public:

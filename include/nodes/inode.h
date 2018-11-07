@@ -8,31 +8,25 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include "include/events/ievent_target.h"
 #include "node_type.h"
 
-class Element;
+class IElement;
 
-class Document;
+class IDocument;
 
-class INode {
+class INode : IEventTarget {
 public:
     //Properties
     virtual const std::string &baseURI() = 0;
 
-    virtual std::vector<INode &> *childNodes() = 0;
+    virtual std::vector<INode *> *childNodes() = 0;
 
-    INode *firstChild() {
-        auto children = this->childNodes();
-        return children ? children->size() ? &children[0] : nullptr : nullptr;
-    };
+    INode *firstChild();
 
     virtual const bool isConnected() = 0;
 
-    INode *lastChild() {
-        auto children = this->childNodes();
-        auto size = children ? children->size() : 0;
-        return children && size ? &children[size - 1] : nullptr;
-    }
+    INode *lastChild();
 
     virtual INode *nextSibling() = 0;
 
@@ -44,11 +38,11 @@ public:
 
     virtual void nodeValue(std::string *value) = 0;
 
-    virtual const Document *ownerDocument() = 0;
+    virtual const IDocument *ownerDocument() = 0;
 
     virtual const INode *parentNode() = 0;
 
-    virtual const Element *parentElement() = 0;
+    virtual const IElement *parentElement() = 0;
 
     virtual const INode *previousSibling() = 0;
 
@@ -58,10 +52,10 @@ public:
 
     //Methods
 
-    virtual void appendChild(INode const &child) {
+    virtual void appendChild(INode &child) {
         auto children = this->childNodes();
         if (children) {
-            children->push_back(child);
+            children->push_back(&child);
         }
     };
 
@@ -73,54 +67,28 @@ public:
 
     virtual const INode &getRootNode() = 0;
 
-    bool hasChildNodes() {
+    inline bool hasChildNodes() {
         auto children = this->childNodes();
         return children && children->size();
     }
 
-    virtual void insertBefore(INode &child, INode *ref) {
-        auto children = this->childNodes();
-        if (children)
-            if (ref) {
-                auto it = std::find(children->begin(), children->end(), child);
-                if (it != children->end()) {
-                    children->insert(it, child);
-                    return;
-                }
-            }
-        this->appendChild(child);
+    virtual void insertBefore(INode &child, INode *ref);
+
+    virtual const bool isDefaultNamespace(std::string const &uri) = 0;
+
+    virtual const bool isEqualNode(INode const &other) = 0;
+
+    inline const bool isSameNode(INode &other) {
+        return this == &other;
     }
 
-    virtual bool isDefaultNamespace(string const &uri) = 0;
-
-    virtual bool isEqualNode(INode const &other) = 0;
-
-    const bool isSameNode(INode const &other) {
-        return (*this) == other;
-    }
-
-    virtual string *lookupNamespaceURI(string *prefix) = 0;
+    virtual std::string *lookupNamespaceURI(std::string *prefix) = 0;
 
     virtual void normalize() = 0;
 
-    virtual void removeChild(INode const &child) {
-        auto children = this->childNodes();
-        if (children) {
-            auto it = std::find(children->begin(), children->end(), child);
-            if (it != children->end()) {
-                children->erase(it);
-            }
-        }
-    };
+    virtual void removeChild(INode const &child);
 
-    virtual void replaceChild(INode const &newChild, INode const &oldChild) {
-        auto children = this->childNodes();
-        if (children) {
-            std::replace(children->begin(), children->end(), oldChild, newChild);
-        }
-    }
-
-    virtual ~VNode() {};
+    virtual void replaceChild(INode &newChild, INode &oldChild);
 };
 
 #endif //FEATHER_INODE_H

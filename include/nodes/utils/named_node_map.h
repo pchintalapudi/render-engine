@@ -12,23 +12,28 @@
 
 class NamedNodeMap {
 public:
+
+    NamedNodeMap() : indeces(new std::map<std::string, int>()), attributes(new std::vector<Attr *>()) {
+    }
+
     Attr *getNamedItem(std::string const &name) {
-        return (this->indeces.find(name) == this->indeces.end()) ? nullptr : this->attributes[this->indeces[name]];
+        return (this->indeces->find(name) == this->indeces->end()) ? nullptr
+                                                                   : (*this->attributes)[(*this->indeces)[name]];
     }
 
     void setNamedItem(std::string const &name, Attr &attr) {
-        if (this->indeces.find(name) == this->indeces.end()) {
-            this->attributes.push_back(&attr);
-            this->indeces[name] = this->attributes.size() - 1;
+        if (this->indeces->find(name) == this->indeces->end()) {
+            this->attributes->push_back(&attr);
+            (*this->indeces)[name] = this->attributes->size() - 1;
         } else {
-            this->attributes[this->indeces[name]] = &attr;
+            (*this->attributes)[(*this->indeces)[name]] = &attr;
         }
     }
 
     void removeNamedItem(std::string const &name) {
-        if (this->indeces.find(name) != this->indeces.end()) {
-            this->attributes.erase(this->attributes.begin() + this->indeces[name]);
-            this->indeces.erase(name);
+        if (this->indeces->find(name) != this->indeces->end()) {
+            this->attributes->erase(this->attributes->begin() + (*this->indeces)[name]);
+            this->indeces->erase(name);
         }
     }
 
@@ -44,9 +49,14 @@ public:
         this->removeNamedItem(nmspace + localName);
     }
 
+    ~NamedNodeMap() {
+        delete this->indeces;
+        delete this->attributes;
+    }
+
 private:
-    std::map<std::string, int> indeces;
-    std::vector<Attr *> attributes;
+    std::map<std::string, int> *indeces;
+    std::vector<Attr *> *attributes;
 };
 
 #endif //FEATHER_NAMED_NODE_MAP_H

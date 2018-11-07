@@ -7,9 +7,12 @@
 
 #include "utils/named_node_map.h"
 #include "inode.h"
-class Element:INode {
+
+class IElement : INode {
 public:
     virtual const NamedNodeMap attributes() = 0;
 
+    virtual ~IElement() {};
 };
+
 #endif //FEATHER_HTML_ELEMENT_H

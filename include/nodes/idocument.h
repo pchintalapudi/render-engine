@@ -7,7 +7,7 @@
 
 #include "inode.h"
 
-class Document: INode {
+class IDocument: INode {
 
 };
 #endif //FEATHER_DOCUMENT_H

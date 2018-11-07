@@ -7,25 +7,67 @@
 
 #include <string>
 
-class Element;
+class IElement;
 
 class Attr {
 public:
-    virtual const std::string &getName() = 0;
 
-    virtual const std::string &getNamespaceURI() = 0;
+    Attr(std::string localName, IElement &owner) : Attr(std::string(""), localName, owner, std::string("")) {
+    }
 
-    virtual const std::string &getLocalName() = 0;
+    Attr(std::string nameSpace, std::string localName, IElement &owner) : Attr(nameSpace, localName, owner,
+                                                                              *(new std::string(""))) {}
 
-    virtual const std::string &getPrefix() = 0;
+    Attr(std::string localName, IElement &owner, std::string value) : Attr("", localName, owner,
+                                                                          value) {}
 
-    virtual const Element &getOwnerElement() = 0;
+    Attr(std::string nameSpace, std::string localName,
+         IElement &owner, std::string value)
+            : nameSpace(*new std::string(nameSpace)),
+              localName(*new std::string(localName)),
+              owner(owner), value(*new std::string(value)) {}
+
+    const std::string &getName() {
+        return this->nameSpace + this->localName;
+    };
+
+    const std::string &getNamespaceURI() {
+        return this->nameSpace;
+    };
+
+    const std::string &getLocalName() {
+        return this->localName;
+    };
+
+    const std::string &getPrefix() {
+        return this->nameSpace;
+    };
+
+    const IElement &getOwnerElement() {
+        return this->owner;
+    };
 
     inline const bool specified() { return true; };
 
-    virtual std::string &getValue() = 0;
+    std::string &getValue() {
+        return this->value;
+    };
 
-    virtual void setValue(std::string const &value);
+    void setValue(std::string &value) {
+        this->value = value;
+    }
+
+    ~Attr() {
+        delete &this->localName;
+        delete &this->nameSpace;
+        delete &this->value;
+    }
+
+private:
+    const std::string localName;
+    const std::string nameSpace;
+    const IElement &owner;
+    std::string value;
 };
 
 #endif //FEATHER_ATTR_H

@@ -6,13 +6,9 @@
 #define FEATHER_TEXT_H
 
 #include <string>
-#include "inode.h"
+#include "icharacter_data.h"
 
-class Text:INode {
-public:
-    std::string getText();
-
-private:
-    std::string text("");
+class Text : ICharacterData {
 };
+
 #endif //FEATHER_TEXT_H
