@@ -7,9 +7,9 @@
 
 #include "event.h"
 
-class IEventTarget {
+class EventTarget {
 public:
-    virtual ~IEventTarget() {}
+    virtual ~EventTarget() {}
 };
 
 #endif //FEATHER_EVENT_TARGET_H

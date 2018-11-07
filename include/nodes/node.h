@@ -8,15 +8,17 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-#include "include/events/ievent_target.h"
+#include "include/events/event_target.h"
 #include "node_type.h"
 
 class Element;
 
 class Document;
 
-class Node : public IEventTarget {
+class Node : public EventTarget {
 public:
+
+    Node(std::string baseURI, std::string name, NodeType nodeType, Document *owner, Node *parent);
 
     Node(Node &other);
 
@@ -37,9 +39,9 @@ public:
 
     inline const unsigned short getNodeType() const { return this->nodeType; };
 
-    virtual std::string getNodeValue() const;
+    virtual const std::string *getNodeValue() const { return nullptr; };
 
-    virtual void setNodeValue(std::string *value);
+    virtual void setNodeValue(std::string *value) {};
 
     const Document *getOwnerDocument() const { return this->owner; };
 
@@ -49,9 +51,9 @@ public:
 
     Node *const getPreviousSibling() const;
 
-    std::string getTextContent() const { return this->textContent; };
+    std::string getTextContent() const;
 
-    void setTextContent(std::string content) { this->textContent = content; };
+    void setTextContent(std::string content);
 
     //Methods
 
@@ -68,7 +70,7 @@ public:
 
     const bool contains(Node const &other) const;
 
-    Node *const getRootNode() const;
+    inline Node *const getRootNode() const;
 
     const inline bool hasChildNodes() const {
         auto children = this->childNodes;
@@ -112,8 +114,9 @@ private:
     NodeType nodeType;
     Document *owner;
     Node *parent;
-    std::string textContent;
     std::string nameSpace;
+
+    std::string getConcatText() const;
 };
 
 #endif //FEATHER_INODE_H

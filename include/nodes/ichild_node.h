@@ -12,11 +12,11 @@ class IChildNode {
 public:
     virtual void remove() = 0;
 
-    virtual void before(std::vector<Node *> toInsert) = 0;
+    virtual void before(std::vector<Node *> &toInsert) = 0;
 
-    virtual void after(std::vector<Node *> toInsert) = 0;
+    virtual void after(std::vector<Node *> &toInsert) = 0;
 
-    virtual void replaceWith(std::vector<Node *> toInsert) = 0;
+    virtual void replaceWith(std::vector<Node *> &toInsert) = 0;
 
     virtual ~IChildNode() {};
 };

@@ -12,9 +12,15 @@
 
 class CharacterData : public Node, public IChildNode, public INonDocumentTypeChildNode {
 public:
-    virtual DOMString getData() const = 0;
 
-    virtual DOMString setData(std::string data) = 0;
+public:
+
+    DOMString getData() const { return *this->data; };
+
+    DOMString setData(std::string data) {
+        delete this->data;
+        this->data = new std::string(data);
+    };
 
     const unsigned long getLength() const {
         return this->getData().length();
@@ -40,12 +46,32 @@ public:
         return this->getData().substr(offset, length);
     }
 
-    inline std::string getNodeValue() const override {
-        return this->getData();
+    inline const std::string *getNodeValue() const override {
+        return new std::string(this->getData());
     }
 
-    virtual ~CharacterData() {}
+    inline void setNodeValue(std::string *nodeValue) override {
+        this->setData(nodeValue ? *nodeValue : "");
+    }
 
+    virtual ~CharacterData() override {
+        delete this->data;
+    }
+
+    void remove() override;
+
+    void before(std::vector<Node *> &toInsert) override;
+
+    void after(std::vector<Node *> &toInsert) override;
+
+    void replaceWith(std::vector<Node *> &toInsert) override;
+
+    Element *const previousElementSibling() const override;
+
+    Element *const nextElementSibling() const override;
+
+private:
+    std::string *data;
 };
 
 #endif //FEATHER_CHARACTER_DATA_H

@@ -3,20 +3,27 @@
 //
 
 #include <algorithm>
+#include <sstream>
 #include <vector>
 #include "include/nodes/text.h"
 #include "include/nodes/document.h"
 #include "include/nodes/node.h"
 #include "include/nodes/element.h"
 
-Node::Node(Node &other) {
-    this->baseURI = other.baseURI;
-    this->childNodes = other.childNodes ? new std::vector(*(other.childNodes)) : nullptr;
-    this->name = other.name;
-    this->nodeType = other.nodeType;
-    this->owner = other.owner;
-    this->parent = other.parent;
-    this->textContent = other.textContent;
+Node::Node(std::string baseURI, std::string name,
+           NodeType nodeType, Document *owner, Node *parent)
+        : baseURI(baseURI), childNodes(new std::vector<Node *>()),
+          name(name), nodeType(nodeType), owner(owner), parent(parent) {
+}
+
+Node::Node(Node &other)
+        : baseURI(other.baseURI),
+          childNodes(other.childNodes
+                     ? new std::vector(*other.childNodes)
+                     : nullptr),
+          name(other.name),
+          owner(other.owner),
+          parent(other.parent) {
 }
 
 const bool Node::isConnected() const {
@@ -90,7 +97,7 @@ const bool Node::contains(Node const &other) const {
 }
 
 Node *const Node::getRootNode() const {
-    return this->owner ? this->owner : nullptr;
+    return this->owner;
 }
 
 void Node::insertBefore(Node &child, Node *ref) {
@@ -117,7 +124,7 @@ void Node::normalize() {
                     (*children)[i - 1] = nullptr;//new Text()
                     children->erase(children->begin() + i);
                 } else {
-                    auto text = (*children)[i]->textContent;
+                    auto text = (*children)[i]->getTextContent();
                     if (std::all_of(text.begin(), text.end(), isspace)) {
                         children->erase(children->begin() + i);
                     }
@@ -142,4 +149,31 @@ void Node::replaceChild(Node &newChild, Node &oldChild) {
     if (children) {
         std::replace(children->begin(), children->end(), &oldChild, &newChild);
     }
+}
+
+std::string Node::getConcatText() const {
+    auto children = this->childNodes;
+    std::stringstream text;
+    if (children) {
+        for (unsigned long i = 0; i < children->size(); i++) {
+            auto child = (*children)[i];
+            if (child->nodeType == ELEMENT_NODE) {
+                text << child->getConcatText();
+            } else if (child->nodeType == TEXT_NODE) {
+                text << child->getNodeValue();
+            }
+        }
+    }
+    return text.str();
+}
+
+std::string Node::getTextContent() const {
+    auto nodeValue = this->getNodeValue();
+    if (nodeValue) {
+        return *nodeValue;
+    }
+    if (this->nodeType == ELEMENT_NODE) {
+        return this->getConcatText();
+    }
+    return nullptr;
 }

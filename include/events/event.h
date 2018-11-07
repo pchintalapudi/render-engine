@@ -8,18 +8,18 @@
 #include <string>
 #include <vector>
 
-class IEventTarget;
+class EventTarget;
 
 class Event {
 public:
-    Event(IEventTarget &target, std::vector<std::string> &types, bool bubble)
+    Event(EventTarget &target, std::vector<std::string> &types, bool bubble)
             : target(target), types(types), bubble(bubble), consumed(false) {}
 
     const std::vector<std::string> &getTypes() {
         return this->types;
     }
 
-    const IEventTarget &getTarget() {
+    const EventTarget &getTarget() {
         return this->target;
     }
 
@@ -38,7 +38,7 @@ public:
     virtual ~Event() = default;
 
 private:
-    const IEventTarget &target;
+    const EventTarget &target;
     const std::vector<std::string> &types;
     const bool bubble;
     bool consumed;
