@@ -13,7 +13,12 @@
 class CharacterData : public Node, public IChildNode, public INonDocumentTypeChildNode {
 public:
 
-public:
+    CharacterData(std::string baseURI, Document *owner, Node *parent)
+            : Node(baseURI, "#text", TEXT_NODE, owner, parent) {}
+
+    CharacterData(Document *owner, Node &parent) : Node("#text", TEXT_NODE, owner, parent) {}
+
+    CharacterData(CharacterData &other);
 
     DOMString getData() const { return *this->data; };
 
@@ -22,7 +27,7 @@ public:
         this->data = new std::string(data);
     };
 
-    const unsigned long getLength() const {
+    unsigned long getLength() const {
         return this->getData().length();
     }
 
@@ -31,7 +36,8 @@ public:
     }
 
     inline void deleteData(unsigned long offset, unsigned long length) {
-        this->setData(this->getData().substr(0, offset) + this->getData().substr(offset + length));
+        this->setData(this->getData().substr(0, offset) +
+                      this->getData().substr(offset + length, this->getData().length() - length - offset));
     }
 
     inline void insertData(unsigned long offset, std::string toInsert) {
@@ -39,14 +45,15 @@ public:
     }
 
     inline void replaceData(unsigned long offset, unsigned long length, std::string toInsert) {
-        this->setData(this->getData().substr(0, offset) + toInsert + this->getData().substr(offset + length));
+        this->setData(this->getData().substr(0, offset) + toInsert +
+                      this->getData().substr(offset + length, this->getData().length() - length - offset));
     }
 
     inline std::string substringData(unsigned long offset, unsigned long length) const {
         return this->getData().substr(offset, length);
     }
 
-    inline const std::string *getNodeValue() const override {
+    inline std::string *getNodeValue() const override {
         return new std::string(this->getData());
     }
 
@@ -62,13 +69,19 @@ public:
 
     void before(std::vector<Node *> &toInsert) override;
 
+    void before(Node *toInsert) override;
+
     void after(std::vector<Node *> &toInsert) override;
+
+    void after(Node *toInsert) override;
 
     void replaceWith(std::vector<Node *> &toInsert) override;
 
-    Element *const previousElementSibling() const override;
+    void replaceWith(Node *toInsert) override;
 
-    Element *const nextElementSibling() const override;
+    Element *previousElementSibling() const override;
+
+    Element *nextElementSibling() const override;
 
 private:
     std::string *data;

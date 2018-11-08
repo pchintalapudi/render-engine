@@ -11,8 +11,9 @@
 #include "include/nodes/element.h"
 
 Node::Node(std::string baseURI, std::string name,
-           NodeType nodeType, Document *owner, Node *parent)
-        : baseURI(baseURI), childNodes(new std::vector<Node *>()),
+           NodeType nodeType, Document *const owner, Node *const parent)
+        : baseURI(baseURI),
+          childNodes(nodeType == ELEMENT_NODE ? new std::vector<Node *>() : nullptr),
           name(name), nodeType(nodeType), owner(owner), parent(parent) {
 }
 
@@ -26,7 +27,7 @@ Node::Node(Node &other)
           parent(other.parent) {
 }
 
-const bool Node::isConnected() const {
+bool Node::isConnected() const {
     auto parent = this->parent;
     while (parent && parent->nodeType != DOCUMENT_NODE) {
         parent = parent->parent;
@@ -34,7 +35,7 @@ const bool Node::isConnected() const {
     return parent != nullptr;
 }
 
-Node *const Node::getNextSibling() const {
+Node *Node::getNextSibling() const {
     auto parent = this->parent;
     if (parent) {
         std::vector<Node *> *children = parent->childNodes;
@@ -48,7 +49,7 @@ Node *const Node::getNextSibling() const {
     return nullptr;
 }
 
-Node *const Node::getPreviousSibling() const {
+Node *Node::getPreviousSibling() const {
     auto parent = this->parent;
     if (parent) {
         std::vector<Node *> *children = parent->childNodes;
@@ -62,7 +63,7 @@ Node *const Node::getPreviousSibling() const {
     return nullptr;
 }
 
-Element *const Node::getParentElement() const {
+Element *Node::getParentElement() const {
     Node *parent = this->parent;
     return parent && parent->getNodeType() == ELEMENT_NODE ? dynamic_cast<Element *>(parent) : nullptr;
 }
@@ -77,13 +78,13 @@ Node *Node::getLastChild() const {
     return children ? children->back() : nullptr;
 };
 
-const unsigned char Node::compareDocumentPosition(Node const &other) const {
+unsigned char Node::compareDocumentPosition(Node const &other) const {
     //Idk what this is supposed to do so we'll be noncompliant here
     //TODO: make this method
     return 0;
 }
 
-const bool Node::contains(Node const &other) const {
+bool Node::contains(Node const &other) const {
     if (this == &other) return true;
     auto children = this->childNodes;
     if (children) {
@@ -96,7 +97,7 @@ const bool Node::contains(Node const &other) const {
     return false;
 }
 
-Node *const Node::getRootNode() const {
+Node *Node::getRootNode() const {
     return this->owner;
 }
 
@@ -176,4 +177,13 @@ std::string Node::getTextContent() const {
         return this->getConcatText();
     }
     return nullptr;
+}
+
+void Node::setTextContent(std::string content) {
+    auto children = this->getChildNodes();
+    if (children) {
+        std::for_each(children->begin(), children->end(), [](auto child) { delete child; });
+        children->clear();
+        children->push_back(new Text(this->owner, *this, content));
+    }
 }

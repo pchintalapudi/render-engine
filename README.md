@@ -4,3 +4,15 @@
 
 * libcURL
 * curlpp
+
+
+## Completed DOM models:
+* Text
+* Comment
+
+## Incomplete DOM models:
+* Document
+* Element
+* DocumentFragment
+* CDataSection
+* ProcessingInstruction

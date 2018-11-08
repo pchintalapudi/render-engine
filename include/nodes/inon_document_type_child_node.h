@@ -9,9 +9,9 @@
 
 class INonDocumentTypeChildNode {
 public:
-    virtual Element *const previousElementSibling() const = 0;
+    virtual Element *previousElementSibling() const = 0;
 
-    virtual Element *const nextElementSibling() const = 0;
+    virtual Element *nextElementSibling() const = 0;
 
     virtual ~INonDocumentTypeChildNode() {};
 };

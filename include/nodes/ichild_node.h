@@ -14,9 +14,15 @@ public:
 
     virtual void before(std::vector<Node *> &toInsert) = 0;
 
+    virtual void before(Node *toInsert) = 0;
+
     virtual void after(std::vector<Node *> &toInsert) = 0;
 
+    virtual void after(Node *toInsert) = 0;
+
     virtual void replaceWith(std::vector<Node *> &toInsert) = 0;
+
+    virtual void replaceWith(Node *toInsert) = 0;
 
     virtual ~IChildNode() {};
 };
