@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
-#include "include/events/event_target.h"
+#include "../events/event_target.h"
 #include "node_type.h"
 
 class Element;
@@ -108,7 +108,20 @@ public:
 
     void replaceChild(Node &newChild, Node &oldChild);
 
-    virtual ~Node() {}
+    void clearChildren() {
+        if (childNodes)
+            childNodes->clear();
+    }
+
+    void cleanupChildren() {
+        if (childNodes)
+            std::for_each(childNodes->begin(), childNodes->end(), [](auto child) { delete child; });
+    }
+
+    virtual ~Node() {
+        cleanupChildren();
+        delete childNodes;
+    }
 
 private:
     std::string baseURI;

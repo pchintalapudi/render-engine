@@ -8,6 +8,7 @@
 #include "include/nodes/document.h"
 #include "include/nodes/node.h"
 
+class Element;
 CharacterData::CharacterData(CharacterData &other) : Node(other) {
     this->data = other.data;
 }

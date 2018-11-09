@@ -13,21 +13,21 @@
 
 class DOMTokenList {
 public:
-    inline unsigned long getLength() {
+    inline unsigned long getLength() const {
         return this->items.size();
     }
 
-    DOMString getValue() {
+    DOMString getValue() const {
         std::stringstream ss;
         std::for_each(this->items.begin(), this->items.end(), [&ss](const std::string &s) { ss << s; });
         return ss.str();
     }
 
-    DOMString item(unsigned long &index) {
+    DOMString item(unsigned long &index) const {
         return this->items[index];
     }
 
-    bool contains(DOMString &item) {
+    bool contains(DOMString &item) const {
         return std::find(this->items.begin(), this->items.end(), item) == this->items.end();
     }
 
@@ -46,7 +46,7 @@ public:
         std::replace(this->items.begin(), this->items.end(), oldItem, newItem);
     }
 
-    virtual bool supports(DOMString feature) = 0;
+    virtual bool supports(DOMString feature) const = 0;
 
     bool toggle(DOMString item) {
         auto it = std::find(this->items.begin(), this->items.end(), item);
@@ -59,8 +59,12 @@ public:
         }
     }
 
-    inline std::vector<DOMString> getItems() {
-        return items;
+    inline std::vector<DOMString> *getItems() {
+        return &items;
+    }
+
+    void clear() {
+        items.clear();
     }
 
 private:

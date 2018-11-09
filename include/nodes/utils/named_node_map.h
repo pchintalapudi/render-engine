@@ -5,6 +5,7 @@
 #ifndef FEATHER_NAMED_NODE_MAP_H
 #define FEATHER_NAMED_NODE_MAP_H
 
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -51,6 +52,7 @@ public:
 
     ~NamedNodeMap() {
         delete this->indeces;
+        std::for_each(this->attributes->begin(), this->attributes->end(), [](auto child) { delete child; });
         delete this->attributes;
     }
 

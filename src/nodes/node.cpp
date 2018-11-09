@@ -13,7 +13,7 @@
 Node::Node(std::string baseURI, std::string name,
            NodeType nodeType, Document *const owner, Node *const parent)
         : baseURI(baseURI),
-          childNodes(nodeType == ELEMENT_NODE ? new std::vector<Node *>() : nullptr),
+          childNodes(nodeType == ELEMENT_NODE ? *new std::vector<Node *>() : nullptr),
           name(name), nodeType(nodeType), owner(owner), parent(parent) {
 }
 
