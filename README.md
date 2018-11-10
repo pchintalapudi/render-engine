@@ -9,10 +9,10 @@
 ## Completed DOM models:
 * Text
 * Comment
+* CDataSection
+* ProcessingInstruction
 
 ## Incomplete DOM models:
 * Document
 * Element
 * DocumentFragment
-* CDataSection
-* ProcessingInstruction
