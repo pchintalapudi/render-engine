@@ -26,7 +26,7 @@ public:
         }
     }
 
-    void dispatchEvent(Event &event);
+    void dispatchEvent(Event &event) const;
 
     virtual ~EventTarget() {
         for (const auto& vec : handlers) {

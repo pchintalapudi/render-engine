@@ -5,7 +5,7 @@
 #include "include/events/event_target.h"
 #include "include/events/event_phase.h"
 
-void EventTarget::dispatchEvent(Event &event) {
+void EventTarget::dispatchEvent(Event &event) const {
     auto idx = std::find(event.getDeepPath().begin(), event.getDeepPath().end(), this);
     bool atEnd = idx - event.getDeepPath().begin() + 1 == event.getDeepPath().size();
     if (atEnd) {
@@ -13,7 +13,7 @@ void EventTarget::dispatchEvent(Event &event) {
     }
     for (const auto &type : event.getTypeList()) {
         if (handlers.find(type) != handlers.end()) {
-            for (const auto &handler : *(handlers[type])) {
+            for (const auto &handler : *(handlers.at(type))) {
                 handler(event);
                 if (event.isViolentlyConsumed()) {
                     return;

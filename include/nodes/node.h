@@ -21,55 +21,55 @@ public:
     Node(DOMString name, NodeType nodeType, Node &parent)
             : baseURI(parent.baseURI), name(name), nodeType(nodeType), owner(parent.owner), parent(&parent) {}
 
-    inline DOMString getBaseURI() { return baseURI; }
+    inline DOMString getBaseURI() const { return baseURI; }
 
     inline std::vector<Node *> getChildNodes() { return childNodes; }
 
-    inline Node *getFirstChild() { return childNodes.size() ? childNodes[0] : nullptr; }
+    inline Node *getFirstChild() const { return childNodes.size() ? childNodes[0] : nullptr; }
 
-    inline bool isConnected() { return owner != nullptr; }
+    inline bool isConnected() const { return owner != nullptr; }
 
-    inline Node *getLastChild() { return childNodes.size() ? childNodes[childNodes.size() - 1] : nullptr; }
+    inline Node *getLastChild() const { return childNodes.size() ? childNodes[childNodes.size() - 1] : nullptr; }
 
-    Node *getNextSibling();
+    Node *getNextSibling() const;
 
-    inline DOMString getNodeName() { return name; }
+    inline DOMString getNodeName() const { return name; }
 
-    inline NodeType getNodeType() { return nodeType; }
+    inline NodeType getNodeType() const { return nodeType; }
 
-    inline DOMString getNodeValue() { return nodeValue; }
+    inline DOMString getNodeValue() const { return nodeValue; }
 
     inline void setNodeValue(DOMString value) { nodeValue = value; }
 
-    inline Document *getOwner() { return owner; }
+    inline Document *getOwner() const { return owner; }
 
     inline void setOwner(Document *owner) { this->owner = owner; }
 
-    inline Node *getParentNode() { return parent; }
+    inline Node *getParentNode() const { return parent; }
 
     inline void setParentNode(Node *parent) { this->parent = parent; }
 
-    inline Element *getParentElement();
+    inline Element *getParentElement() const;
 
-    Node *getPreviousSibling();
+    Node *getPreviousSibling() const;
 
     Node *appendChild(Node *child);
 
     virtual Node *cloneNode() = 0;
 
-    unsigned char compareDocumentPosition(Node *other);
+    unsigned char compareDocumentPosition(const Node *other) const;
 
-    bool contains(Node *other);
+    bool contains(const Node *other) const;
 
-    Node *getRootNode();
+    Node *getRootNode() const;
 
-    inline bool hasChildNodes() { return childNodes.size() != 0; }
+    inline bool hasChildNodes() const { return childNodes.size() != 0; }
 
     void insertBefore(Node *child);
 
-    virtual bool isEqualNode(Node *other) = 0;
+    virtual bool isEqualNode(const Node *other) = 0;
 
-    inline bool isSameNode(Node *other) { return this == other; }
+    inline bool isSameNode(const Node *other) const { return this == other; }
 
     void normalize();
 
@@ -77,7 +77,7 @@ public:
 
     void replaceChild(Node *replacement, Node *target);
 
-    virtual ~Node() override {
+    ~Node() override {
         for (auto child : childNodes) {
             delete child;
         }

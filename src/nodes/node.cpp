@@ -9,11 +9,11 @@
 #include "include/nodes/element.h"
 #include "include/nodes/document.h"
 
-Element *Node::getParentElement() {
+Element *Node::getParentElement() const {
     return parent && parent->getNodeType() == NodeType::ELEMENT_NODE ? static_cast<Element *>(parent) : nullptr;
 }
 
-Node *Node::getNextSibling() {
+Node *Node::getNextSibling() const {
     if (parent) {
         auto idx = std::find(parent->childNodes.begin(), parent->childNodes.end(), this);
         if (idx < parent->childNodes.end() - 1) {
@@ -23,7 +23,7 @@ Node *Node::getNextSibling() {
     return nullptr;
 }
 
-Node *Node::getPreviousSibling() {
+Node *Node::getPreviousSibling() const {
     if (parent) {
         auto idx = std::find(parent->childNodes.begin(), parent->childNodes.end(), this);
         if (idx > parent->childNodes.begin()) {
@@ -59,7 +59,7 @@ Node *Node::appendChild(Node *child) {
     return child;
 }
 
-bool Node::contains(Node *other) {
+bool Node::contains(const Node *other) const {
     if (other == this) {
         return true;
     }
@@ -71,15 +71,16 @@ bool Node::contains(Node *other) {
     return false;
 }
 
-Node *Node::getRootNode() {
+Node *Node::getRootNode() const {
     if (owner) {
         return owner;
     }
-    Node *node = this;
-    while (node->parent) {
-        node = node->parent;
-    }
-    return node;
+    Node *node = parent;
+    if (node)
+        while (node->parent) {
+            node = node->parent;
+        }
+    else return const_cast<Node *>(this);
 }
 
 void Node::insertBefore(Node *child) {
@@ -145,7 +146,7 @@ void Node::replaceChild(Node *replacement, Node *target) {
     std::replace(childNodes.begin(), childNodes.end(), target, replacement);
 }
 
-Node *traverseTree(Node *root, Node *node1, Node *node2) {
+const Node *traverseTree(Node *root, const Node *node1, const Node *node2) {
     for (auto child : root->getChildNodes()) {
         if (child == node1) {
             return node1;
@@ -160,7 +161,7 @@ Node *traverseTree(Node *root, Node *node1, Node *node2) {
     return nullptr;
 }
 
-unsigned char Node::compareDocumentPosition(Node *other) {
+unsigned char Node::compareDocumentPosition(const Node *other) const {
     if (this == other) {
         return 0;
     }
