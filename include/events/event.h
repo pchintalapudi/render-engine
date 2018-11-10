@@ -7,14 +7,14 @@
 
 class EventTarget;
 
+#include <vector>
 #include "../typedefs.h"
 #include "event_phase.h"
 
 class Event {
 public:
 
-    Event(bool bubbles, bool cancelable, bool composed, EventPhase eventPhase,
-          EventTarget &target, DOMString type, bool trusted);
+    Event(bool bubbles, bool cancelable, bool composed, EventTarget &target, std::vector<DOMString> type, bool trusted);
 
     inline bool getBubbles() { return bubbles; }
 
@@ -46,7 +46,9 @@ public:
 
     inline unsigned long getTimeStamp() { return timeStamp; }
 
-    inline DOMString getType() { return type; }
+    inline DOMString getType() { return types[0]; }
+
+    inline std::vector<DOMString> &getTypeList() { return types; }
 
     inline bool isTrusted() { return trusted; }
 
@@ -61,6 +63,14 @@ public:
         violentlyConsumed = true;
     }
 
+    inline bool isConsumed() {
+        return consumed;
+    }
+
+    inline bool isViolentlyConsumed() {
+        return violentlyConsumed;
+    }
+
     virtual ~Event() {
     }
 
@@ -73,7 +83,7 @@ private:
     EventPhase eventPhase;
     EventTarget &originalTarget;
     unsigned long timeStamp;
-    DOMString type;
+    std::vector<DOMString> types;
     bool trusted;
     bool consumed;
     bool violentlyConsumed;
