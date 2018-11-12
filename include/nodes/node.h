@@ -5,6 +5,8 @@
 #ifndef FEATHER_NODE_H
 #define FEATHER_NODE_H
 
+#include "include/utils/node_list.h"
+#include "include/utils/html_collection.h"
 #include "include/events/event_target.h"
 #include "node_type.h"
 
@@ -23,13 +25,13 @@ public:
 
     inline DOMString getBaseURI() const { return baseURI; }
 
-    inline std::vector<Node *> getChildNodes() { return childNodes; }
+    inline NodeList &getChildNodes() { return childNodes; }
 
-    inline Node *getFirstChild() const { return childNodes.size() ? childNodes[0] : nullptr; }
+    inline Node *getFirstChild() const { return childNodes.size() ? childNodes.get(0) : nullptr; }
 
     inline bool isConnected() const { return owner != nullptr; }
 
-    inline Node *getLastChild() const { return childNodes.size() ? childNodes[childNodes.size() - 1] : nullptr; }
+    inline Node *getLastChild() const { return childNodes.size() ? childNodes.get(childNodes.size() - 1) : nullptr; }
 
     Node *getNextSibling() const;
 
@@ -37,9 +39,9 @@ public:
 
     inline NodeType getNodeType() const { return nodeType; }
 
-    inline DOMString getNodeValue() const { return nodeValue; }
+    inline DOMString *getNodeValue() const { return nodeValue; }
 
-    inline void setNodeValue(DOMString value) { nodeValue = value; }
+    inline void setNodeValue(DOMString value) { nodeValue = new DOMString(value); }
 
     inline Document *getOwner() const { return owner; }
 
@@ -67,7 +69,7 @@ public:
 
     void insertBefore(Node *child);
 
-    virtual bool isEqualNode(const Node *other) = 0;
+    virtual bool isEqualNode(const Node *other) const = 0;
 
     inline bool isSameNode(const Node *other) const { return this == other; }
 
@@ -78,17 +80,16 @@ public:
     void replaceChild(Node *replacement, Node *target);
 
     ~Node() override {
-        for (auto child : childNodes) {
-            delete child;
-        }
+        childNodes.forEach([](auto child) { delete child; });
+        delete nodeValue;
     }
 
 private:
     const DOMString baseURI;
-    std::vector<Node *> childNodes;
+    NodeList childNodes;
     const DOMString name;
     const NodeType nodeType;
-    DOMString nodeValue;
+    DOMString *nodeValue;
     Document *owner;
     Node *parent;
 };

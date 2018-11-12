@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <deque>
 #include <sstream>
+#include "include/nodes/text.h"
 #include "include/nodes/node.h"
 #include "include/nodes/element.h"
 #include "include/nodes/document.h"
@@ -15,9 +16,9 @@ Element *Node::getParentElement() const {
 
 Node *Node::getNextSibling() const {
     if (parent) {
-        auto idx = std::find(parent->childNodes.begin(), parent->childNodes.end(), this);
-        if (idx < parent->childNodes.end() - 1) {
-            return parent->childNodes[idx - parent->childNodes.begin() + 1];
+        auto idx = parent->childNodes.indexOf(this);
+        if (~idx && idx < parent->childNodes.size() - 1) {
+            return parent->childNodes.get(idx + 1);
         }
     }
     return nullptr;
@@ -25,34 +26,43 @@ Node *Node::getNextSibling() const {
 
 Node *Node::getPreviousSibling() const {
     if (parent) {
-        auto idx = std::find(parent->childNodes.begin(), parent->childNodes.end(), this);
-        if (idx > parent->childNodes.begin()) {
-            return parent->childNodes[idx - parent->childNodes.begin() - 1];
+        auto idx = parent->childNodes.indexOf(this);
+        if (~idx && idx > 0) {
+            return parent->childNodes.get(idx - 1);
         }
     }
     return nullptr;
 }
 
+void switchParent(Node *switched, Node *parent) {
+    switched->getParentNode()->removeChild(switched);
+    switched->setParentNode(parent);
+    switched->setOwner(parent->getOwner());
+}
+
 Node *Node::appendChild(Node *child) {
     if (nodeType == NodeType::ELEMENT_NODE || nodeType == NodeType::DOCUMENT_FRAGMENT_NODE ||
         (nodeType == NodeType::DOCUMENT_NODE && childNodes.size() < 2))
-        if (child->nodeType != NodeType::DOCUMENT_FRAGMENT_NODE && child->nodeType != NodeType::ATTRIBUTE_NODE &&
-            child->nodeType != NodeType::DOCUMENT_NODE) {
+        if (child->nodeType != NodeType::DOCUMENT_FRAGMENT_NODE
+            && child->nodeType != NodeType::ATTRIBUTE_NODE
+            && child->nodeType != NodeType::DOCUMENT_NODE) {
             childNodes.push_back(child);
-            child->parent = this;
-            child->owner = owner;
+            switchParent(child, this);
         } else if (child->childNodes.size() > 0) {
             if (child->nodeType == NodeType::DOCUMENT_NODE) {
-                auto nextChild = childNodes[1];
+                auto nextChild = child->childNodes.get(1);
                 childNodes.push_back(nextChild);
-                nextChild->parent = this;
-                nextChild->owner = this->owner;
+                switchParent(nextChild, this);
             } else if (child->nodeType == NodeType::DOCUMENT_FRAGMENT_NODE) {
-                for (auto nextChild : child->childNodes) {
-                    nextChild->parent = this;
-                    nextChild->owner = this->owner;
-                    childNodes.push_back(nextChild);
-                }
+                child->childNodes.forEach([this](Node *node) {
+                    switchParent(node, this);
+                    childNodes.push_back(node);
+                });
+//                for (auto nextChild : child->childNodes) {
+//                    nextChild->parent = this;
+//                    nextChild->owner = this->owner;
+//                    childNodes.push_back(nextChild);
+//                }
             }
             child->childNodes.clear();
         }
@@ -63,12 +73,7 @@ bool Node::contains(const Node *other) const {
     if (other == this) {
         return true;
     }
-    for (auto child : childNodes) {
-        if (child->contains(other)) {
-            return true;
-        }
-    }
-    return false;
+    return childNodes.anyMatch([other](Node *child) { return child->contains(other); });
 }
 
 Node *Node::getRootNode() const {
@@ -89,45 +94,45 @@ void Node::insertBefore(Node *child) {
             child->parent->removeChild(child);
         child->parent = parent;
         child->owner = owner;
-        parent->childNodes.insert(std::find(parent->childNodes.begin(), parent->childNodes.end(), this), child);
+        parent->childNodes.insert(parent->childNodes.indexOf(this), child);
     }
 }
 
 void Node::normalize() {
-    std::deque<DOMString> texts;
+    unsigned long size = 0;
     for (unsigned long i = childNodes.size() - 1; i > 0; i--) {
-        if (childNodes[i]->nodeType == NodeType::TEXT_NODE) {
-            if (childNodes[i - 1]->nodeType == NodeType::TEXT_NODE) {
-                texts.push_front(childNodes[i]->nodeValue);
-            } else {
-                std::for_each(childNodes.begin() + i, childNodes.begin() + i + texts.size(),
-                              [](auto text) { delete text; });
-                childNodes.erase(childNodes.begin() + i, childNodes.begin() + i + texts.size());
+        if (childNodes.get(i)->nodeType == NodeType::TEXT_NODE) {
+            if (childNodes.get(i - 1)->nodeType != NodeType::TEXT_NODE) {
+                std::vector<Node *> erased = childNodes.erase(i, i + size);
                 std::stringstream sstream;
-                std::for_each(texts.rbegin(), texts.rend(), [&sstream](auto text) { sstream << text; });
+                std::for_each(erased.begin(), erased.end(),
+                              [&sstream](Node *child) {
+                                  sstream << child->getNodeValue();
+                                  delete child;
+                              });
                 DOMString concatenated = sstream.str();
                 if (!std::all_of(concatenated.begin(), concatenated.end(), isspace)) {
-                    //TODO: Insert a new text node here
+                    childNodes.insert(i, new Text(*this, concatenated));
                 }
-                texts.clear();
-            }
+                size = 0;
+            } else size++;
         }
     }
-    if (texts.size()) {
-        std::for_each(childNodes.begin(), childNodes.begin() + texts.size(),
-                      [](auto text) { delete text; });
-        childNodes.erase(childNodes.begin(), childNodes.begin() + texts.size());
+    if (size) {
+        std::vector<Node *> erased = childNodes.erase(0, size);
         std::stringstream sstream;
-        std::for_each(texts.rbegin(), texts.rend(), [&sstream](auto text) { sstream << text; });
+        std::for_each(erased.begin(), erased.end(), [&sstream](Node *erase) {
+            sstream << erase->getNodeValue();
+            delete erase;
+        });
         DOMString concatenated = sstream.str();
         if (!std::all_of(concatenated.begin(), concatenated.end(), isspace)) {
-            //TODO: Insert a new text node here
+            childNodes.insert(0, new Text(*this, concatenated));
         }
-    } else if (childNodes[0]->nodeType == NodeType::TEXT_NODE) {
-        DOMString text = childNodes[0]->nodeValue;
+    } else if (childNodes.get(0)->nodeType == NodeType::TEXT_NODE) {
+        DOMString text = *childNodes.get(0)->nodeValue;
         if (std::all_of(text.begin(), text.end(), isspace)) {
-            delete childNodes[0];
-            childNodes.erase(childNodes.begin());
+            delete childNodes.erase(0);
         }
     }
 }
@@ -135,7 +140,7 @@ void Node::normalize() {
 void Node::removeChild(Node *child) {
     child->parent = nullptr;
     child->owner = nullptr;
-    childNodes.erase(std::remove(childNodes.begin(), childNodes.end(), child), childNodes.end());
+    childNodes.erase(child);
 }
 
 void Node::replaceChild(Node *replacement, Node *target) {
@@ -143,11 +148,12 @@ void Node::replaceChild(Node *replacement, Node *target) {
     target->parent = nullptr;
     replacement->owner = owner;
     target->owner = nullptr;
-    std::replace(childNodes.begin(), childNodes.end(), target, replacement);
+    childNodes.set(childNodes.indexOf(target), replacement);
 }
 
 const Node *traverseTree(Node *root, const Node *node1, const Node *node2) {
-    for (auto child : root->getChildNodes()) {
+    for (unsigned long i = 0; i < root->getChildNodes().size(); i++) {
+        Node *child = root->getChildNodes().get(i);
         if (child == node1) {
             return node1;
         } else if (child == node2) {

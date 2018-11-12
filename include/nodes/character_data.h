@@ -5,8 +5,8 @@
 #ifndef FEATHER_CHARACTER_DATA_H
 #define FEATHER_CHARACTER_DATA_H
 
-#include <include/nodes/interfaces/child_node.h>
-#include <include/nodes/interfaces/non_document_type_child_node.h>
+#include "include/nodes/interfaces/child_node.h"
+#include "include/nodes/interfaces/non_document_type_child_node.h"
 #include "node.h"
 
 class CharacterData : public Node, public ChildNode, public NonDocumentTypeChildNode {
@@ -16,7 +16,7 @@ public:
 
     CharacterData(DOMString name, NodeType nodeType, Node &parent) : Node(name, nodeType, parent) {}
 
-    inline DOMString getData() const { return getNodeValue(); }
+    inline DOMString getData() const { return *getNodeValue(); }
 
     inline void setData(DOMString data) { setNodeValue(data); }
 
@@ -33,6 +33,8 @@ public:
     inline DOMString substringData(unsigned long offset, unsigned long length) const {
         return getData().substr(offset, length);
     }
+
+    void remove();
 
     inline void before(Node *node) override { insertBefore(node); };
 

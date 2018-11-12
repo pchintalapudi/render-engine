@@ -23,6 +23,10 @@ public:
 
     DOMString getWholeText() const;
 
+    Text *cloneNode() override;
+
+    bool isEqualNode(const Node *other) const override;
+
 protected:
     //This is necessary for CDataSection to provide a correct name attribute
     Text(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)
