@@ -8,6 +8,7 @@ void NodeList::erase(const Node *value) {
     auto idx = indexOf(value);
     if (~idx) {
         nodes.erase(nodes.begin() + idx);
+        checksum++;
     }
 }
 
@@ -18,7 +19,7 @@ Node *NodeList::erase(unsigned long index) {
     return val;
 }
 
-std::vector<Node *> NodeList::subvector(unsigned long start, unsigned long end) {
+std::vector<Node *> NodeList::subvector(unsigned long start, unsigned long end)const {
     return std::vector<Node *>(nodes.begin() + start, nodes.begin() + end);
 }
 
