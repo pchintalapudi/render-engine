@@ -14,7 +14,7 @@ class HTMLCollection {
 public:
     HTMLCollection(NodeList &watched) : watched(watched), checksum(watched.getChecksum()), cached(getElementVector()) {}
 
-    inline Element *getItem(unsigned long index) {
+    inline Element *getItem(unsigned long index) const {
         return index < getLength() ? getElementVector()[index] : nullptr;
     }
 

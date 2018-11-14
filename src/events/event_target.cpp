@@ -13,7 +13,7 @@ void EventTarget::dispatchEvent(Event &event) const {
     }
     for (const auto &type : event.getTypeList()) {
         if (handlers.find(type) != handlers.end()) {
-            for (const auto &handler : *(handlers.at(type))) {
+            for (auto &handler : *handlers.at(type)) {
                 handler(event);
                 if (event.isViolentlyConsumed()) {
                     return;

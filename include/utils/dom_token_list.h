@@ -13,7 +13,11 @@ class DOMTokenList {
 public:
     inline unsigned long getLength() const { return backing.size(); }
 
-    inline DOMString getValue() const { return cachedsum == checksum ? cached : (cached = _get_cacheable_value()); }
+    inline DOMString getValue() const {
+        DOMString val = cachedsum == checksum ? cached : (cached = _get_cacheable_value());
+        cachedsum = checksum;
+        return val;
+    }
 
     inline DOMString getItem(unsigned long index) const { return backing[index]; }
 
@@ -26,6 +30,11 @@ public:
         checksum++;
     }
 
+    inline void add(std::vector<DOMString> vals) {
+        backing.insert(backing.end(), vals.begin(), vals.end());
+        checksum++;
+    }
+
     void remove(DOMString val);
 
     void replace(DOMString replacement, DOMString target);
@@ -34,9 +43,16 @@ public:
 
     bool toggle(DOMString token);
 
-    template <typename Op>
+    template<typename Op>
     void forEach(Op op) {
         std::for_each(backing.begin(), backing.end(), op);
+    }
+
+    inline unsigned long getChecksum() { return checksum; }
+
+    void clear() {
+        backing.clear();
+        checksum++;
     }
 
 private:
