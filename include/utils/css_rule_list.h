@@ -6,9 +6,14 @@
 #define FEATHER_CSS_RULE_LIST_H
 
 #include <vector>
+#include <numeric>
 #include "include/css/css_rules/css_rule.h"
 
-class CSSRuleList {
+namespace css {
+    class CSSRuleList;
+}
+
+class css::CSSRuleList {
 public:
     inline unsigned long getLength() const { return rules.size(); }
 
@@ -17,7 +22,9 @@ public:
     inline std::vector<CSSRule *> &backing() { return rules; }
 
     unsigned long getChecksum() {
-
+        unsigned long checksum = 0;
+        for (auto rule : rules) { checksum += rule->getChecksum(); }
+        return checksum;
     }
 
 private:

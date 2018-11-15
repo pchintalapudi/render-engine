@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSViewportRule : CSSRule {
+namespace css {
+    class CSSViewportRule;
+}
+
+class css::CSSViewportRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_VIEWPORT_RULE_H

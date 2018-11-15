@@ -6,8 +6,10 @@
 #define FEATHER_CSS_COUNTER_STYLE_RULE_H
 
 #include "css_rule.h"
-
-class CSSCounterStyleRule : CSSRule {
+namespace css {
+    class CSSCounterStyleRule;
+}
+class css::CSSCounterStyleRule : CSSRule {
 
 };
 

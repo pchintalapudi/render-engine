@@ -4,7 +4,10 @@
 
 #ifndef FEATHER_CSS_RULE_TYPE_H
 #define FEATHER_CSS_RULE_TYPE_H
-enum class CSSRuleType {
+namespace css {
+    enum class CSSRuleType;
+}
+enum class css::CSSRuleType {
     UNKNOWN_RULE,
     STYLE_RULE,
     CHARSET_RULE,

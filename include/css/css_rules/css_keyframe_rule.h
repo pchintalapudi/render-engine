@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSKeyframeRule : CSSRule {
+namespace css {
+    class CSSKeyframeRule;
+}
+
+class css::CSSKeyframeRule : CSSRule {
 
 };
 

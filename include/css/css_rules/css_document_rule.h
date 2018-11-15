@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSDocumentRule : CSSRule {
+namespace css {
+    class CSSDocumentRule;
+}
+
+class css::CSSDocumentRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_DOCUMENT_RULE_H

@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSFontFaceRule : CSSRule {
+namespace css {
+    class CSSFontFaceRule;
+}
+
+class css::CSSFontFaceRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_FONT_FACE_RULE_H

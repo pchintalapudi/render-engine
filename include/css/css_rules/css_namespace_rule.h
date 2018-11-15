@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSNamespaceRule : CSSRule {
+namespace css {
+    class CSSNamespaceRule;
+}
+
+class css::CSSNamespaceRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_NAMESPACE_RULE_H

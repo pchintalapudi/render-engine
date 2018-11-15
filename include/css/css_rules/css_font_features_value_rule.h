@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSFontFeaturesValueRule : CSSRule {
+namespace css {
+    class CSSFontFeaturesValueRule;
+}
+
+class css::CSSFontFeaturesValueRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_FONT_FEATURES_VALUE_RULE_H

@@ -9,7 +9,11 @@
 #include "css_rules/css_import_rule.h"
 #include "style_sheet.h"
 
-class CSSStyleSheet : StyleSheet {
+namespace css {
+    class CSSStyleSheet;
+}
+
+class css::CSSStyleSheet : css::StyleSheet {
 public:
     inline const CSSRuleList &getCssRules() const { return rules; }
 
@@ -27,9 +31,12 @@ public:
         return rule;
     }
 
-    inline void clean() { dirty = false; }
+    inline void clean() {
+        dirty = false;
+        checksum = rules.getChecksum();
+    }
 
-    inline bool isDirty() { return dirty; }
+    inline bool isDirty() { return dirty || checksum != rules.getChecksum(); }
 
 private:
     CSSRuleList rules;

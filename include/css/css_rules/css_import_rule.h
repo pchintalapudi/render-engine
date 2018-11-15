@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSImportRule : CSSRule {
+namespace css {
+    class CSSImportRule;
+}
+
+class css::CSSImportRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_IMPORT_RULE_H

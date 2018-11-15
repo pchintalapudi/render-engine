@@ -6,8 +6,12 @@
 #define FEATHER_CSS_KEYFRAMES_RULE_H
 
 #include "css_rule.h"
+#include "css_keyframe_rule.h"
 
-class CSSKeyFramesRule : CSSRule {
+namespace css {
+    class CSSKeyframesRule;
+}
+class css::CSSKeyframesRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_KEYFRAMES_RULE_H

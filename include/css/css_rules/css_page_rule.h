@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSPageRule : CSSRule {
+namespace css {
+    class CSSPageRule;
+}
+
+class css::CSSPageRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_PAGE_RULE_H

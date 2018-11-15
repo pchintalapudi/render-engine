@@ -8,15 +8,18 @@
 #include "include/typedefs.h"
 #include "css_rule_type.h"
 
-class CSSStyleSheet;
+namespace css {
+    class CSSStyleSheet;
 
-class CSSRule {
+    class CSSRule;
+}
+class css::CSSRule {
 public:
 
-    CSSRule(CSSRule *parent, CSSStyleSheet *parentStyleSheet, CSSRuleType type)
-            : parent(parent), parentStyleSheet(parentStyleSheet), type(type) {}
+    CSSRule(CSSRule *parent, CSSStyleSheet *parentStyleSheet, CSSRuleType type, bool *dirty)
+            : parent(parent), parentStyleSheet(parentStyleSheet), type(type), dirty(dirty), checksum(0) {}
 
-    inline DOMString getCssText() { return cssText; };
+    virtual DOMString getCSSText() = 0;
 
     inline CSSRule *getParent() { return parent; }
 
@@ -24,11 +27,18 @@ public:
 
     inline CSSRuleType getType() { return type; }
 
+    inline unsigned long getChecksum() { return checksum; }
+
+    inline bool isDirty() { return *dirty; }
+
+    inline void clean() { *dirty = false; }
+
 private:
     CSSRule *parent;
     CSSStyleSheet *parentStyleSheet;
     CSSRuleType type;
-    DOMString cssText;
+    unsigned long checksum;
+    bool *dirty;
 };
 
 #endif //FEATHER_CSSRULE_H

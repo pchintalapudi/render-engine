@@ -7,7 +7,11 @@
 
 #include "css_rule.h"
 
-class CSSRegionStyleRule : CSSRule {
+namespace css {
+    class CSSRegionStyleRule;
+}
+
+class css::CSSRegionStyleRule : CSSRule {
 };
 
 #endif //FEATHER_CSS_REGION_STYLE_RULE_H

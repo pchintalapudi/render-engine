@@ -7,7 +7,10 @@
 
 #include "css_rule.h"
 
-class CSSMediaRule : CSSRule {
+namespace css {
+    class CSSMediaRule;
+}
+class css::CSSMediaRule : CSSRule {
 
 };
 #endif //FEATHER_CSS_MEDIA_RULE_H

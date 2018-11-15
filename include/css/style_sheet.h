@@ -10,7 +10,11 @@
 
 class Node;
 
-class StyleSheet {
+namespace css {
+    class StyleSheet;
+}
+
+class css::StyleSheet {
 public:
     inline bool getDisabled() { return disabled; }
 
@@ -20,7 +24,7 @@ public:
 
     inline Node *getOwnerNode() { return ownerNode; }
 
-    inline StyleSheet *getParent() { return parent; }
+    inline css::StyleSheet *getParent() { return parent; }
 
     inline DOMString getTitle() { return title; }
 
@@ -31,7 +35,7 @@ private:
     DOMString href;
     std::vector<DOMString> media;
     Node *ownerNode;
-    StyleSheet *parent;
+    css::StyleSheet *parent;
     DOMString title;
     DOMString type;
 };
