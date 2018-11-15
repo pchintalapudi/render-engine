@@ -6,7 +6,7 @@
 #include "include/nodes/element.h"
 #include "include/utils/html_collection.h"
 
-std::vector<Element *> HTMLCollection::_get_cacheable_element_vector() const {
+std::vector<dom::Element *> dom::HTMLCollection::_get_cacheable_element_vector() const {
     std::vector<Element *> elements;
     for (unsigned long i = 0; i < watched.size(); i++) {
         Node *node = watched.get(i);
@@ -17,17 +17,17 @@ std::vector<Element *> HTMLCollection::_get_cacheable_element_vector() const {
     return elements;
 }
 
-std::vector<Element *> HTMLCollection::getElementVector() const {
+std::vector<dom::Element *> dom::HTMLCollection::getElementVector() const {
     if (checksum == watched.getChecksum()) return cached;
     cached = _get_cacheable_element_vector();
     checksum = watched.getChecksum();
 }
 
-Element* HTMLCollection::getNamedItem(DOMString name) {
-    Element * nameMatch;
+dom::Element* dom::HTMLCollection::getNamedItem(DOMString name) {
+    Element * nameMatch = nullptr;
     for (Element * element : getElementVector()) {
         if (element->getId() == name) {
-            return nameMatch;
+            return element;
         }
         if (!nameMatch && element->getNodeName() == name) {
             nameMatch = element;

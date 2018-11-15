@@ -14,7 +14,6 @@ namespace css {
 
 class css::CSSStyleRule : CSSRule {
 private:
-
     CSSStyleDeclaration styling;
 };
 

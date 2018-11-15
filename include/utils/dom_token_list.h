@@ -9,7 +9,11 @@
 #include <vector>
 #include "../typedefs.h"
 
-class DOMTokenList {
+namespace dom {
+    class DOMTokenList;
+}
+
+class dom::DOMTokenList {
 public:
     inline unsigned long getLength() const { return backing.size(); }
 

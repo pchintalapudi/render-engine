@@ -5,7 +5,7 @@
 #include "include/events/event_target.h"
 #include "include/events/event_phase.h"
 
-void EventTarget::dispatchEvent(Event &event) const {
+void js::EventTarget::dispatchEvent(Event &event) const {
     auto idx = std::find(event.getDeepPath().begin(), event.getDeepPath().end(), this);
     bool atEnd = idx - event.getDeepPath().begin() + 1 == event.getDeepPath().size();
     if (atEnd) {

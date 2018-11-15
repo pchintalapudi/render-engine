@@ -5,7 +5,7 @@
 #include <sstream>
 #include "include/utils/named_node_map.h"
 
-Attr *NamedNodeMap::getClassAttr() const {
+dom::Attr *dom::NamedNodeMap::getClassAttr() const {
     if (classList) {
         if (classAttr && checksum == classList->getChecksum()) {
             return classAttr;
@@ -18,7 +18,7 @@ Attr *NamedNodeMap::getClassAttr() const {
     return nullptr;
 }
 
-void NamedNodeMap::setClassAttr(Attr *classAttr) {
+void dom::NamedNodeMap::setClassAttr(dom::Attr *classAttr) {
     delete this->classAttr;
     this->classAttr = classAttr;
     classList->clear();
@@ -39,7 +39,7 @@ void NamedNodeMap::setClassAttr(Attr *classAttr) {
     checksum = classList->getChecksum();
 }
 
-void NamedNodeMap::setNamedItem(Attr &data) {
+void dom::NamedNodeMap::setNamedItem(dom::Attr &data) {
     if (data.getName() == "class") {
         setClassAttr(&data);
         insertionOrder.push_back("class");

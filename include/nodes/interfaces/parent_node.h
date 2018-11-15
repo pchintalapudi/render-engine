@@ -8,9 +8,12 @@
 #include "../../utils/html_collection.h"
 #include "../node.h"
 
-class Element;
+namespace dom {
+    class Element;
+    class ParentNode;
+}
 
-class ParentNode {
+class dom::ParentNode {
     unsigned long getChildElementCount() const { return getChildren().getLength(); }
 
     virtual HTMLCollection &getChildren() = 0;

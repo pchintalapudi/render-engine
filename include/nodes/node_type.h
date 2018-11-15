@@ -4,7 +4,10 @@
 
 #ifndef FEATHER_NODE_TYPE_H
 #define FEATHER_NODE_TYPE_H
-enum class NodeType {
+namespace dom {
+    enum class NodeType;
+}
+enum class dom::NodeType {
     NOT_A_NODE,//Not a real value, but the indeces match only if this is the first enum constant
     ELEMENT_NODE,
     ATTRIBUTE_NODE,

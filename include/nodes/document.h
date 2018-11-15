@@ -7,7 +7,11 @@
 
 #include "node.h"
 
-class Document : public Node {
+namespace dom {
+    class Document;
+}
+
+class dom::Document : public Node {
 };
 
 #endif //FEATHER_DOCUMENT_H

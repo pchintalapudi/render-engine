@@ -13,14 +13,19 @@
 #include "include/nodes/interfaces/non_document_type_child_node.h"
 #include "node.h"
 
-class ClassTokenList : public DOMTokenList {
+namespace dom {
+    class ClassTokenList;
+    class Element;
+}
+
+class dom::ClassTokenList : public DOMTokenList {
     inline bool supports(DOMString feature) override { return false; }
 };
 
-class Element : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
+class dom::Element : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
 public:
 
-    Element(DOMString tagName);
+    explicit Element(DOMString tagName);
 
     inline NamedNodeMap &getAttributes() { return attributes; }
 

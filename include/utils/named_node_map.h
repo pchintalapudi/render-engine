@@ -12,7 +12,10 @@
 #include "include/nodes/attr.h"
 #include "include/typedefs.h"
 
-class NamedNodeMap {
+namespace dom {
+    class NamedNodeMap;
+}
+class dom::NamedNodeMap {
 public:
 
     NamedNodeMap(Element *owner, DOMTokenList *classList) : owner(owner), classList(classList) {}

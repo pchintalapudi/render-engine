@@ -8,9 +8,12 @@
 #include <algorithm>
 #include <vector>
 
-class Node;
+namespace dom {
+    class Node;
 
-class NodeList {
+    class NodeList;
+}
+class dom::NodeList {
 public:
     inline Node *get(unsigned long index) const {
         return nodes[index];
@@ -31,7 +34,7 @@ public:
 
     inline Node *erase(int index) { return erase(static_cast<unsigned long>(index)); }
 
-    std::vector<Node *> subvector(unsigned long start, unsigned long end)const;
+    std::vector<Node *> subvector(unsigned long start, unsigned long end) const;
 
     void push_back(Node *value);
 
@@ -82,7 +85,7 @@ public:
     }
 
     template<typename Filter>
-    inline bool allMatch(Filter filter)const {
+    inline bool allMatch(Filter filter) const {
         return anyMatch([filter](Node *node) { return !filter(node); });
     }
 

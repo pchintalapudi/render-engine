@@ -4,7 +4,11 @@
 
 #ifndef FEATHER_EVENT_PHASE_H
 #define FEATHER_EVENT_PHASE_H
-enum class EventPhase {
+
+namespace js {
+    enum class EventPhase;
+}
+enum class js::EventPhase {
     NONE, CAPTURING_PHASE, AT_TARGET, BUBBLING_PHASE
 };
 #endif //FEATHER_EVENT_PHASE_H

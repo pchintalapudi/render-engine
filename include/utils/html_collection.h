@@ -7,12 +7,14 @@
 
 #include "include/typedefs.h"
 #include "node_list.h"
+namespace dom {
+    class Element;
+    class HTMLCollection;
+}
 
-class Element;
-
-class HTMLCollection {
+class dom::HTMLCollection {
 public:
-    HTMLCollection(NodeList &watched) : watched(watched), checksum(watched.getChecksum()), cached(getElementVector()) {}
+    explicit HTMLCollection(NodeList &watched) : watched(watched), checksum(watched.getChecksum()), cached(getElementVector()) {}
 
     inline Element *getItem(unsigned long index) const {
         return index < getLength() ? getElementVector()[index] : nullptr;

@@ -4,7 +4,7 @@
 #include <sstream>
 #include "include/nodes/text.h"
 
-DOMString Text::getWholeText() const {
+DOMString dom::Text::getWholeText() const {
     if (getParentNode()) {
         std::stringstream stream;
         auto children = getParentNode()->getChildNodes();
@@ -16,10 +16,10 @@ DOMString Text::getWholeText() const {
     } else return getData();
 }
 
-Text *Text::cloneNode() {
+dom::Text *dom::Text::cloneNode() {
     return new Text(getBaseURI(), getOwner(), getParentNode(), getData());
 }
 
-bool Text::isEqualNode(const Node *other) const {
+bool dom::Text::isEqualNode(const dom::Node *other) const {
     return other->getNodeType() == NodeType::TEXT_NODE && other->getNodeValue() == getNodeValue();
 }

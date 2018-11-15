@@ -7,8 +7,10 @@
 
 #include <vector>
 #include "../node.h"
-
-class ChildNode {
+namespace dom {
+    class ChildNode;
+}
+class dom::ChildNode {
     virtual void remove() = 0;
 
     virtual void before(std::vector<Node *> &nodes) = 0;

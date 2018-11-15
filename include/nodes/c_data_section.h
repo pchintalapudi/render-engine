@@ -7,7 +7,11 @@
 
 #include "text.h"
 
-class CDataSection : public Text {
+namespace dom {
+    class CDataSection;
+}
+
+class dom::CDataSection : public Text {
 public:
     CDataSection(DOMString baseURI, Document *owner, Node *parent)
             : Text(baseURI, "#cdata-section", NodeType::CDATA_SECTION_NODE, owner, parent) {}

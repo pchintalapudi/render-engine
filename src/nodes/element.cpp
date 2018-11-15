@@ -6,7 +6,7 @@
 #include <sstream>
 #include "include/nodes/element.h"
 
-void Element::setClassName(DOMString className) {
+void dom::Element::setClassName(DOMString className) {
     classList.clear();
     std::stringstream stream;
     for (int i = 0; i < className.length(); i++) {
@@ -23,12 +23,12 @@ void Element::setClassName(DOMString className) {
         classList.add(str);
 }
 
-void Element::setInnerHTML(DOMString html) {
+void dom::Element::setInnerHTML(DOMString html) {
     getChildNodes().clear();
     //TODO: Parse html and add as node children
 }
 
-DOMString Element::computeInnerHTML() const {
+DOMString dom::Element::computeInnerHTML() const {
     std::stringstream output;
     output << "<" << tagName;
     for (unsigned long i = 0; i < attributes.getLength(); i++) {

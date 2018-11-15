@@ -7,7 +7,11 @@
 
 #include "character_data.h"
 
-class ProcessingInstruction : public CharacterData {
+namespace dom {
+    class ProcessingInstruction;
+}
+
+class dom::ProcessingInstruction : public CharacterData {
 public:
 
     ProcessingInstruction(DOMString baseURI, Document *owner, Node *parent, DOMString target)

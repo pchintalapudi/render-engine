@@ -5,9 +5,12 @@
 #ifndef FEATHER_SLOTABLE_H
 #define FEATHER_SLOTABLE_H
 
-class Element;
+namespace dom {
+    class Element;
+    class Slotable;
+}
 
-class Slotable {
+class dom::Slotable {
 public:
     inline Element *getAssignedSlot() { return assignedSlot; }
 

@@ -7,9 +7,12 @@
 
 #include "include/typedefs.h"
 
-class Element;
+namespace dom {
+    class Element;
+    class Attr;
+}
 
-class Attr {
+class dom::Attr {
 public:
 
     Attr(DOMString name, Element *owner) : namespaceURI(""), localName(name), prefix(""), ownerElement(owner) {}

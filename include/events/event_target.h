@@ -9,8 +9,10 @@
 #include <map>
 #include <functional>
 #include "event.h"
-
-class EventTarget {
+namespace js {
+    class EventTarget;
+}
+class js::EventTarget {
 public:
 
     EventTarget() {}

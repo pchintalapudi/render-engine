@@ -4,14 +4,16 @@
 
 #ifndef FEATHER_EVENT_H
 #define FEATHER_EVENT_H
-
-class EventTarget;
+namespace js {
+    class EventTarget;
+    class Event;
+}
 
 #include <vector>
 #include "../typedefs.h"
 #include "event_phase.h"
 
-class Event {
+class js::Event {
 public:
 
     Event(bool bubbles, bool cancelable, bool composed, EventTarget &target, std::vector<DOMString> type, bool trusted);

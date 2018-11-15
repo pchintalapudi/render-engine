@@ -5,12 +5,17 @@
 #ifndef FEATHER_DOCUMENT_OR_SHADOW_ROOT_H
 #define FEATHER_DOCUMENT_OR_SHADOW_ROOT_H
 
-class Element;
-class DocumentOrShadowRoot {
+namespace dom {
+    class Element;
+
+    class DocumentOrShadowRoot;
+}
+class dom::DocumentOrShadowRoot {
 private:
     Element *active;
     Element *fullScreen;
     Element *pointerLock;
 
 };
+
 #endif //FEATHER_DOCUMENT_OR_SHADOW_ROOT_H
