@@ -15,6 +15,7 @@
 
 namespace dom {
     class ClassTokenList;
+
     class Element;
 }
 
@@ -22,7 +23,8 @@ class dom::ClassTokenList : public DOMTokenList {
     inline bool supports(DOMString feature) override { return false; }
 };
 
-class dom::Element : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
+class dom::Element
+        : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
 public:
 
     explicit Element(DOMString tagName);
@@ -69,6 +71,8 @@ public:
         return tagName;
     }
 
+    inline dom::HTMLCollection &getChildren() override { return children; }
+
 private:
     NamedNodeMap attributes;
     ClassTokenList classList;
@@ -81,6 +85,7 @@ private:
     DOMString tagName;
 
     HTMLCollection children;
+
     DOMString computeInnerHTML() const;
 };
 
