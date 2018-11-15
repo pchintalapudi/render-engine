@@ -53,7 +53,7 @@ public:
 
     inline void setParentNode(Node *parent) { this->parent = parent; }
 
-    inline Element *getParentElement() const;
+    Element *getParentElement() const;
 
     Node *getPreviousSibling() const;
 
