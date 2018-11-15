@@ -16,6 +16,10 @@ public:
 
     inline std::vector<CSSRule *> &backing() { return rules; }
 
+    unsigned long getChecksum() {
+
+    }
+
 private:
     std::vector<CSSRule *> rules;
 };

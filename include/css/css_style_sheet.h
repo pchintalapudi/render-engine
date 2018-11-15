@@ -35,6 +35,7 @@ private:
     CSSRuleList rules;
     CSSImportRule *owner;
     bool dirty;
+    unsigned long checksum;
 };
 
 #endif //FEATHER_CSS_STYLE_SHEET_H

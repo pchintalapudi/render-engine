@@ -16,7 +16,7 @@ public:
     CSSRule(CSSRule *parent, CSSStyleSheet *parentStyleSheet, CSSRuleType type)
             : parent(parent), parentStyleSheet(parentStyleSheet), type(type) {}
 
-    virtual DOMString getCssText() = 0;
+    inline DOMString getCssText() { return cssText; };
 
     inline CSSRule *getParent() { return parent; }
 
@@ -28,6 +28,7 @@ private:
     CSSRule *parent;
     CSSStyleSheet *parentStyleSheet;
     CSSRuleType type;
+    DOMString cssText;
 };
 
 #endif //FEATHER_CSSRULE_H
