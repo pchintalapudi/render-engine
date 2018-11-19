@@ -33,7 +33,7 @@ void Trie<T>::add(std::string s, T t, unsigned int index) {
     }
     if (this->m.find(s[index]) == this->m.end())
         this->m[s[index]] = new Trie<T>();
-    this->m[s[index]].add(s, t, index + 1);
+    (*this->m[s[index]]).add(s, t, index + 1);
 }
 
 template<class T>

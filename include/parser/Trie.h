@@ -13,7 +13,7 @@ namespace feather {
         template<class T>
         class Trie {
         private:
-            std::unordered_map<char, Trie<T>> m;
+            std::unordered_map<char, Trie<T>*> m;
 
             Trie<T> feed(char *, unsigned int, unsigned int);
 
@@ -25,8 +25,7 @@ namespace feather {
 
         public:
             Trie() {
-                this->m = std::unordered_map<char, Trie<T>>();
-                this->t = nullptr;
+                this->m = std::unordered_map<char, Trie<T>*>();
             };
 
             Trie<T> feed(char *c, unsigned int n);

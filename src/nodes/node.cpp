@@ -85,7 +85,7 @@ dom::Node *dom::Node::getRootNode() const {
         while (node->parent) {
             node = node->parent;
         }
-    else return const_cast<Node *>(this);
+    return const_cast<Node *>(this);
 }
 
 void dom::Node::insertBefore(Node *child) {
