@@ -50,6 +50,7 @@ public:
 private:
     std::unordered_map<DOMString, Attr *> dataMap;
     std::vector<DOMString> insertionOrder;
+    Element *const owner;
     DOMTokenList *const classList;
     mutable Attr *classAttr;
     mutable unsigned long checksum;
@@ -57,8 +58,6 @@ private:
     Attr *getClassAttr() const;
 
     void setClassAttr(Attr *classAttr);
-
-    Element *const owner;
 };
 
 #endif //FEATHER_NAMED_NODE_MAP_H

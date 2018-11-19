@@ -20,7 +20,10 @@ namespace dom {
 }
 
 class dom::ClassTokenList : public DOMTokenList {
-    inline bool supports(DOMString feature) override { return false; }
+    inline bool supports(DOMString feature) override {
+        (void) feature;
+        return false;
+    }
 };
 
 class dom::Element
