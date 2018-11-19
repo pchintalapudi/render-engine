@@ -9,7 +9,11 @@
 #include "include/nodes/interfaces/non_document_type_child_node.h"
 #include "node.h"
 
-class CharacterData : public Node, public ChildNode, public NonDocumentTypeChildNode {
+namespace dom {
+    class CharacterData;
+}
+
+class dom::CharacterData : public Node, public ChildNode, public NonDocumentTypeChildNode {
 public:
     CharacterData(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)
             : Node(baseURI, name, nodeType, owner, parent) {}
@@ -34,7 +38,7 @@ public:
         return getData().substr(offset, length);
     }
 
-    void remove();
+    void remove() override;
 
     inline void before(Node *node) override { insertBefore(node); };
 

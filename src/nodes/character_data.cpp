@@ -5,20 +5,20 @@
 #include "include/nodes/character_data.h"
 #include "include/nodes/element.h"
 
-void CharacterData::deleteData(unsigned long offset, unsigned long length) {
+void dom::CharacterData::deleteData(unsigned long offset, unsigned long length) {
     setData(getData().substr(0, offset) + getData().substr(offset + length, getLength() - offset - length));
 }
 
-void CharacterData::insertData(unsigned long offset, DOMString toInsert) {
+void dom::CharacterData::insertData(unsigned long offset, DOMString toInsert) {
     setData(getData().substr(0, offset) + toInsert + getData().substr(offset, getLength() - offset));
 }
 
-void CharacterData::replaceData(unsigned long offset, unsigned long length, DOMString replacement) {
+void dom::CharacterData::replaceData(unsigned long offset, unsigned long length, DOMString replacement) {
     setData(getData().substr(0, offset) + replacement +
             getData().substr(offset + length, getLength() - offset - length));
 }
 
-Element *CharacterData::getPreviousElementSibling() const {
+dom::Element *dom::CharacterData::getPreviousElementSibling() const {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         for (auto idx = children.indexOf(this); --idx > -1;) {
@@ -31,7 +31,7 @@ Element *CharacterData::getPreviousElementSibling() const {
     return nullptr;
 }
 
-Element *CharacterData::getNextElementSibling() const {
+dom::Element *dom::CharacterData::getNextElementSibling() const {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         for (unsigned long idx = children.indexOf(this); ++idx < children.size();) {
@@ -44,7 +44,7 @@ Element *CharacterData::getNextElementSibling() const {
     return nullptr;
 }
 
-void CharacterData::before(std::vector<Node *> &nodes) {
+void dom::CharacterData::before(std::vector<Node *> &nodes) {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         std::for_each(nodes.begin(), nodes.end(), [this](Node *child) {
@@ -57,7 +57,7 @@ void CharacterData::before(std::vector<Node *> &nodes) {
     }
 }
 
-void CharacterData::after(Node *node) {
+void dom::CharacterData::after(Node *node) {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         if (node->getParentNode())
@@ -68,7 +68,7 @@ void CharacterData::after(Node *node) {
     }
 }
 
-void CharacterData::after(std::vector<Node *> &nodes) {
+void dom::CharacterData::after(std::vector<Node *> &nodes) {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         std::for_each(nodes.begin(), nodes.end(), [this](Node *child) {
@@ -81,12 +81,12 @@ void CharacterData::after(std::vector<Node *> &nodes) {
     }
 }
 
-void CharacterData::replaceWith(Node *node) {
+void dom::CharacterData::replaceWith(Node *node) {
     if (getParentNode())
         getParentNode()->replaceChild(node, this);
 }
 
-void CharacterData::replaceWith(std::vector<Node *> &nodes) {
+void dom::CharacterData::replaceWith(std::vector<Node *> &nodes) {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         auto idx = children.indexOf(this);
@@ -103,7 +103,7 @@ void CharacterData::replaceWith(std::vector<Node *> &nodes) {
     }
 }
 
-void CharacterData::remove() {
+void dom::CharacterData::remove() {
     if (getParentNode()) {
         getParentNode()->getChildNodes().erase(this);
         setParentNode(nullptr);

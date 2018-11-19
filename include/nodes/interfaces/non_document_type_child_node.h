@@ -5,9 +5,13 @@
 #ifndef FEATHER_NON_DOCUMENT_TYPE_CHILD_NODE_H
 #define FEATHER_NON_DOCUMENT_TYPE_CHILD_NODE_H
 
-class Element;
+namespace dom {
+    class Element;
 
-class NonDocumentTypeChildNode {
+    class NonDocumentTypeChildNode;
+}
+
+class dom::NonDocumentTypeChildNode {
 
     virtual Element *getPreviousElementSibling() const = 0;
 

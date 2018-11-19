@@ -8,22 +8,29 @@
 #include "../../utils/html_collection.h"
 #include "../node.h"
 
-class Element;
+namespace dom {
+    class Element;
+    class ParentNode;
+}
 
-class ParentNode {
-    virtual unsigned long getChildElementCount() const = 0;
+class dom::ParentNode {
+    unsigned long getChildElementCount() const { return getChildren().getLength(); }
 
     virtual HTMLCollection &getChildren() = 0;
 
-    virtual Element *getFirstElementChild();
+    virtual HTMLCollection &getChildren() const = 0;
 
-    virtual Element *getLastElementChild();
+    Element *getFirstElementChild() { return getChildElementCount() ? getChildren().getItem(0) : nullptr; }
 
-    virtual void append(std::vector<Node *> children);
+    Element *getLastElementChild() {
+        return getChildElementCount() ? getChildren().getItem(getChildElementCount() - 1) : nullptr;
+    }
 
-    virtual void prepend(std::vector<Node *> children);
+    virtual void append(std::vector<Node *> children) = 0;
 
+    virtual void prepend(std::vector<Node *> children) = 0;
 
+    virtual Element *querySelector(DOMString selector);
 };
 
 #endif //FEATHER_PARENT_NODE_H

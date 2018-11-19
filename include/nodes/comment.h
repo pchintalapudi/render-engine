@@ -7,7 +7,11 @@
 
 #include "character_data.h"
 
-class Comment : public CharacterData {
+namespace dom {
+    class Comment;
+}
+
+class dom::Comment : public CharacterData {
 public:
     Comment(DOMString baseURI, Document *owner, Node *parent)
             : CharacterData(baseURI, "#comment", NodeType::COMMENT_NODE, owner, parent) {}

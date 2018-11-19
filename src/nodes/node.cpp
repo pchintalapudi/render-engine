@@ -10,11 +10,11 @@
 #include "include/nodes/element.h"
 #include "include/nodes/document.h"
 
-Element *Node::getParentElement() const {
+dom::Element *dom::Node::getParentElement() const {
     return parent && parent->getNodeType() == NodeType::ELEMENT_NODE ? static_cast<Element *>(parent) : nullptr;
 }
 
-Node *Node::getNextSibling() const {
+dom::Node *dom::Node::getNextSibling() const {
     if (parent) {
         auto idx = parent->childNodes.indexOf(this);
         if (~idx && idx < parent->childNodes.size() - 1) {
@@ -24,7 +24,7 @@ Node *Node::getNextSibling() const {
     return nullptr;
 }
 
-Node *Node::getPreviousSibling() const {
+dom::Node *dom::Node::getPreviousSibling() const {
     if (parent) {
         auto idx = parent->childNodes.indexOf(this);
         if (~idx && idx > 0) {
@@ -34,13 +34,13 @@ Node *Node::getPreviousSibling() const {
     return nullptr;
 }
 
-void switchParent(Node *switched, Node *parent) {
+void switchParent(dom::Node *switched, dom::Node *parent) {
     switched->getParentNode()->removeChild(switched);
     switched->setParentNode(parent);
     switched->setOwner(parent->getOwner());
 }
 
-Node *Node::appendChild(Node *child) {
+dom::Node *dom::Node::appendChild(Node *child) {
     if (nodeType == NodeType::ELEMENT_NODE || nodeType == NodeType::DOCUMENT_FRAGMENT_NODE ||
         (nodeType == NodeType::DOCUMENT_NODE && childNodes.size() < 2))
         if (child->nodeType != NodeType::DOCUMENT_FRAGMENT_NODE
@@ -69,14 +69,14 @@ Node *Node::appendChild(Node *child) {
     return child;
 }
 
-bool Node::contains(const Node *other) const {
+bool dom::Node::contains(const dom::Node *other) const {
     if (other == this) {
         return true;
     }
     return childNodes.anyMatch([other](Node *child) { return child->contains(other); });
 }
 
-Node *Node::getRootNode() const {
+dom::Node *dom::Node::getRootNode() const {
     if (owner) {
         return owner;
     }
@@ -88,7 +88,7 @@ Node *Node::getRootNode() const {
     else return const_cast<Node *>(this);
 }
 
-void Node::insertBefore(Node *child) {
+void dom::Node::insertBefore(Node *child) {
     if (parent) {
         if (child->parent)
             child->parent->removeChild(child);
@@ -98,7 +98,7 @@ void Node::insertBefore(Node *child) {
     }
 }
 
-void Node::normalize() {
+void dom::Node::normalize() {
     unsigned long size = 0;
     for (unsigned long i = childNodes.size() - 1; i > 0; i--) {
         if (childNodes.get(i)->nodeType == NodeType::TEXT_NODE) {
@@ -137,13 +137,13 @@ void Node::normalize() {
     }
 }
 
-void Node::removeChild(Node *child) {
+void dom::Node::removeChild(Node *child) {
     child->parent = nullptr;
     child->owner = nullptr;
     childNodes.erase(child);
 }
 
-void Node::replaceChild(Node *replacement, Node *target) {
+void dom::Node::replaceChild(Node *replacement, Node *target) {
     replacement->parent = this;
     target->parent = nullptr;
     replacement->owner = owner;
@@ -151,9 +151,9 @@ void Node::replaceChild(Node *replacement, Node *target) {
     childNodes.set(childNodes.indexOf(target), replacement);
 }
 
-const Node *traverseTree(Node *root, const Node *node1, const Node *node2) {
+const dom::Node *traverseTree(dom::Node *root, const dom::Node *node1, const dom::Node *node2) {
     for (unsigned long i = 0; i < root->getChildNodes().size(); i++) {
-        Node *child = root->getChildNodes().get(i);
+        auto child = root->getChildNodes().get(i);
         if (child == node1) {
             return node1;
         } else if (child == node2) {
@@ -167,7 +167,7 @@ const Node *traverseTree(Node *root, const Node *node1, const Node *node2) {
     return nullptr;
 }
 
-unsigned char Node::compareDocumentPosition(const Node *other) const {
+unsigned char dom::Node::compareDocumentPosition(const Node *other) const {
     if (this == other) {
         return 0;
     }

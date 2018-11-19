@@ -10,11 +10,13 @@
 #include "include/events/event_target.h"
 #include "node_type.h"
 
-class Element;
+namespace dom {
+    class Element;
+    class Document;
+    class Node;
+}
 
-class Document;
-
-class Node : public EventTarget {
+class dom::Node : public js::EventTarget {
 public:
 
     Node(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)
@@ -51,7 +53,7 @@ public:
 
     inline void setParentNode(Node *parent) { this->parent = parent; }
 
-    inline Element *getParentElement() const;
+    Element *getParentElement() const;
 
     Node *getPreviousSibling() const;
 

@@ -7,21 +7,25 @@
 
 #include <algorithm>
 #include <map>
+#include <functional>
 #include "event.h"
-
-class EventTarget {
+namespace js {
+    class EventTarget;
+}
+class js::EventTarget {
 public:
 
     EventTarget() {}
 
-    inline void addEventListener(DOMString type, void (*listener)(Event &)) {
-        (handlers.find(type) == handlers.end() ? handlers[type] = new std::vector<void (*)(Event &)>()
+    inline void addEventListener(DOMString type, std::function<void(Event &)> listener) {
+        (handlers.find(type) == handlers.end() ? handlers[type] = new std::vector<std::function<void(Event &)>>()
                                                : handlers[type])->push_back(listener);
     }
 
-    inline void removeEventListener(DOMString type, void (*listener)(Event &)) {
+    template<typename Listener>
+    inline void removeEventListener(DOMString type, Listener listener) {
         if (handlers.find(type) != handlers.end()) {
-            std::vector<void (*)(Event &)> *handlerList = handlers[type];
+            auto handlerList = handlers[type];
             handlerList->erase(std::remove(handlerList->begin(), handlerList->end(), listener), handlerList->end());
         }
     }
@@ -29,13 +33,13 @@ public:
     void dispatchEvent(Event &event) const;
 
     virtual ~EventTarget() {
-        for (const auto& vec : handlers) {
+        for (const auto &vec : handlers) {
             delete vec.second;
         }
     }
 
 private:
-    std::map<DOMString, std::vector<void (*)(Event &)> *> handlers;
+    std::map<DOMString, std::vector<std::function<void(Event &)>> *> handlers;
 };
 
 #endif //FEATHER_EVENT_TARGET_H

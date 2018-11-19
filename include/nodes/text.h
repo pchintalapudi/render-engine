@@ -8,7 +8,11 @@
 #include "include/nodes/interfaces/slotable.h"
 #include "character_data.h"
 
-class Text : public CharacterData, public Slotable {
+namespace dom {
+    class Text;
+}
+
+class dom::Text : public CharacterData, public Slotable {
 public:
     Text(DOMString baseURI, Document *owner, Node *parent)
             : CharacterData(baseURI, "#text", NodeType::TEXT_NODE, owner, parent) {}
