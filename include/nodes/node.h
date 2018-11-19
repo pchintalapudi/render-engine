@@ -27,7 +27,7 @@ public:
 
     inline DOMString getBaseURI() const { return baseURI; }
 
-    inline NodeList &getChildNodes() { return childNodes; }
+    inline NodeList &getChildNodes() const { return childNodes; }
 
     inline Node *getFirstChild() const { return childNodes.size() ? childNodes.get(0) : nullptr; }
 
@@ -88,7 +88,7 @@ public:
 
 private:
     const DOMString baseURI;
-    NodeList childNodes;
+    mutable NodeList childNodes;
     const DOMString name;
     const NodeType nodeType;
     DOMString *nodeValue;

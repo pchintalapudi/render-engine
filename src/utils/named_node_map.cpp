@@ -34,8 +34,7 @@ void dom::NamedNodeMap::setClassAttr(dom::Attr *classAttr) {
         stream << val[i];
     }
     DOMString str = stream.str();
-    if (!std::all_of(str.begin(), str.end(), isspace))
-        classList->add(str);
+    if (!std::all_of(str.begin(), str.end(), isspace)) classList->add(str);
     checksum = classList->getChecksum();
 }
 

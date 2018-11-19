@@ -5,12 +5,12 @@
 #ifndef FEATHER_ELEMENT_H
 #define FEATHER_ELEMENT_H
 
-#include "include/nodes/interfaces/slotable.h"
 #include "include/utils/dom_token_list.h"
 #include "include/utils/named_node_map.h"
-#include "include/nodes/interfaces/child_node.h"
-#include "include/nodes/interfaces/parent_node.h"
-#include "include/nodes/interfaces/non_document_type_child_node.h"
+#include "interfaces/slotable.h"
+#include "interfaces/child_node.h"
+#include "interfaces/parent_node.h"
+#include "interfaces/non_document_type_child_node.h"
 #include "node.h"
 
 namespace dom {
@@ -52,13 +52,17 @@ public:
 
     inline DOMString getComputedRole() { return computedRole; }
 
-    inline void setId(DOMString id) { this->id = id; }
+    inline void setId(DOMString id) { attributes.setNamedItem(*new Attr("id", this, id)); }
 
-    inline DOMString getId() { return id; }
+    inline DOMString getId() { return attributes.getNamedItem("id")->getValue(); }
 
     inline DOMString getInnerHTML() { return computeInnerHTML(); }
 
     void setInnerHTML(DOMString html);
+
+    inline DOMString getOuterHTML() { return computeOuterHTML(); }
+
+    void setOuterHTML(DOMString html);
 
     inline double getScrollLeft() { return scrollDim[0]; }
 
@@ -70,9 +74,7 @@ public:
 
     inline DOMString getSlot() { return slot; }
 
-    inline DOMString getTagName() {
-        return tagName;
-    }
+    inline DOMString getTagName() { return tagName; }
 
     inline dom::HTMLCollection &getChildren() override { return children; }
 
@@ -82,7 +84,6 @@ private:
     double clientDim[4];
     DOMString computedName;
     DOMString computedRole;
-    DOMString id;
     double scrollDim[4];
     DOMString slot;
     DOMString tagName;
@@ -90,6 +91,12 @@ private:
     HTMLCollection children;
 
     DOMString computeInnerHTML() const;
+
+    DOMString computeOuterHTML() const;
+
+    DOMString computeHTML() const;
+
+    void computeStringValue(Node *node, std::stringstream &output) const;
 };
 
 #endif //FEATHER_ELEMENT_H
