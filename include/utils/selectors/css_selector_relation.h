@@ -8,6 +8,6 @@ namespace css {
     enum class CSSSelectorRelation;
 }
 enum class css::CSSSelectorRelation {
-    DESCENDANT, IMMEDIATE_SIBLING, SIBLING
+    NONE, DESCENDANT, IMMEDIATE_SIBLING, SIBLING
 };
 #endif //FEATHER_CSS_SELECTOR_RELATION_H

@@ -15,6 +15,8 @@ class css::CSSSelector {
 public:
     bool matches(dom::Element *element);
     DOMString toString();
+    static CSSSelector parse(DOMString selector);
+    static std::vector<CSSSelector> parseList(DOMString selectorList);
 private:
     std::vector<CSSSelectorTokenGroup> groups;
 };
