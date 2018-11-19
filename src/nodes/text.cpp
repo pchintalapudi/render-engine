@@ -10,7 +10,7 @@ DOMString dom::Text::getWholeText() const {
         auto children = getParentNode()->getChildNodes();
         long long idx = children.indexOf(this) - 1;
         while (--idx > -1 && children.get(idx)->getNodeType() == NodeType::TEXT_NODE);
-        for (; ++idx < children.size() && children.get(idx)->getNodeType() == NodeType::TEXT_NODE;
+        for (; ++idx < (long long) children.size() && children.get(idx)->getNodeType() == NodeType::TEXT_NODE;
                stream << children.get(idx)->getNodeValue());
         return stream.str();
     } else return getData();
