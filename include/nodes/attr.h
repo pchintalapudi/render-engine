@@ -17,7 +17,7 @@ public:
 
     Attr(DOMString name, Element *owner) : namespaceURI(""), localName(name), prefix(""), ownerElement(owner) {}
 
-    Attr(DOMString name, Element *owner, DOMString val) : Attr(name, owner) { setValue(value); }
+    Attr(DOMString name, Element *owner, DOMString val) : Attr(name, owner) { setValue(val); }
 
     inline DOMString getName() {
         return prefix + localName;

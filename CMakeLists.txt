@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 project(feather)
 set(CMAKE_CXX_STANDARD 17)
 
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 set(CMAKE_PREFIX_PATH ${PROJECT_SOURCEE_DIR}/packages)
 
 # Configure the main project by adding all the directories

@@ -9,7 +9,7 @@
 void dom::Element::setClassName(DOMString className) {
     classList.clear();
     std::stringstream stream;
-    for (int i = 0; i < className.length(); i++) {
+    for (unsigned long i = 0; i < className.length(); i++) {
         if (className[i] == ' ') {
             DOMString str = stream.str();
             if (!std::all_of(str.begin(), str.end(), isspace))
