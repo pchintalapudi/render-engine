@@ -37,3 +37,6 @@ lib/
 
 .vscode/
 .idea/
+
+# Ignore dependencies for user to download
+packages/
