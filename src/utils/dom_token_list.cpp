@@ -11,6 +11,7 @@ DOMString dom::DOMTokenList::_get_cacheable_value() const {
         stream << backing[0];
     }
     std::for_each(backing.begin() + 1, backing.end(), [&stream](auto token) { stream << token; });
+    return stream.str();
 }
 
 void dom::DOMTokenList::remove(DOMString val) {
@@ -24,7 +25,7 @@ void dom::DOMTokenList::remove(DOMString val) {
 }
 
 void dom::DOMTokenList::replace(DOMString replacement, DOMString target) {
-    for (int i = 0; i < backing.size(); i++) {
+    for (unsigned long i = 0; i < backing.size(); i++) {
         if (backing[i] == target) {
             backing[i] == replacement;
             checksum++;
@@ -34,7 +35,7 @@ void dom::DOMTokenList::replace(DOMString replacement, DOMString target) {
 }
 
 bool dom::DOMTokenList::toggle(DOMString token) {
-    for (int i = 0; i < backing.size(); i++) {
+    for (unsigned long i = 0; i < backing.size(); i++) {
         if (backing[i] == token) {
             backing.erase(backing.begin() + i);
             return false;

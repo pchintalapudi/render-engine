@@ -42,7 +42,7 @@ void switchParent(dom::Node *switched, dom::Node *parent) {
 
 dom::Node *dom::Node::appendChild(Node *child) {
     if (nodeType == NodeType::ELEMENT_NODE || nodeType == NodeType::DOCUMENT_FRAGMENT_NODE ||
-        (nodeType == NodeType::DOCUMENT_NODE && childNodes.size() < 2))
+        (nodeType == NodeType::DOCUMENT_NODE && childNodes.size() < 2)) {
         if (child->nodeType != NodeType::DOCUMENT_FRAGMENT_NODE
             && child->nodeType != NodeType::ATTRIBUTE_NODE
             && child->nodeType != NodeType::DOCUMENT_NODE) {
@@ -66,6 +66,7 @@ dom::Node *dom::Node::appendChild(Node *child) {
             }
             child->childNodes.clear();
         }
+    }
     return child;
 }
 

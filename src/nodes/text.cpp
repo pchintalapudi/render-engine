@@ -8,7 +8,7 @@ DOMString dom::Text::getWholeText() const {
     if (getParentNode()) {
         std::stringstream stream;
         auto children = getParentNode()->getChildNodes();
-        auto idx = children.indexOf(this) - 1;
+        long long idx = children.indexOf(this) - 1;
         while (--idx > -1 && children.get(idx)->getNodeType() == NodeType::TEXT_NODE);
         for (; ++idx < children.size() && children.get(idx)->getNodeType() == NodeType::TEXT_NODE;
                stream << children.get(idx)->getNodeValue());

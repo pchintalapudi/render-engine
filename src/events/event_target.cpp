@@ -7,7 +7,7 @@
 
 void js::EventTarget::dispatchEvent(Event &event) const {
     auto idx = std::find(event.getDeepPath().begin(), event.getDeepPath().end(), this);
-    bool atEnd = idx - event.getDeepPath().begin() + 1 == event.getDeepPath().size();
+    bool atEnd = (idx - event.getDeepPath().begin() + 1) == event.getDeepPath().size();
     if (atEnd) {
         event.setEventPhase(EventPhase::AT_TARGET);
     }

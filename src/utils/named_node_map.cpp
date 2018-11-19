@@ -24,7 +24,7 @@ void dom::NamedNodeMap::setClassAttr(dom::Attr *classAttr) {
     classList->clear();
     auto val = classAttr->getValue();
     std::stringstream stream;
-    for (int i = 0; i < val.length(); i++) {
+    for (unsigned long i = 0; i < val.length(); i++) {
         if (val[i] == ' ') {
             DOMString str = stream.str();
             if (!std::all_of(str.begin(), str.end(), isspace))

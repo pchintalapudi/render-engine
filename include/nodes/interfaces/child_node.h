@@ -23,7 +23,7 @@ class dom::ChildNode {
 
     virtual void replaceWith(std::vector<Node *> &nodes) = 0;
 
-    virtual void replaceWith(Node *nodes);
+    virtual void replaceWith(Node *nodes) = 0;
 };
 
 #endif //FEATHER_CHILD_NODE_H

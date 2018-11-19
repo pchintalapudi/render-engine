@@ -21,6 +21,7 @@ std::vector<dom::Element *> dom::HTMLCollection::getElementVector() const {
     if (checksum == watched.getChecksum()) return cached;
     cached = _get_cacheable_element_vector();
     checksum = watched.getChecksum();
+    return cached;
 }
 
 dom::Element* dom::HTMLCollection::getNamedItem(DOMString name) {
