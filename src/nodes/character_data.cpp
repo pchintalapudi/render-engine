@@ -21,7 +21,7 @@ void dom::CharacterData::replaceData(unsigned long offset, unsigned long length,
 dom::Element *dom::CharacterData::getPreviousElementSibling() const {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
-        for (auto idx = children.indexOf(this); --idx > -1;) {
+        for (auto idx = children.indexOf(this); --idx > -1L;) {
             auto child = children.get(idx);
             if (child->getNodeType() == NodeType::ELEMENT_NODE) {
                 return static_cast<Element *>(child);

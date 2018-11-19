@@ -22,6 +22,7 @@ public:
     inline Node *set(unsigned long index, Node *value) {
         nodes[index] = value;
         checksum++;
+        return nodes[index];
     }
 
     void erase(const Node *value);
