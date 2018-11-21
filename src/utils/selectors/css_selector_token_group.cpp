@@ -11,13 +11,13 @@
 bool css::CSSSelectorTokenGroup::matches(dom::Element *element) {
     if (!end.matches(element)) return false;
     dom::Element *focused = element;
-    for (unsigned long i = tokens.size(); i > -1; i--) {
+    for (long long i = tokens.size(); i > -1; i--) {
         auto token = tokens[i];
         switch (token.second) {
             case CSSSelectorRelation::DESCENDANT:
                 if (focused->getParentElement() && token.first.matches(focused->getParentElement())) {
                     focused = focused->getParentElement();
-                    continue;
+                    break;
                 } else return false;
             case CSSSelectorRelation::IMMEDIATE_SIBLING: {
                 auto sibling = focused->getPreviousSibling();
@@ -26,7 +26,7 @@ bool css::CSSSelectorTokenGroup::matches(dom::Element *element) {
                 if (sibling && token.first.matches(
                         static_cast<dom::Element *>(sibling))) {
                     focused = static_cast<dom::Element *>(sibling);
-                    continue;
+                    break;
                 } else return false;
             }
             case CSSSelectorRelation::SIBLING: {
@@ -41,8 +41,12 @@ bool css::CSSSelectorTokenGroup::matches(dom::Element *element) {
                     sibling = sibling->getPreviousSibling();
                 }
                 if (!sibling) return false;
+                else break;
             }
+            default:
+                return false;
         }
+
     }
     return true;
 }
@@ -60,6 +64,9 @@ DOMString css::CSSSelectorTokenGroup::toString() {
                 break;
             case CSSSelectorRelation::IMMEDIATE_SIBLING:
                 stream << " + ";
+                break;
+            default:
+                break;
         }
     });
     stream << end.toString();

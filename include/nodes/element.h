@@ -68,6 +68,10 @@ public:
 
     inline double getScrollTop() { return scrollDim[1]; }
 
+    inline void setScrollLeft(double scrollLeft) { scrollDim[0] = scrollLeft; }
+
+    inline void setScrollTop(double scrollTop) { scrollDim[1] = scrollTop; }
+
     inline double getScrollWidth() { return scrollDim[2]; }
 
     inline double getScrollHeight() { return scrollDim[3]; }

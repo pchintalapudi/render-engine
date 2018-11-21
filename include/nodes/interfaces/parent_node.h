@@ -10,6 +10,7 @@
 
 namespace dom {
     class Element;
+
     class ParentNode;
 }
 
@@ -30,7 +31,9 @@ class dom::ParentNode {
 
     virtual void prepend(std::vector<Node *> children) = 0;
 
-    virtual Element *querySelector(DOMString selector);
+    virtual Element *querySelector(DOMString selector) = 0;
+
+    virtual NodeList &querySelectorAll(DOMString selector) = 0;
 };
 
 #endif //FEATHER_PARENT_NODE_H

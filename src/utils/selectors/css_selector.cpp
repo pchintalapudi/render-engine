@@ -9,7 +9,7 @@
 
 bool css::CSSSelector::matches(dom::Element *element) {
     dom::Element *focused = element;
-    for (unsigned long i = groups.size(); focused && i > -1; i--) {
+    for (long long i = (long long) groups.size(); focused && i > -1; i--) {
         while (focused) {
             if (groups[i].matches(focused)) {
                 auto size = groups.size() - 1;
@@ -33,8 +33,8 @@ DOMString css::CSSSelector::toString() {
     return stream.str();
 }
 
-css::CSSSelector getSubselector(unsigned long *i, unsigned long j, DOMString selector) {
-    unsigned long k = *i + 1, openCount = 1;
+css::CSSSelector getSubselector(long long *i, long long j, DOMString selector) {
+    long long k = *i + 1, openCount = 1;
     for (; k < j; k++) {
         switch (selector[k]) {
             case '(':
@@ -52,8 +52,8 @@ css::CSSSelector getSubselector(unsigned long *i, unsigned long j, DOMString sel
     return css::CSSSelector::parse(selector.substr(*i + 1, k - *i + 2));
 }
 
-std::vector<css::CSSSelector> getSubselectors(unsigned long *i, unsigned long j, DOMString selector) {
-    unsigned long k = *i + 1, openCount = 1;
+std::vector<css::CSSSelector> getSubselectors(long long *i, long long j, DOMString selector) {
+    long long k = *i + 1, openCount = 1;
     for (; k < j && openCount; k++) {
         switch (selector[k]) {
             case '(':
@@ -73,12 +73,17 @@ struct NthSel {
     long b;
 };
 
-NthSel parseFormula(unsigned long *i, unsigned long j, DOMString selector) {
-    unsigned long k = *i + 1;
+NthSel parseFormula(long long *i, long long j, DOMString selector) {
+    long long k = *i + 1;
     NthSel ret;
     std::stringstream stream;
-    while (k < j && selector[k] != 'n') if (!isspace(selector[k++])) stream << selector[k - 1];
-    stream >> ret.A;
+    while (k < j && selector[k] != 'n' && selector[k] != ')') if (!isspace(selector[k++])) stream << selector[k - 1];
+    if (selector[k] == 'n')
+        stream >> ret.A;
+    else {
+        stream >> ret.b;
+        return ret;
+    }
     k++;
     while (k < j && selector[k] != ')') if (!isspace(selector[k++])) stream << selector[k - 1];
     stream >> ret.b;
@@ -90,7 +95,43 @@ enum class AttrSelectorType {
     MATCH, CONTAIN, END, LIST, HYPHEN, BEGIN
 };
 
-std::function<bool(dom::Element *)> parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
+bool equalsIgnoreCase(DOMString s1, DOMString s2) {
+    return s1 == s2;
+}
+
+bool containsIgnoreCase(DOMString s1, DOMString s2) {
+    return s1.find(s2) != DOMString::npos;
+}
+
+bool inList(DOMString list, DOMString val) {
+    std::stringstream stream;
+    for (unsigned long i = 0; i < list.length(); i++) {
+        if (list[i] == ' ') {
+            auto str = stream.str();
+            if (str == val) return true;
+            stream.clear();
+        } else {
+            stream << list[i];
+        }
+    }
+    return stream.str() == val;
+}
+
+bool inListIgnoreCase(DOMString list, DOMString val) {
+    std::stringstream stream;
+    for (unsigned long i = 0; i < list.length(); i++) {
+        if (list[i] == ' ') {
+            auto str = stream.str();
+            if (equalsIgnoreCase(str, val)) return true;
+            stream.clear();
+        } else {
+            stream << list[i];
+        }
+    }
+    return stream.str() == val;
+}
+
+std::function<bool(dom::Element *)> parseAttrSelector(long long *i, unsigned long j, DOMString selector) {
     unsigned long k = *i + 1;
     std::stringstream stream;
     for (; k < j && selector[k] != '=' && selector[k] != ']'; stream << selector[k++]);
@@ -132,23 +173,92 @@ std::function<bool(dom::Element *)> parseAttrSelector(unsigned long *i, unsigned
         val = val.substr(1, val.length() - 2);
         switch (type) {
             case AttrSelectorType::MATCH:
-                return [attr, val](dom::Element *element) {
-                    auto attribute = element->getAttributes().getNamedItem(attr);
-                    return attribute && attribute->getValue() == val;
-                };
+                if (!caseSensitive)
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        return attribute && attribute->getValue() == val;
+                    };
+                else
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        return attribute && equalsIgnoreCase(attribute->getValue(), val);
+                    };
             case AttrSelectorType::CONTAIN:
-                return [attr, val](dom::Element *element) {
-                    auto attribute = element->getAttributes().getNamedItem(attr);
-                    return attribute && attribute->getValue().find(val) != DOMString::npos;
-                };
+                if (!caseSensitive)
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        return attribute && attribute->getValue().find(val) != DOMString::npos;
+                    };
+                else
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        return attribute && containsIgnoreCase(attribute->getValue(), val);
+                    };
             case AttrSelectorType::END:
-                return [attr, val](dom::Element *element) {
-                    auto attribute = element->getAttributes().getNamedItem(attr);
-                    if (!attribute) return false;
-                    auto value = attribute->getValue();
-                    return value.length() > val.length() &&
-                           value.substr(value.length() - val.length(), val.length()) == val;
-                };
+                if (!caseSensitive)
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute) return false;
+                        auto value = attribute->getValue();
+                        return value.length() > val.length() &&
+                               value.substr(value.length() - val.length(), val.length()) == val;
+                    };
+                else
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute) return false;
+                        auto value = attribute->getValue();
+                        return value.length() > val.length() &&
+                               equalsIgnoreCase(value.substr(value.length() - val.length(), val.length()), val);
+                    };
+            case AttrSelectorType::BEGIN:
+                if (!caseSensitive)
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute)return false;
+                        auto value = attribute->getValue();
+                        return value.length() > val.length() && value.substr(0, val.length()) == val;
+                    };
+                else
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute)return false;
+                        auto value = attribute->getValue();
+                        return value.length() > val.length() && equalsIgnoreCase(value.substr(0, val.length()), val);
+                    };
+            case AttrSelectorType::HYPHEN:
+                if (!caseSensitive)
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute) return false;
+                        auto value = attribute->getValue();
+                        return (value == val) ||
+                               (value.length() > val.length() && (val + "-") == value.substr(0, val.length() + 1));
+                    };
+                else
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute)return false;
+                        auto value = attribute->getValue();
+                        return equalsIgnoreCase(value, val)
+                               || (value.length() > val.length()
+                                   && equalsIgnoreCase(value.substr(0, val.length() + 1), val + "-"));
+                    };
+            case AttrSelectorType::LIST:
+                if (!caseSensitive)
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute) return false;
+                        auto value = attribute->getValue();
+                        return inList(value, val);
+                    };
+                else
+                    return [attr, val](dom::Element *element) {
+                        auto attribute = element->getAttributes().getNamedItem(attr);
+                        if (!attribute) return false;
+                        auto value = attribute->getValue();
+                        return inListIgnoreCase(value, val);
+                    };
         }
     } else {
         auto attr = stream.str();
@@ -162,7 +272,7 @@ css::CSSSelector css::CSSSelector::parse(DOMString selector) {
     //If a special character is encountered stop and interpret
 
     //Set up start and end indeces to skip over arbitrary whitespace
-    unsigned long j = selector.length(), i = -1;
+    long long j = selector.length(), i = -1;
     while (j > -1 && isspace(selector[--j]));
     while (i < j && isspace(++i));
     j++;
@@ -232,17 +342,33 @@ css::CSSSelector css::CSSSelector::parse(DOMString selector) {
                 break;
             case ':': {
                 DOMString str = buffer.str();
-                if (str.empty() || str == ":") {
-                    buffer << ":";
-                } else {
+                if (!str.empty() && str != ":") {
                     //Interpret the buffer
                     buffer.clear();
                 }
+                buffer << ":";
+                break;
             }
             case '.': {
                 DOMString str = buffer.str();
                 //Interpret the buffer
                 buffer.clear();
+                buffer << ".";
+                break;
+            }
+            case '#': {
+                DOMString str = buffer.str();
+                //Interpret the buffer;
+                buffer.clear();
+                buffer << "#";
+                break;
+            }
+            case '*': {
+                DOMString str = buffer.str();
+                //Interpret the buffer;
+                buffer.clear();
+                //This is the universal selector; handle this somehow
+                break;
             }
             case '[': {
                 //Skip ahead to the close bracket; that's where the attribute selector ends
