@@ -3,7 +3,7 @@ project(feather)
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_PREFIX_PATH ${PROJECT_SOURCEE_DIR}/packages)
-set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 # Configure the main project by adding all the directories
 
 include_directories(${PROJECT_SOURCE_DIR})
@@ -14,7 +14,10 @@ add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/chara
         include/nodes/interfaces/parent_node.h include/nodes/interfaces/non_document_type_child_node.h src/nodes/character_data.cpp
         include/nodes/interfaces/slotable.h include/nodes/text.h src/nodes/text.cpp include/nodes/comment.h
         include/nodes/c_data_section.h include/nodes/processing_instruction.h include/utils/named_node_map.h
-        include/utils/html_collection.h include/utils/node_list.h src/utils/node_list.cpp)
+        include/utils/html_collection.h include/utils/node_list.h src/utils/node_list.cpp include/utils/selectors/css_selector.h
+        include/utils/selectors/css_selector_relation.h include/utils/selectors/css_selector_token.h include/utils/selectors/css_selector_token_group.h
+        src/utils/selectors/css_selector.cpp src/utils/selectors/css_selector_token.cpp src/utils/selectors/css_selector_token_group.cpp
+        include/utils/css_rule_list.h include/utils/css_style_declaration.h)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)

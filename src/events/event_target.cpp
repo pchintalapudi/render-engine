@@ -27,8 +27,8 @@ void js::EventTarget::dispatchEvent(Event &event) const {
     if (idx != event.getDeepPath().begin() && event.getBubbles() && !event.isConsumed() &&
         event.getEventPhase() == EventPhase::BUBBLING_PHASE && idx > event.getDeepPath().begin()) {
         event.getDeepPath()[idx - event.getDeepPath().begin() - 1]->dispatchEvent(event);
-    } else if (idx != event.getDeepPath().end() - 1 && event.getBubbles() && !event.isConsumed()
-               && event.getEventPhase() == EventPhase::CAPTURING_PHASE && idx < event.getDeepPath().end() - 1) {
+    } else if (idx != event.getDeepPath().end() - 1 && !event.isConsumed() &&
+               event.getEventPhase() == EventPhase::CAPTURING_PHASE && idx < event.getDeepPath().end() - 1) {
         event.getDeepPath()[idx - event.getDeepPath().begin() + 1]->dispatchEvent(event);
     }
 }
