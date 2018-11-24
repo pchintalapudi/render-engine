@@ -24,7 +24,7 @@ std::vector<dom::Element *> dom::HTMLCollection::getElementVector() const {
     return cached;
 }
 
-dom::Element* dom::HTMLCollection::getNamedItem(DOMString name) {
+dom::Element* dom::HTMLCollection::getNamedItem(DOMString name)const {
     Element * nameMatch = nullptr;
     for (Element * element : getElementVector()) {
         if (element->getId() == name) {
@@ -35,4 +35,11 @@ dom::Element* dom::HTMLCollection::getNamedItem(DOMString name) {
         }
     }
     return nameMatch;
+}
+
+unsigned long dom::HTMLCollection::indexOf(dom::Element *element) const{
+    for (unsigned long i = 0; i < getElementVector().size(); i++) {
+        if (cached[i] == element) return i;
+    }
+    return ~static_cast<unsigned long>(0);
 }

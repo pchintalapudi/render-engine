@@ -7,7 +7,7 @@
 #include "include/utils/selectors/css_selector_token.h"
 #include "include/nodes/element.h"
 
-bool css::CSSSelectorToken::matches(dom::Element *element) {
+bool css::CSSSelectorToken::matches(dom::Element *element) const {
     if (!type.empty() && type != element->getTagName()) {
         return false;
     }
@@ -22,7 +22,7 @@ bool css::CSSSelectorToken::matches(dom::Element *element) {
                        [element](auto test) { return test.first(element); });
 }
 
-DOMString css::CSSSelectorToken::toString() {
+DOMString css::CSSSelectorToken::toString() const {
     std::stringstream stream;
     if (!type.empty()) {
         stream << type;

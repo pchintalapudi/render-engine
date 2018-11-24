@@ -17,7 +17,7 @@ add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/chara
         include/utils/html_collection.h include/utils/node_list.h src/utils/node_list.cpp include/utils/selectors/css_selector.h
         include/utils/selectors/css_selector_relation.h include/utils/selectors/css_selector_token.h include/utils/selectors/css_selector_token_group.h
         src/utils/selectors/css_selector.cpp src/utils/selectors/css_selector_token.cpp src/utils/selectors/css_selector_token_group.cpp
-        include/utils/css_rule_list.h include/utils/css_style_declaration.h)
+        include/utils/css_rule_list.h include/utils/css_style_declaration.h src/utils/selectors/css_selector_parsing_impl.cpp include/utils/selectors/css_selector_parsing_impl.h)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)

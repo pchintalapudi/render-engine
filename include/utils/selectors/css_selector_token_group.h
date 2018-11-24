@@ -13,11 +13,11 @@
 namespace css { class CSSSelectorTokenGroup; }
 class css::CSSSelectorTokenGroup {
 public:
-    bool matches(dom::Element *element);
+    bool matches(dom::Element *element) const;
 
-    DOMString toString();
+    DOMString toString() const;
 
-    unsigned long getLength();
+    unsigned long getLength() const;
 
 private:
     CSSSelectorToken end;

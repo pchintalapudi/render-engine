@@ -13,10 +13,10 @@ namespace css {
 }
 class css::CSSSelector {
 public:
-    bool matches(dom::Element *element);
-    DOMString toString();
-    static CSSSelector parse(DOMString selector);
-    static std::vector<CSSSelector> parseList(DOMString selectorList);
+    bool matches(dom::Element *element) const;
+
+    DOMString toString() const;
+
 private:
     std::vector<CSSSelectorTokenGroup> groups;
 };

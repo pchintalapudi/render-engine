@@ -22,7 +22,9 @@ public:
 
     inline unsigned long getLength() const { return getElementVector().size(); }
 
-    Element *getNamedItem(DOMString name);
+    Element *getNamedItem(DOMString name) const;
+
+    unsigned long indexOf(Element * element) const;
 
 private:
     NodeList &watched;
