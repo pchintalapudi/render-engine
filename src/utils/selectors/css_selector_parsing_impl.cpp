@@ -4,6 +4,7 @@
 #include <sstream>
 #include "include/utils/selectors/css_selector_parsing_impl.h"
 #include "include/nodes/element.h"
+#include "include/nodes/document.h"
 
 struct NthSel {
     NthSel() : A(0), b(0) {}
@@ -13,9 +14,10 @@ struct NthSel {
     long A;
     long b;
 };
-
-const NthSel odd = NthSel(2, 1);
-const NthSel even = NthSel(2, 0);
+namespace {
+    const NthSel odd = NthSel(2, 1);
+    const NthSel even = NthSel(2, 0);
+}
 
 css::CSSSelector getSubselector(long long *i, long long j, DOMString selector) {
     long long k = *i + 1, openCount = 1;
@@ -373,6 +375,46 @@ bool isNthLastOfType(NthSel &formula, DOMString type, dom::Element *element) {
     return (!idx || (sgn(idx) == sgn(formula.A) && !(idx % formula.A)));
 }
 
+bool isActive(dom::Element *element) {
+    return element->getOwner() ? element->getOwner()->getPseudoclassManager().isActive(element) : false;
+}
+
+bool isAnyLink(dom::Element *element) {
+    DOMString tag = element->getTagName();
+    dom::Attr *attr = element->getAttributes().getNamedItem("href");
+    return (tag == "a" || tag == "area" || tag == "link") && (attr && !attr->getValue().empty());
+}
+
+bool isFirstChild(dom::Element *element) {
+    if (!element->getParentNode()) return true;
+    auto children = element->getParentNode()->getChildNodes();
+    for (unsigned long i = 0; i < children.size(); i++) {
+        if (children.get(i) == element) return true;
+        else if (children.get(i)->getNodeType() == dom::NodeType::ELEMENT_NODE) break;
+    }
+    return false;
+}
+
+bool isFirstOfType(dom::Element *element) {
+    if (!element->getParentNode()) return true;
+    auto children = element->getParentNode()->getChildNodes();
+    for (unsigned long i = 0; i < children.size(); i++) {
+        if (children.get(i) == element) return true;
+        else if (children.get(i)->getNodeType() == dom::NodeType::ELEMENT_NODE
+                 && static_cast<dom::Element *>(children.get(i))->getTagName() == element->getTagName())
+            break;
+    }
+    return false;
+}
+
+bool isFocus(dom::Element *element) {
+    return element->getOwner() && element->getOwner()->getPseudoclassManager().isFocused(element);
+}
+
+bool containsFocus(dom::Element *element) {
+    return element->getOwner() && element->getOwner()->getPseudoclassManager().hasFocus(element);
+}
+
 void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &classes,
                      std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFuncs,
                      DOMString str) {
@@ -390,6 +432,22 @@ void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &
         case ':':
             str = str.length() > 2 ? str[1] == ':' ? str.substr(2, str.length() - 2)
                                                    : str.substr(1, str.length() - 1) : str.substr(1, str.length() - 1);
+            if (str == "active") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isActive, ":active"));
+            } else if (str == "any-link") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isAnyLink, ":any-link"));
+            } else if (str == "first-child") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (isFirstChild, ":first-child"));
+            } else if (str == "first-of-type") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (isFirstOfType, ":first-of-type"));
+            } else if (str == "focus") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isFocus, ":focus"));
+            } else if (str == "focus-within") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (containsFocus, ":focus-within"));
+            }
             break;
     }
 }
