@@ -5,7 +5,7 @@
 #ifndef FEATHER_CSS_SELECTOR_H
 #define FEATHER_CSS_SELECTOR_H
 
-#include <vector>
+#include <deque>
 #include "css_selector_token_group.h"
 
 namespace css {
@@ -13,12 +13,15 @@ namespace css {
 }
 class css::CSSSelector {
 public:
+
+    CSSSelector(std::vector<CSSSelectorTokenGroup *> groups);
+
     bool matches(dom::Element *element) const;
 
     DOMString toString() const;
 
 private:
-    std::vector<CSSSelectorTokenGroup> groups;
+    std::deque<CSSSelectorTokenGroup *> groups;
 };
 
 #endif //FEATHER_CSS_SELECTOR_H

@@ -19,6 +19,9 @@ private:
     std::vector<DOMString> classes;
     std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> attributesAndPseudoclasses;
 public:
+    CSSSelectorToken(DOMString type, DOMString id, std::vector<DOMString> &classes,
+                     std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFunctions);
+
     bool matches(dom::Element *element) const;
 
     DOMString toString() const;

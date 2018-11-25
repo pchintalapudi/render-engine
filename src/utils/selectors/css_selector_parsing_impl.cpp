@@ -1,6 +1,7 @@
 //
 // Created by prem on 11/24/2018.
 //
+#include <iostream>
 #include <sstream>
 #include "include/utils/selectors/css_selector_parsing_impl.h"
 #include "include/nodes/element.h"
@@ -19,8 +20,8 @@ namespace {
     const NthSel even = NthSel(2, 0);
 }
 
-css::CSSSelector getSubselector(long long *i, long long j, DOMString selector) {
-    long long k = *i + 1, openCount = 1;
+css::CSSSelector getSubselector(unsigned long *i, unsigned long j, DOMString selector) {
+    unsigned long k = *i + 1, openCount = 1;
     std::stringstream output;
     for (; k < j; output << selector[k++]) {
         switch (selector[k]) {
@@ -30,18 +31,20 @@ css::CSSSelector getSubselector(long long *i, long long j, DOMString selector) {
             case ')':
                 openCount--;
                 if (!openCount) {
-                    goto closed;
+                    *i = k;
+                    return css::parse(output.str());
                 }
+            default:
+                break;
         }
     }
-    closed:
     *i = k;
     return css::parse(output.str());
 }
 
 std::vector<css::CSSSelector>
-getSubselectors(long long *i, long long j, DOMString selector) {
-    long long k = *i + 1, openCount = 1;
+getSubselectors(unsigned long *i, unsigned long j, DOMString selector) {
+    unsigned long k = *i + 1, openCount = 1;
     for (; k < j && openCount; k++) {
         switch (selector[k]) {
             case '(':
@@ -49,6 +52,12 @@ getSubselectors(long long *i, long long j, DOMString selector) {
                 break;
             case ')':
                 openCount--;
+                if (!openCount) {
+                    *i = k;
+                    return css::parseList(selector.substr(*i + 1, k - *i + 2));
+                }
+                break;
+            default:
                 break;
         }
     }
@@ -56,8 +65,8 @@ getSubselectors(long long *i, long long j, DOMString selector) {
     return css::parseList(selector.substr(*i + 1, k - *i + 2));
 }
 
-const NthSel parseFormula(long long *i, long long j, DOMString selector) {
-    long long k = *i + 1;
+const NthSel parseFormula(unsigned long *i, unsigned long j, DOMString selector) {
+    unsigned long k = *i + 1;
     NthSel ret;
     std::stringstream stream;
     while (k < j && selector[k] != 'n' && selector[k] != ')') if (!isspace(selector[k++])) stream << selector[k - 1];
@@ -72,7 +81,7 @@ const NthSel parseFormula(long long *i, long long j, DOMString selector) {
         return ret;
     }
     k++;
-    stream.clear();
+    stream.str("");
     while (k < j && selector[k] != ')') if (selector[k] != '+' && !isspace(selector[k++])) stream << selector[k - 1];
     if (!stream.str().empty())
         stream >> ret.b;
@@ -94,7 +103,7 @@ bool containsIgnoreCase(DOMString s1, DOMString s2) {
     std::stringstream stream;
     for (unsigned long i = 0; i < s1.length(); stream << s1[i++]);
     s1 = stream.str();
-    stream.clear();
+    stream.str("");
     for (unsigned long i = 0; i < s2.length(); stream << s2[i++]);
     s2 = stream.str();
     return s1.find(s2) != DOMString::npos;
@@ -102,13 +111,13 @@ bool containsIgnoreCase(DOMString s1, DOMString s2) {
 
 bool inList(DOMString list, DOMString val) {
     std::stringstream stream;
-    for (unsigned long i = 0; i < list.length(); i++) {
-        if (list[i] == ' ') {
+    for (auto character : list) {
+        if (character == ' ') {
             auto str = stream.str();
             if (str == val) return true;
-            stream.clear();
+            stream.str("");
         } else {
-            stream << list[i];
+            stream << character;
         }
     }
     return stream.str() == val;
@@ -116,20 +125,20 @@ bool inList(DOMString list, DOMString val) {
 
 bool inListIgnoreCase(DOMString list, DOMString val) {
     std::stringstream stream;
-    for (unsigned long i = 0; i < list.length(); i++) {
-        if (list[i] == ' ') {
+    for (auto character : list) {
+        if (character == ' ') {
             auto str = stream.str();
             if (equalsIgnoreCase(str, val)) return true;
-            stream.clear();
+            stream.str("");
         } else {
-            stream << list[i];
+            stream << character;
         }
     }
     return stream.str() == val;
 }
 
 std::pair<std::function<bool(dom::Element *)>, DOMString>
-parseAttrSelector(long long *i, unsigned long j, DOMString selector) {
+parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
     unsigned long k = *i + 1;
     std::stringstream stream, combined;
     for (; k < j && selector[k] != '=' && selector[k] != ']'; stream << selector[k++]);
@@ -166,11 +175,11 @@ parseAttrSelector(long long *i, unsigned long j, DOMString selector) {
         for (; selector[k] != '"' && selector[k] != ']'; stream << selector[k++]);
         auto val = stream.str();
         combined << val << '"';
-        stream.clear();
+        stream.str("");
         while (isspace(selector[k++]));
         k--;
         bool caseSensitive;
-        if (caseSensitive = (selector[k] == 'i' || selector[k] == 'I')) combined << ' ' << 'i';
+        if ((caseSensitive = (selector[k] == 'i' || selector[k] == 'I'))) combined << ' ' << 'i';
         combined << ']';
         while (selector[k++] != ']');
         *i = k;
@@ -316,7 +325,7 @@ bool isNthLastChild(NthSel &formula, dom::Element *element) {
             idx = static_cast<long long>(element->getParentElement()->getChildren().getLength())
                   - static_cast<long long>(element->getParentElement()->getChildren().indexOf(element));
         } else {
-            for (long long i = element->getParentNode()->getChildNodes().size() - 1; i > -1; i--) {
+            for (unsigned long i = element->getParentNode()->getChildNodes().size(); i-- > 0;) {
                 auto child = element->getParentNode()->getChildNodes().get(i);
                 if (child == element) break;
                 if (child->getNodeType() == dom::NodeType::ELEMENT_NODE) idx++;
@@ -356,14 +365,14 @@ bool isNthLastOfType(NthSel &formula, DOMString type, dom::Element *element) {
     long long idx = 0;
     if (element->getParentElement()) {
         auto parent = element->getParentElement();
-        for (long long i = parent->getChildren().getLength() - 1; i > -1; i--) {
+        for (unsigned long i = parent->getChildren().getLength(); i-- > 0;) {
             auto child = parent->getChildren().getItem(i);
             if (child == element) break;
             if (child->getTagName() == type) idx++;
         }
     } else if (element->getParentNode()) {
         auto parent = element->getParentNode();
-        for (long long i = parent->getChildNodes().size() - 1; i > -1; i--) {
+        for (unsigned long i = parent->getChildNodes().size(); i-- > 0;) {
             auto child = parent->getChildNodes().get(i);
             if (child == element) break;
             if (child->getNodeType() == dom::NodeType::ELEMENT_NODE &&
@@ -476,55 +485,77 @@ bool isTarget(dom::Element *element) {
 void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &classes,
                      std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFuncs,
                      DOMString str) {
-    if (str.empty()) return;
-    switch (str[0]) {
-        default:
-            *tagName = str;
-            break;
-        case '#':
-            *id = str.substr(1, str.length() - 1);
-            break;
-        case '.':
-            classes.push_back(str.substr(1, str.length() - 1));
-            break;
-        case ':':
-            str = str.length() > 2 ? str[1] == ':' ? str.substr(2, str.length() - 2)
-                                                   : str.substr(1, str.length() - 1) : str.substr(1, str.length() - 1);
-            if (str == "active") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isActive, ":active"));
-            } else if (str == "any-link" || str == "link") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isAnyLink, ":any-link"));
-            } else if (str == "first-child") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (isFirstChild, ":first-child"));
-            } else if (str == "first-of-type") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (isFirstOfType, ":first-of-type"));
-            } else if (str == "focus") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isFocus, ":focus"));
-            } else if (str == "focus-within") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (containsFocus, ":focus-within"));
-            } else if (str == "hover") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isHover, ":hover"));
-            } else if (str == "last-child") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (isLastChild, ":last-child"));
-            } else if (str == "last-of-type") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (isLastOfType, ":last-of-type"));
-            } else if (str == "only-child") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (isOnlyChild, ":only-child"));
-            } else if (str == "only-of-type") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                             (isOnlyOfType, ":only-of-type"));
-            } else if (str == "root") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isRoot, ":root"));
-            } else if (str == "target") {
-                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isTarget, ":target"));
-            } else if (str == "")
+    if (!str.empty())
+        switch (str[0]) {
+            default:
+                *tagName = str;
                 break;
+            case '#':
+                *id = str.substr(1, str.length() - 1);
+                break;
+            case '.':
+                classes.push_back(str.substr(1, str.length() - 1));
+                break;
+            case ':':
+                str = str.length() > 2 ? str[1] == ':' ? str.substr(2, str.length() - 2)
+                                                       : str.substr(1, str.length() - 1) : str.substr(1,
+                                                                                                      str.length() - 1);
+                if (str == "active") {
+                    weirdFuncs.emplace_back(isActive, ":active");
+                } else if (str == "any-link" || str == "link") {
+                    weirdFuncs.emplace_back(isAnyLink, ":link");
+                } else if (str == "first-child") {
+                    weirdFuncs.emplace_back(isFirstChild, ":first-child");
+                } else if (str == "first-of-type") {
+                    weirdFuncs.emplace_back(isFirstOfType, ":first-of-type");
+                } else if (str == "focus") {
+                    weirdFuncs.emplace_back(isFocus, ":focus");
+                } else if (str == "focus-within") {
+                    weirdFuncs.emplace_back(containsFocus, ":focus-within");
+                } else if (str == "hover") {
+                    weirdFuncs.emplace_back(isHover, ":hover");
+                } else if (str == "last-child") {
+                    weirdFuncs.emplace_back(isLastChild, ":last-child");
+                } else if (str == "last-of-type") {
+                    weirdFuncs.emplace_back(isLastOfType, ":last-of-type");
+                } else if (str == "only-child") {
+                    weirdFuncs.emplace_back(isOnlyChild, ":only-child");
+                } else if (str == "only-of-type") {
+                    weirdFuncs.emplace_back(isOnlyOfType, ":only-of-type");
+                } else if (str == "root") {
+                    weirdFuncs.emplace_back(isRoot, ":root");
+                } else if (str == "target") {
+                    weirdFuncs.emplace_back(isTarget, ":target");
+                }
+                break;
+        }
+}
+
+void handleSwitch(bool *spaceFound, css::CSSSelectorRelation *relation, DOMString *type, DOMString *id,
+                  std::vector<DOMString> &classes,
+                  std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFuncs,
+                  std::vector<std::pair<css::CSSSelectorToken *, css::CSSSelectorRelation>> &relations,
+                  std::vector<css::CSSSelectorTokenGroup *> &selVector) {
+    if (*spaceFound) {
+        if (*relation == css::CSSSelectorRelation::NONE) {
+            css::CSSSelectorToken *token = new css::CSSSelectorToken(*type, *id, classes, weirdFuncs);
+            *type = "*";
+            *id = "";
+            classes.clear();
+            weirdFuncs.clear();
+            css::CSSSelectorTokenGroup *tokenGroup = new css::CSSSelectorTokenGroup(token, relations);
+            selVector.push_back(tokenGroup);
+        }
+        *spaceFound = false;
+    }
+    if (*relation != css::CSSSelectorRelation::NONE) {
+        css::CSSSelectorToken *token = new css::CSSSelectorToken(*type, *id, classes, weirdFuncs);
+        *type = "*";
+        *id = "";
+        classes.clear();
+        weirdFuncs.clear();
+        relations.emplace_back(token, *relation);
+        *relation = css::CSSSelectorRelation::NONE;
     }
 }
 
@@ -534,16 +565,17 @@ css::CSSSelector css::parse(DOMString selector) {
     //If a special character is encountered stop and interpret
 
     //Set up start and end indeces to skip over arbitrary whitespace
-    long long j = selector.length(), i = -1;
-    while (j > 0 && isspace(selector[--j]));
+    unsigned long j = selector.length(), i = 0;
+    while (j-- > 0 && isspace(selector[j]));
     j++;
-    while (i < j && isspace(++i));
+    while (i < j && isspace(selector[i++]));
+    i--;
     //Set up char buffer
     std::stringstream buffer;
     //Set up selector vector
-    std::vector<CSSSelectorTokenGroup> selVector;
+    std::vector<CSSSelectorTokenGroup *> selVector;
     //Set up token group relations
-    std::vector<std::pair<CSSSelectorToken, CSSSelectorRelation>> relations;
+    std::vector<std::pair<CSSSelectorToken *, CSSSelectorRelation>> relations;
     //Set up token
     DOMString tagName = "*";
     DOMString id;
@@ -552,28 +584,21 @@ css::CSSSelector css::parse(DOMString selector) {
     //Monitor spaces
     CSSSelectorRelation relation = CSSSelectorRelation::NONE;
     bool spaceFound = false;
+    std::cout << i << " " << j << std::endl;
     for (; i < j; i++) {
         switch (selector[i]) {
             default:
-                if (spaceFound) {
-                    if (relation == CSSSelectorRelation::NONE) {
-                        //Clear up the entire token group; this is a valid space delimiter
-                    }
-                    spaceFound = false;
-                }
-                if (relation != CSSSelectorRelation::NONE) {
-                    //We are done with the token; we should clean up the token alone
-                }
+                handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
                 buffer << selector[i];
-                continue;
+                break;
             case '(': {
                 DOMString prev = buffer.str();
                 if (prev == ":dir") {
+                    //This requires some precomputing of style, which i can't do yet...
                 } else if (prev == ":host-context") {
                     auto sub = getSubselector(&i, j, selector);
                     auto func = [sub](dom::Element *element) { return false;/*we don't support shadow roots yet*/ };
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                                 (func, ":host-context(" + sub.toString() + ")"));
+                    weirdFuncs.emplace_back(func, ":host-context(" + sub.toString() + ")");
                 } else if (prev == ":is" || prev == ":matches" || prev == ":where") {
                     auto subList = getSubselectors(&i, j, selector);
                     auto func = [subList](dom::Element *element) {
@@ -586,40 +611,39 @@ css::CSSSelector css::parse(DOMString selector) {
                     output << ":is(" << subList[0].toString();
                     for (unsigned long i = 1; i < subList.size(); i++) output << ", " << subList[i].toString();
                     output << ')';
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(func, output.str()));
+                    weirdFuncs.emplace_back(func, output.str());
                 } else if (prev == ":lang") {
                 } else if (prev == ":not") {
                     auto sub = getSubselector(&i, j, selector);
                     auto func = [sub](dom::Element *element) { return !sub.matches(element); };
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
-                                                 (func, ":not(" + sub.toString() + ")"));
+                    weirdFuncs.emplace_back(func, ":not(" + sub.toString() + ")");
                 } else if (prev == ":nth-child") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(
+                    weirdFuncs.emplace_back(
                             [&formula](dom::Element *element) { return isNthChild(formula, element); },
-                            ":nth-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")"));
+                            ":nth-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
                 } else if (prev == ":nth-last-child") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(
+                    weirdFuncs.emplace_back(
                             [&formula](dom::Element *element) { return isNthLastChild(formula, element); },
-                            ":nth-last-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")"));
+                            ":nth-last-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
                 } else if (prev == ":nth-last-of-type") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(
+                    weirdFuncs.emplace_back(
                             [&formula, tagName](dom::Element *element) {
                                 return isNthLastOfType(formula, tagName, element);
                             },
                             ":nth-last-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) +
-                            ")"));
+                            ")");
                 } else if (prev == ":nth-of-type") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(
+                    weirdFuncs.emplace_back(
                             [&formula, tagName](dom::Element *element) {
                                 return isNthOfType(formula, tagName, element);
                             },
-                            ":nth-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")"));
+                            ":nth-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
                 }
-                buffer.clear();
+                buffer.str("");
                 break;
             }
             case ')':
@@ -634,37 +658,45 @@ css::CSSSelector css::parse(DOMString selector) {
             case ' ':
                 //There's some weird stuff that happens with whitespace; people might whitespace between combinators,
                 //so we need to handle that case. That will require significant effort, and will also require much testing.
+                interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
+                buffer.str("");
+                std::cout << "check: " << buffer.str() << std::endl;
                 spaceFound = true;
                 break;
             case ':': {
+                handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
                 DOMString str = buffer.str();
                 if (str != ":") {
                     interpretBuffer(&tagName, &id, classes, weirdFuncs, str);
-                    buffer.clear();
+                    buffer.str("");
                 }
                 buffer << ":";
                 break;
             }
             case '.': {
+                handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
                 DOMString str = buffer.str();
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, str);
-                buffer.clear();
+                buffer.str("");
                 buffer << ".";
                 break;
             }
             case '#': {
+                handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
                 DOMString str = buffer.str();
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, str);
-                buffer.clear();
+                buffer.str("");
                 buffer << "#";
                 break;
             }
             case '*': {
+                handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
                 //The only valid place where this can appear is in front of a group of selectors
                 //Therefore, since the default value of tagName is a "*", this does not need to be handled.
                 break;
             }
             case '[': {
+                handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
                 //Skip ahead to the close bracket; that's where the attribute selector ends
                 //We can parse the attribute selector based on that substring between open and close
                 weirdFuncs.push_back(parseAttrSelector(&i, j, selector));
@@ -673,8 +705,28 @@ css::CSSSelector css::parse(DOMString selector) {
                 //This is an error; this shouldn't happen
                 //We'll silently ignore it to best-effort parse the file
                 break;
+            case '~':
+                relation = CSSSelectorRelation::SIBLING;
+                interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
+                buffer.str("");
+                break;
+            case '+':
+                relation = CSSSelectorRelation::IMMEDIATE_SIBLING;
+                interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
+                buffer.str("");
+                break;
+            case '>':
+                relation = CSSSelectorRelation::DESCENDANT;
+                interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
+                buffer.str("");
+                break;
         }
+        std::cout << buffer.str() << std::endl;
     }
+    interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
+    spaceFound = true;
+    handleSwitch(&spaceFound, &relation, &tagName, &id, classes, weirdFuncs, relations, selVector);
+    return css::CSSSelector(selVector);
 }
 
 std::vector<css::CSSSelector> css::parseList(DOMString selectorList) {

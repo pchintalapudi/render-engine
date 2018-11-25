@@ -16,7 +16,7 @@ void dom::Element::setClassName(DOMString className) {
             DOMString str = stream.str();
             if (!std::all_of(str.begin(), str.end(), isspace))
                 classList.add(str);
-            stream.clear();
+            stream.str("");
         }
         stream << className[i];
     }

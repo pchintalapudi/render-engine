@@ -29,7 +29,7 @@ void dom::NamedNodeMap::setClassAttr(dom::Attr *classAttr) {
             DOMString str = stream.str();
             if (!std::all_of(str.begin(), str.end(), isspace))
                 classList->add(str);
-            stream.clear();
+            stream.str("");
         }
         stream << val[i];
     }

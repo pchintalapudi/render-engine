@@ -10,12 +10,15 @@
 
 //Useful function declarations
 
+css::CSSSelector::CSSSelector(std::vector<css::CSSSelectorTokenGroup *> groups) {
+    this->groups.insert(this->groups.end(), groups.begin(), groups.end());
+}
 
 bool css::CSSSelector::matches(dom::Element *element) const {
     dom::Element *focused = element;
-    for (long long i = (long long) groups.size(); focused && i > -1; i--) {
+    for (unsigned long i = groups.size(); focused && i-- > 0;) {
         while (focused) {
-            if (groups[i].matches(focused)) {
+            if ((*groups[i]).matches(focused)) {
                 auto size = groups.size() - 1;
                 i -= size;
                 while (size-- > 0) {
@@ -31,8 +34,15 @@ bool css::CSSSelector::matches(dom::Element *element) const {
 
 DOMString css::CSSSelector::toString() const {
     std::stringstream stream;
-    if (groups.size()) stream << groups[1].toString();
-    if (groups.size() > 1)
-        std::for_each(groups.begin() + 1, groups.end(), [&stream](auto group) { stream << " " << group.toString(); });
+    switch (groups.size()) {
+        case 0:
+            break;
+        case 1:
+            stream << (*groups[0]).toString();
+            break;
+        default:
+            for (auto group : groups) stream << " " << (*group).toString();
+            break;
+    }
     return stream.str();
 }

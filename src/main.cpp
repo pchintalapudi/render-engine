@@ -1,13 +1,17 @@
 #include <iostream>
 #include <string>
-#include "parser/Trie.h"
+#include "include/utils/selectors/css_selector.h"
 
 using namespace std;
 
+namespace css {
+    CSSSelector parse(DOMString selector);
+}
+
 int main()
 {
-    string url;
-    getline(cin, url);
-    cout << url << endl;
-    Trie<bool> t;
+    string selector;
+    getline(cin, selector);
+    auto cssSelector = css::parse(selector);
+    cout << cssSelector.toString() << " printed " <<endl;
 }
