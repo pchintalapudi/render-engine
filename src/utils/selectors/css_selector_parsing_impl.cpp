@@ -415,6 +415,64 @@ bool containsFocus(dom::Element *element) {
     return element->getOwner() && element->getOwner()->getPseudoclassManager().hasFocus(element);
 }
 
+bool isHover(dom::Element *element) {
+    return element->getOwner() && element->getOwner()->getPseudoclassManager().isHover(element);
+}
+
+bool isLastChild(dom::Element *element) {
+    if (!element->getParentNode()) return true;
+    auto children = element->getParentNode()->getChildNodes();
+    for (unsigned long i = children.size(); i > 0; i--) {
+        auto child = children.get(i - 1);
+        if (child == element) return true;
+        if (child->getNodeType() == dom::NodeType::ELEMENT_NODE) break;
+    }
+    return false;
+}
+
+bool isLastOfType(dom::Element *element) {
+    if (!element->getParentNode()) return true;
+    auto children = element->getParentNode()->getChildNodes();
+    for (unsigned long i = children.size(); i-- > 0;) {
+        auto child = children.get(i);
+        if (child == element) return true;
+        if (child->getNodeType() == dom::NodeType::ELEMENT_NODE
+            && static_cast<dom::Element *>(child)->getTagName() == element->getTagName())
+            break;
+    }
+    return false;
+}
+
+bool isOnlyChild(dom::Element *element) {
+    if (!element->getParentNode()) return true;
+    auto children = element->getParentNode()->getChildNodes();
+    for (unsigned long i = 0; i < children.size(); i++) {
+        auto child = children.get(i);
+        if (child != element && child->getNodeType() == dom::NodeType::ELEMENT_NODE) return false;
+    }
+    return true;
+}
+
+bool isOnlyOfType(dom::Element *element) {
+    if (!element->getParentNode()) return true;
+    auto children = element->getParentNode()->getChildNodes();
+    for (unsigned long i = 0; i < children.size(); i++) {
+        auto child = children.get(i);
+        if (child != element && child->getNodeType() == dom::NodeType::ELEMENT_NODE
+            && static_cast<dom::Element *>(child)->getTagName() == element->getTagName())
+            return false;
+    }
+    return true;
+}
+
+bool isRoot(dom::Element *element) {
+    return element->getOwner() && element->getOwner()->getDocumentElement() == element;
+}
+
+bool isTarget(dom::Element *element) {
+    return false;//TODO: somehow determine current url fragment from the element; maybe it's a property of Document
+}
+
 void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &classes,
                      std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFuncs,
                      DOMString str) {
@@ -434,7 +492,7 @@ void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &
                                                    : str.substr(1, str.length() - 1) : str.substr(1, str.length() - 1);
             if (str == "active") {
                 weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isActive, ":active"));
-            } else if (str == "any-link") {
+            } else if (str == "any-link" || str == "link") {
                 weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isAnyLink, ":any-link"));
             } else if (str == "first-child") {
                 weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
@@ -447,8 +505,26 @@ void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &
             } else if (str == "focus-within") {
                 weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
                                              (containsFocus, ":focus-within"));
-            }
-            break;
+            } else if (str == "hover") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isHover, ":hover"));
+            } else if (str == "last-child") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (isLastChild, ":last-child"));
+            } else if (str == "last-of-type") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (isLastOfType, ":last-of-type"));
+            } else if (str == "only-child") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (isOnlyChild, ":only-child"));
+            } else if (str == "only-of-type") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
+                                             (isOnlyOfType, ":only-of-type"));
+            } else if (str == "root") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isRoot, ":root"));
+            } else if (str == "target") {
+                weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>(isTarget, ":target"));
+            } else if (str == "")
+                break;
     }
 }
 
@@ -498,7 +574,7 @@ css::CSSSelector css::parse(DOMString selector) {
                     auto func = [sub](dom::Element *element) { return false;/*we don't support shadow roots yet*/ };
                     weirdFuncs.push_back(std::pair<std::function<bool(dom::Element *)>, DOMString>
                                                  (func, ":host-context(" + sub.toString() + ")"));
-                } else if (prev == ":is" || prev == ":matches") {
+                } else if (prev == ":is" || prev == ":matches" || prev == ":where") {
                     auto subList = getSubselectors(&i, j, selector);
                     auto func = [subList](dom::Element *element) {
                         for (auto sub : subList) {

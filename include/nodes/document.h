@@ -16,8 +16,11 @@ class dom::Document : public Node {
 public:
     inline css::PseudoclassManager &getPseudoclassManager() { return pseudoclassManager; }
 
+    inline dom::Element *getDocumentElement() { return root; }
+
 private:
     css::PseudoclassManager pseudoclassManager;
+    dom::Element *root;
 };
 
 #endif //FEATHER_DOCUMENT_H
