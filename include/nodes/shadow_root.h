@@ -16,6 +16,5 @@ class dom::ShadowRoot : DocumentOrShadowRoot, Element {
 private:
     bool open;
     Element *host;
-
 };
 #endif //FEATHER_SHADOW_ROOT_H

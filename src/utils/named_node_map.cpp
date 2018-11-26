@@ -30,6 +30,7 @@ void dom::NamedNodeMap::setClassAttr(dom::Attr *classAttr) {
             if (!std::all_of(str.begin(), str.end(), isspace))
                 classList->add(str);
             stream.str("");
+            stream.clear();
         }
         stream << val[i];
     }
@@ -46,4 +47,10 @@ void dom::NamedNodeMap::setNamedItem(dom::Attr &data) {
         dataMap[data.getName()] = &data;
         insertionOrder.push_back(data.getName());
     }
+}
+
+std::vector<DOMString> dom::NamedNodeMap::keys() {
+    std::vector<DOMString> keys;
+    for (auto it : dataMap) keys.push_back(it.first);
+    if (classAttr) keys.push_back("class");
 }

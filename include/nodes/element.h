@@ -14,12 +14,12 @@
 #include "node.h"
 
 namespace dom {
-    class ClassTokenList;
-
     class Element;
+
+    class ShadowRoot;
 }
 
-class dom::ClassTokenList : public DOMTokenList {
+class ClassTokenList : public dom::DOMTokenList {
     inline bool supports(DOMString feature) override {
         (void) feature;
         return false;
@@ -76,11 +76,23 @@ public:
 
     inline double getScrollHeight() { return scrollDim[3]; }
 
+    inline ShadowRoot *getShadowRoot() { return closed ? nullptr : shadow; }
+
     inline DOMString getSlot() { return slot; }
 
     inline DOMString getTagName() { return tagName; }
 
+    ShadowRoot *attachShadow(bool closed);
+
+    Element *closest(DOMString selector);
+
+    DOMString *getAttribute(DOMString attributeName);
+
+    std::vector<DOMString> getAttributeNames();
+
     inline dom::HTMLCollection &getChildren() override { return children; }
+
+    virtual ~Element();
 
 private:
     NamedNodeMap attributes;
@@ -91,6 +103,8 @@ private:
     double scrollDim[4];
     DOMString slot;
     DOMString tagName;
+    ShadowRoot *shadow;
+    bool closed;
 
     HTMLCollection children;
 

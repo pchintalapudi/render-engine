@@ -39,6 +39,8 @@ public:
         return dataMap.at(insertionOrder[index]);
     }
 
+    std::vector<DOMString> keys();
+
     ~NamedNodeMap() {
         for (auto pair : dataMap) {
             delete pair.second;

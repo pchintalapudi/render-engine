@@ -82,6 +82,7 @@ const NthSel parseFormula(unsigned long *i, unsigned long j, DOMString selector)
     }
     k++;
     stream.str("");
+    stream.clear();
     while (k < j && selector[k] != ')') if (selector[k] != '+' && !isspace(selector[k++])) stream << selector[k - 1];
     if (!stream.str().empty())
         stream >> ret.b;
@@ -104,6 +105,7 @@ bool containsIgnoreCase(DOMString s1, DOMString s2) {
     for (unsigned long i = 0; i < s1.length(); stream << s1[i++]);
     s1 = stream.str();
     stream.str("");
+    stream.clear();
     for (unsigned long i = 0; i < s2.length(); stream << s2[i++]);
     s2 = stream.str();
     return s1.find(s2) != DOMString::npos;
@@ -116,6 +118,7 @@ bool inList(DOMString list, DOMString val) {
             auto str = stream.str();
             if (str == val) return true;
             stream.str("");
+            stream.clear();
         } else {
             stream << character;
         }
@@ -130,6 +133,7 @@ bool inListIgnoreCase(DOMString list, DOMString val) {
             auto str = stream.str();
             if (equalsIgnoreCase(str, val)) return true;
             stream.str("");
+            stream.clear();
         } else {
             stream << character;
         }
@@ -176,6 +180,7 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
         auto val = stream.str();
         combined << val << '"';
         stream.str("");
+        stream.clear();
         while (isspace(selector[k++]));
         k--;
         bool caseSensitive;
@@ -594,7 +599,6 @@ css::CSSSelector css::parse(DOMString selector) {
             case '(': {
                 DOMString prev = buffer.str();
                 if (prev == ":dir") {
-                    //This requires some precomputing of style, which i can't do yet...
                 } else if (prev == ":host-context") {
                     auto sub = getSubselector(&i, j, selector);
                     auto func = [sub](dom::Element *element) { return false;/*we don't support shadow roots yet*/ };
@@ -602,16 +606,14 @@ css::CSSSelector css::parse(DOMString selector) {
                 } else if (prev == ":is" || prev == ":matches" || prev == ":where") {
                     auto subList = getSubselectors(&i, j, selector);
                     auto func = [subList](dom::Element *element) {
-                        for (auto sub : subList) {
-                            if (sub.matches(element)) return true;
-                        }
+                        for (auto sub : subList) if (sub.matches(element)) return true;
                         return false;
                     };
-                    std::stringstream output;
-                    output << ":is(" << subList[0].toString();
-                    for (unsigned long i = 1; i < subList.size(); i++) output << ", " << subList[i].toString();
-                    output << ')';
-                    weirdFuncs.emplace_back(func, output.str());
+                    DOMString output;
+                    (output += ":is(") += subList[0].toString();
+                    for (unsigned long i = 1; i < subList.size(); i++) (output += ", ") += subList[i].toString();
+                    output += ')';
+                    weirdFuncs.emplace_back(func, output);
                 } else if (prev == ":lang") {
                 } else if (prev == ":not") {
                     auto sub = getSubselector(&i, j, selector);
@@ -644,6 +646,7 @@ css::CSSSelector css::parse(DOMString selector) {
                             ":nth-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
                 }
                 buffer.str("");
+                buffer.clear();
                 break;
             }
             case ')':
@@ -660,7 +663,7 @@ css::CSSSelector css::parse(DOMString selector) {
                 //so we need to handle that case. That will require significant effort, and will also require much testing.
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
                 buffer.str("");
-                std::cout << "check: " << buffer.str() << std::endl;
+                buffer.clear();
                 spaceFound = true;
                 break;
             case ':': {
@@ -669,6 +672,7 @@ css::CSSSelector css::parse(DOMString selector) {
                 if (str != ":") {
                     interpretBuffer(&tagName, &id, classes, weirdFuncs, str);
                     buffer.str("");
+                    buffer.clear();
                 }
                 buffer << ":";
                 break;
@@ -678,6 +682,7 @@ css::CSSSelector css::parse(DOMString selector) {
                 DOMString str = buffer.str();
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, str);
                 buffer.str("");
+                buffer.clear();
                 buffer << ".";
                 break;
             }
@@ -686,6 +691,7 @@ css::CSSSelector css::parse(DOMString selector) {
                 DOMString str = buffer.str();
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, str);
                 buffer.str("");
+                buffer.clear();
                 buffer << "#";
                 break;
             }
@@ -709,19 +715,21 @@ css::CSSSelector css::parse(DOMString selector) {
                 relation = CSSSelectorRelation::SIBLING;
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
                 buffer.str("");
+                buffer.clear();
                 break;
             case '+':
                 relation = CSSSelectorRelation::IMMEDIATE_SIBLING;
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
                 buffer.str("");
+                buffer.clear();
                 break;
             case '>':
                 relation = CSSSelectorRelation::DESCENDANT;
                 interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
                 buffer.str("");
+                buffer.clear();
                 break;
         }
-        std::cout << buffer.str() << std::endl;
     }
     interpretBuffer(&tagName, &id, classes, weirdFuncs, buffer.str());
     spaceFound = true;

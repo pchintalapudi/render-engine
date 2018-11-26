@@ -32,13 +32,10 @@ bool css::CSSSelectorToken::matches(dom::Element *element) const {
 }
 
 DOMString css::CSSSelectorToken::toString() const {
-    std::stringstream stream;
-    stream << type;
-    if (!id.empty()) {
-        stream << "#" << type;
-    }
-    std::for_each(classes.begin(), classes.end(), [&stream](auto clazz) { stream << "." << clazz; });
-    std::for_each(attributesAndPseudoclasses.begin(), attributesAndPseudoclasses.end(),
-                  [&stream](auto test) { stream << test.second; });
-    return stream.str();
+    DOMString str = "";
+    str += type;
+    if (!id.empty()) (str += "#") += id;
+    for (auto clazz : classes) str += ("." + clazz);
+    for (auto func : attributesAndPseudoclasses) str += func.second;
+    return str;
 }

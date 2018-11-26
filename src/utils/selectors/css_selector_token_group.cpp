@@ -61,25 +61,25 @@ bool css::CSSSelectorTokenGroup::matches(dom::Element *element) const {
 
 DOMString css::CSSSelectorTokenGroup::toString() const {
     if (end) {
-        std::stringstream stream;
+        DOMString str;
         for (auto token : tokens) {
-            stream << (*token.first).toString();
+            str += (*token.first).toString();
             switch (token.second) {
                 case CSSSelectorRelation::DESCENDANT:
-                    stream << " > ";
+                    str += " > ";
                     break;
                 case CSSSelectorRelation::SIBLING:
-                    stream << " ~ ";
+                    str += " ~ ";
                     break;
                 case CSSSelectorRelation::IMMEDIATE_SIBLING:
-                    stream << " + ";
+                    str += " + ";
                     break;
                 default:
                     break;
             }
         }
-        stream << (*end).toString();
-        return stream.str();
+        str += (*end).toString();
+        return str;
     } else return "";
 }
 
