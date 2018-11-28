@@ -1,39 +1,35 @@
 //
-// Created by prem on 11/10/2018.
+// Created by prem on 11/28/2018.
 //
 
 #ifndef FEATHER_HTML_COLLECTION_H
 #define FEATHER_HTML_COLLECTION_H
 
-#include "include/typedefs.h"
+#include "observable/filtered_list.h"
 #include "node_list.h"
+
 namespace dom {
     class Element;
+
     class HTMLCollection;
 }
 
-class dom::HTMLCollection {
+class dom::HTMLCollection : public observable::ObservableList<Element *> {
 public:
-    explicit HTMLCollection(NodeList &watched) : watched(watched), checksum(watched.getChecksum()), cached(getElementVector()) {}
-
-    inline Element *getItem(unsigned long index) const {
-        return index < getLength() ? getElementVector()[index] : nullptr;
+    explicit HTMLCollection(ObservableList<Node *> *watched) : watched(watched) {
+        if (watched) watched->addInvalidator(this, [this]() { this->invalidate(); });
     }
 
-    inline unsigned long getLength() const { return getElementVector().size(); }
+    ~HTMLCollection() {
+        if (watched) watched->removeInvalidator(this);
+    }
 
-    Element *getNamedItem(DOMString name) const;
-
-    unsigned long indexOf(Element * element) const;
+protected:
+    const std::vector<Element *> *compute() const;
 
 private:
-    NodeList &watched;
-    mutable unsigned long checksum;
-    mutable std::vector<Element *> cached;
-
-    std::vector<Element *> _get_cacheable_element_vector() const;
-
-    std::vector<Element *> getElementVector() const;
+    ObservableList<Node *> *watched;
+    mutable std::vector<Element *> backing;
 };
 
 #endif //FEATHER_HTML_COLLECTION_H

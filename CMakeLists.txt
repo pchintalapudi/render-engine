@@ -14,12 +14,13 @@ add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/chara
         include/nodes/interfaces/parent_node.h include/nodes/interfaces/non_document_type_child_node.h src/nodes/character_data.cpp
         include/nodes/interfaces/slotable.h include/nodes/text.h src/nodes/text.cpp include/nodes/comment.h
         include/nodes/c_data_section.h include/nodes/processing_instruction.h include/utils/named_node_map.h
-        include/utils/html_collection.h include/utils/node_list.h src/utils/node_list.cpp include/utils/selectors/css_selector.h
+        include/utils/selectors/css_selector.h
         include/utils/selectors/css_selector_relation.h include/utils/selectors/css_selector_token.h include/utils/selectors/css_selector_token_group.h
         src/utils/selectors/css_selector.cpp src/utils/selectors/css_selector_token.cpp src/utils/selectors/css_selector_token_group.cpp
         include/utils/css_rule_list.h include/utils/css_style_declaration.h src/utils/selectors/css_selector_parsing_impl.cpp
         include/utils/selectors/css_selector_parsing_impl.h include/css/pseudoclass_manager.h include/nodes/shadow_root.h
-        include/nodes/document_or_shadow_root.h include/geom/dom_rect.h)
+        include/nodes/document_or_shadow_root.h include/geom/dom_rect.h include/utils/observable/observable_list.h
+        include/utils/observable/filtered_list.h include/utils/observable/invalidatable.h include/utils/observable/smart_observable_list.h include/utils/node_list.h include/utils/html_collection.h src/utils/html_collection.cpp)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)

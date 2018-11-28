@@ -7,7 +7,7 @@
 
 void js::EventTarget::dispatchEvent(Event &event) const {
     auto idx = std::find(event.getDeepPath().begin(), event.getDeepPath().end(), this);
-    bool atEnd = (idx - event.getDeepPath().begin() + 1) == event.getDeepPath().size();
+    bool atEnd = (idx - event.getDeepPath().begin() + static_cast<unsigned long>(1)) == event.getDeepPath().size();
     if (atEnd) {
         event.setEventPhase(EventPhase::AT_TARGET);
     }
@@ -15,20 +15,15 @@ void js::EventTarget::dispatchEvent(Event &event) const {
         if (handlers.find(type) != handlers.end()) {
             for (auto &handler : *handlers.at(type)) {
                 handler(event);
-                if (event.isViolentlyConsumed()) {
-                    return;
-                }
+                if (event.isViolentlyConsumed()) return;
             }
         }
     }
-    if (atEnd && event.getBubbles()) {
-        event.setEventPhase(EventPhase::BUBBLING_PHASE);
-    }
+    if (atEnd && event.getBubbles()) event.setEventPhase(EventPhase::BUBBLING_PHASE);
     if (idx != event.getDeepPath().begin() && event.getBubbles() && !event.isConsumed() &&
-        event.getEventPhase() == EventPhase::BUBBLING_PHASE && idx > event.getDeepPath().begin()) {
+        event.getEventPhase() == EventPhase::BUBBLING_PHASE && idx > event.getDeepPath().begin())
         event.getDeepPath()[idx - event.getDeepPath().begin() - 1]->dispatchEvent(event);
-    } else if (idx != event.getDeepPath().end() - 1 && !event.isConsumed() &&
-               event.getEventPhase() == EventPhase::CAPTURING_PHASE && idx < event.getDeepPath().end() - 1) {
+    else if (idx != event.getDeepPath().end() - 1 && !event.isConsumed() &&
+             event.getEventPhase() == EventPhase::CAPTURING_PHASE && idx < event.getDeepPath().end() - 1)
         event.getDeepPath()[idx - event.getDeepPath().begin() + 1]->dispatchEvent(event);
-    }
 }

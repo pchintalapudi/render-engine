@@ -6,11 +6,12 @@
 #define FEATHER_CSS_STYLE_SHEET_H
 
 #include "include/utils/css_rule_list.h"
-#include "css_rules/css_import_rule.h"
 #include "style_sheet.h"
 
 namespace css {
     class CSSStyleSheet;
+    class CSSRule;
+    class CSSImportRule;
 }
 
 class css::CSSStyleSheet : css::StyleSheet {

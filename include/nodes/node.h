@@ -5,18 +5,20 @@
 #ifndef FEATHER_NODE_H
 #define FEATHER_NODE_H
 
+#include "include/utils/observable/invalidatable.h"
 #include "include/utils/node_list.h"
-#include "include/utils/html_collection.h"
 #include "include/events/event_target.h"
 #include "node_type.h"
 
 namespace dom {
     class Element;
+
     class Document;
+
     class Node;
 }
 
-class dom::Node : public js::EventTarget {
+class dom::Node : public js::EventTarget, public observable::Invalidatable {
 public:
 
     Node(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)

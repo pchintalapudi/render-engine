@@ -53,4 +53,5 @@ std::vector<DOMString> dom::NamedNodeMap::keys() {
     std::vector<DOMString> keys;
     for (auto it : dataMap) keys.push_back(it.first);
     if (classAttr) keys.push_back("class");
+    return keys;
 }

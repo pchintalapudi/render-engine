@@ -5,6 +5,7 @@
 #ifndef FEATHER_ELEMENT_H
 #define FEATHER_ELEMENT_H
 
+#include "include/geom/dom_rect.h"
 #include "include/utils/dom_token_list.h"
 #include "include/utils/named_node_map.h"
 #include "interfaces/slotable.h"
@@ -88,9 +89,17 @@ public:
 
     DOMString *getAttribute(DOMString attributeName);
 
-    std::vector<DOMString> getAttributeNames();
+    inline std::vector<DOMString> getAttributeNames() { return attributes.keys(); }
 
     inline dom::HTMLCollection &getChildren() override { return children; }
+
+    inline const dom::HTMLCollection &getChildren() const override { return children; }
+
+    DOMRect getBoundingClientRect();
+
+    std::vector<DOMRect> getClientRects();
+
+    std::vector<Element *> getElementsByClassName(DOMString classNames);
 
     virtual ~Element();
 

@@ -16,9 +16,11 @@ dom::Element *dom::Node::getParentElement() const {
 
 dom::Node *dom::Node::getNextSibling() const {
     if (parent) {
-        auto idx = parent->childNodes.indexOf(this);
-        if (~idx && idx < parent->childNodes.size() - 1) {
-            return parent->childNodes.get(idx + 1);
+        bool ret = false;
+        for (unsigned long i = 0; i < childNodes.size(); i++) {
+            auto child = childNodes.get(i);
+            if (ret) return child;
+            if (child == this) ret = true;
         }
     }
     return nullptr;
@@ -26,9 +28,11 @@ dom::Node *dom::Node::getNextSibling() const {
 
 dom::Node *dom::Node::getPreviousSibling() const {
     if (parent) {
-        auto idx = parent->childNodes.indexOf(this);
-        if (~idx && idx > 0) {
-            return parent->childNodes.get(idx - 1);
+        Node *prev = nullptr;
+        for (unsigned long i = 0; i < childNodes.size(); i++) {
+            auto child = childNodes.get(i);
+            if (child == this) return prev;
+            prev = child;
         }
     }
     return nullptr;
@@ -46,17 +50,17 @@ dom::Node *dom::Node::appendChild(Node *child) {
         if (child->nodeType != NodeType::DOCUMENT_FRAGMENT_NODE
             && child->nodeType != NodeType::ATTRIBUTE_NODE
             && child->nodeType != NodeType::DOCUMENT_NODE) {
-            childNodes.push_back(child);
+            childNodes.add(child);
             switchParent(child, this);
         } else if (child->childNodes.size() > 0) {
             if (child->nodeType == NodeType::DOCUMENT_NODE) {
                 auto nextChild = child->childNodes.get(1);
-                childNodes.push_back(nextChild);
+                childNodes.add(nextChild);
                 switchParent(nextChild, this);
             } else if (child->nodeType == NodeType::DOCUMENT_FRAGMENT_NODE) {
                 child->childNodes.forEach([this](Node *node) {
                     switchParent(node, this);
-                    childNodes.push_back(node);
+                    childNodes.add(node);
                 });
 //                for (auto nextChild : child->childNodes) {
 //                    nextChild->parent = this;
@@ -104,7 +108,7 @@ void dom::Node::normalize() {
     for (unsigned long i = childNodes.size() - 1; i > 0; i--) {
         if (childNodes.get(i)->nodeType == NodeType::TEXT_NODE) {
             if (childNodes.get(i - 1)->nodeType != NodeType::TEXT_NODE) {
-                std::vector<Node *> erased = childNodes.erase(i, i + size);
+                std::vector<Node *> erased = childNodes.remove(i, i + size);
                 std::stringstream sstream;
                 std::for_each(erased.begin(), erased.end(),
                               [&sstream](Node *child) {
@@ -120,7 +124,7 @@ void dom::Node::normalize() {
         }
     }
     if (size) {
-        std::vector<Node *> erased = childNodes.erase(0, size);
+        std::vector<Node *> erased = childNodes.remove(0, size);
         std::stringstream sstream;
         std::for_each(erased.begin(), erased.end(), [&sstream](Node *erase) {
             sstream << erase->getNodeValue();
@@ -133,7 +137,7 @@ void dom::Node::normalize() {
     } else if (childNodes.get(0)->nodeType == NodeType::TEXT_NODE) {
         DOMString text = *childNodes.get(0)->nodeValue;
         if (std::all_of(text.begin(), text.end(), isspace)) {
-            delete childNodes.erase(0);
+            delete childNodes.remove(0);
         }
     }
 }
@@ -141,7 +145,7 @@ void dom::Node::normalize() {
 void dom::Node::removeChild(Node *child) {
     child->parent = nullptr;
     child->owner = nullptr;
-    childNodes.erase(child);
+    childNodes.remove(child);
 }
 
 void dom::Node::replaceChild(Node *replacement, Node *target) {

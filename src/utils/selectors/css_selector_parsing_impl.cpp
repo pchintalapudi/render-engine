@@ -327,7 +327,7 @@ bool isNthLastChild(NthSel &formula, dom::Element *element) {
     if (element->getParentNode()) {
         long long idx = 0;
         if (element->getParentElement()) {
-            idx = static_cast<long long>(element->getParentElement()->getChildren().getLength())
+            idx = static_cast<long long>(element->getParentElement()->getChildren().size())
                   - static_cast<long long>(element->getParentElement()->getChildren().indexOf(element));
         } else {
             for (unsigned long i = element->getParentNode()->getChildNodes().size(); i-- > 0;) {
@@ -346,8 +346,8 @@ bool isNthOfType(NthSel &formula, DOMString type, dom::Element *element) {
     long long idx = 0;
     if (element->getParentElement()) {
         auto parent = element->getParentElement();
-        for (unsigned long i = 0; i < parent->getChildren().getLength(); i++) {
-            auto child = parent->getChildren().getItem(i);
+        for (unsigned long i = 0; i < parent->getChildren().size(); i++) {
+            auto child = parent->getChildren().get(i);
             if (child == element) break;
             if (child->getTagName() == type) idx++;
         }
@@ -370,8 +370,8 @@ bool isNthLastOfType(NthSel &formula, DOMString type, dom::Element *element) {
     long long idx = 0;
     if (element->getParentElement()) {
         auto parent = element->getParentElement();
-        for (unsigned long i = parent->getChildren().getLength(); i-- > 0;) {
-            auto child = parent->getChildren().getItem(i);
+        for (unsigned long i = parent->getChildren().size(); i-- > 0;) {
+            auto child = parent->getChildren().get(i);
             if (child == element) break;
             if (child->getTagName() == type) idx++;
         }
@@ -606,12 +606,12 @@ css::CSSSelector css::parse(DOMString selector) {
                 } else if (prev == ":is" || prev == ":matches" || prev == ":where") {
                     auto subList = getSubselectors(&i, j, selector);
                     auto func = [subList](dom::Element *element) {
-                        for (auto sub : subList) if (sub.matches(element)) return true;
+                        for (const auto sub : subList) if (sub.matches(element)) return true;
                         return false;
                     };
                     DOMString output;
                     (output += ":is(") += subList[0].toString();
-                    for (unsigned long i = 1; i < subList.size(); i++) (output += ", ") += subList[i].toString();
+                    for (unsigned long k = 1; k < subList.size(); k++) (output += ", ") += subList[k].toString();
                     output += ')';
                     weirdFuncs.emplace_back(func, output);
                 } else if (prev == ":lang") {

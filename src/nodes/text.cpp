@@ -6,13 +6,16 @@
 
 DOMString dom::Text::getWholeText() const {
     if (getParentNode()) {
-        std::stringstream stream;
         auto children = getParentNode()->getChildNodes();
-        long long idx = children.indexOf(this) - 1;
-        while (--idx > -1 && children.get(idx)->getNodeType() == NodeType::TEXT_NODE);
-        for (; ++idx < (long long) children.size() && children.get(idx)->getNodeType() == NodeType::TEXT_NODE;
-               stream << children.get(idx)->getNodeValue());
-        return stream.str();
+        unsigned long idx = ~0;
+        for (unsigned long i = 0; i < children.size(); i++) {
+            auto child = children.get(i);
+            if (!~idx && child->getNodeType() == NodeType::TEXT_NODE) idx = i;
+            if (child == this) break;
+        }
+        DOMString str;
+        for (; idx < children.size(); idx++) str += *children.get(idx)->getNodeValue();
+        return str;
     } else return getData();
 }
 

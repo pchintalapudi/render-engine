@@ -8,10 +8,9 @@ namespace css {
     CSSSelector parse(DOMString selector);
 }
 
-int main()
-{
+int main() {
     string selector;
     getline(cin, selector);
     auto cssSelector = css::parse(selector);
-    cout << cssSelector.toString() << " printed " <<endl;
+    cout << cssSelector.toString() << " printed " << endl;
 }

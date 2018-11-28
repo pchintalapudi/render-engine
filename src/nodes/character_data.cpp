@@ -21,11 +21,11 @@ void dom::CharacterData::replaceData(unsigned long offset, unsigned long length,
 dom::Element *dom::CharacterData::getPreviousElementSibling() const {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
-        for (long long idx = children.indexOf(this); --idx > -1;) {
+        bool found = false;
+        for (unsigned long idx = children.size(); idx-- > 0;) {
             auto child = children.get(idx);
-            if (child->getNodeType() == NodeType::ELEMENT_NODE) {
-                return static_cast<Element *>(child);
-            }
+            if (found && child->getNodeType() == NodeType::ELEMENT_NODE) return static_cast<Element *>(child);
+            if (child == this) found = true;
         }
     }
     return nullptr;
@@ -34,11 +34,11 @@ dom::Element *dom::CharacterData::getPreviousElementSibling() const {
 dom::Element *dom::CharacterData::getNextElementSibling() const {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
-        for (unsigned long idx = children.indexOf(this); ++idx < children.size();) {
+        Element *found = nullptr;
+        for (unsigned long idx = children.size(); idx-- > 0;) {
             auto child = children.get(idx);
-            if (child->getNodeType() == NodeType::ELEMENT_NODE) {
-                return static_cast<Element *>(child);
-            }
+            if (child == this) return found;
+            if (child->getNodeType() == NodeType::ELEMENT_NODE) found = static_cast<Element *>(child);
         }
     }
     return nullptr;
@@ -53,7 +53,7 @@ void dom::CharacterData::before(std::vector<Node *> &nodes) {
             child->setParentNode(getParentNode());
             child->setOwner(getOwner());
         });
-        children.insert(children.indexOf(this) + 1, nodes);
+        children.insertAll(children.indexOf(this) + 1, nodes);
     }
 }
 
@@ -77,7 +77,7 @@ void dom::CharacterData::after(std::vector<Node *> &nodes) {
             child->setParentNode(getParentNode());
             child->setOwner(getOwner());
         });
-        children.insert(children.indexOf(this) + 1, nodes);
+        children.insertAll(children.indexOf(this) + 1, nodes);
     }
 }
 
@@ -90,14 +90,14 @@ void dom::CharacterData::replaceWith(std::vector<Node *> &nodes) {
     if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         auto idx = children.indexOf(this);
-        children.erase(idx);
+        children.remove(idx);
         std::for_each(nodes.begin(), nodes.end(), [this](Node *child) {
             if (child->getParentNode())
                 child->getParentNode()->removeChild(child);
             child->setParentNode(getParentNode());
             child->setOwner(getOwner());
         });
-        children.insert(idx, nodes);
+        children.insertAll(idx, nodes);
         setParentNode(nullptr);
         setOwner(nullptr);
     }
@@ -105,7 +105,7 @@ void dom::CharacterData::replaceWith(std::vector<Node *> &nodes) {
 
 void dom::CharacterData::remove() {
     if (getParentNode()) {
-        getParentNode()->getChildNodes().erase(this);
+        getParentNode()->getChildNodes().remove(this);
         setParentNode(nullptr);
         setOwner(nullptr);
     }

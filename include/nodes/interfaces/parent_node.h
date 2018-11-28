@@ -5,7 +5,7 @@
 #ifndef FEATHER_PARENT_NODE_H
 #define FEATHER_PARENT_NODE_H
 
-#include "../../utils/html_collection.h"
+#include "include/utils/html_collection.h"
 #include "../node.h"
 
 namespace dom {
@@ -15,17 +15,15 @@ namespace dom {
 }
 
 class dom::ParentNode {
-    unsigned long getChildElementCount() const { return getChildren().getLength(); }
+    unsigned long getChildElementCount() const;
 
     virtual HTMLCollection &getChildren() = 0;
 
-    virtual HTMLCollection &getChildren() const = 0;
+    virtual const HTMLCollection &getChildren() const = 0;
 
-    Element *getFirstElementChild() { return getChildElementCount() ? getChildren().getItem(0) : nullptr; }
+    Element *getFirstElementChild();
 
-    Element *getLastElementChild() {
-        return getChildElementCount() ? getChildren().getItem(getChildElementCount() - 1) : nullptr;
-    }
+    Element *getLastElementChild();
 
     virtual void append(std::vector<Node *> children) = 0;
 
