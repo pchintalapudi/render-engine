@@ -5,30 +5,14 @@
 #ifndef FEATHER_CSS_RULE_LIST_H
 #define FEATHER_CSS_RULE_LIST_H
 
-#include <vector>
-#include <numeric>
 #include "include/css/css_rules/css_rule.h"
+#include "observable/smart_observable_list.h"
 
 namespace css {
     class CSSRuleList;
 }
 
-class css::CSSRuleList {
-public:
-    inline unsigned long getLength() const { return rules.size(); }
-
-    inline CSSRule *getItem(unsigned long index) const { return rules[index]; }
-
-    inline std::vector<CSSRule *> &backing() { return rules; }
-
-    unsigned long getChecksum() {
-        unsigned long checksum = 0;
-        for (auto rule : rules) { checksum += rule->getChecksum(); }
-        return checksum;
-    }
-
-private:
-    std::vector<CSSRule *> rules;
+class css::CSSRuleList : public observable::SmartObservableList<CSSRule *> {
 };
 
 #endif //FEATHER_CSS_RULE_LIST_H

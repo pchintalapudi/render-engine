@@ -8,6 +8,8 @@
 #include "include/geom/dom_rect.h"
 #include "include/utils/dom_token_list.h"
 #include "include/utils/named_node_map.h"
+#include "attrs/standard_attr.h"
+#include "attrs/class_attr.h"
 #include "interfaces/slotable.h"
 #include "interfaces/child_node.h"
 #include "interfaces/parent_node.h"
@@ -20,12 +22,9 @@ namespace dom {
     class ShadowRoot;
 }
 
-class ClassTokenList : public dom::DOMTokenList {
-    inline bool supports(DOMString feature) override {
-        (void) feature;
-        return false;
-    }
-};
+namespace {
+    DOMString empty[0];
+}
 
 class dom::Element
         : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
@@ -53,7 +52,7 @@ public:
 
     inline DOMString getComputedRole() { return computedRole; }
 
-    inline void setId(DOMString id) { attributes.setNamedItem(*new Attr("id", this, id)); }
+    inline void setId(DOMString id) { attributes.setNamedItem(new StandardAttr("id", this, id)); }
 
     inline DOMString getId() { return attributes.getNamedItem("id")->getValue(); }
 
@@ -105,7 +104,7 @@ public:
 
 private:
     NamedNodeMap attributes;
-    ClassTokenList classList;
+    DOMTokenList classList = DOMTokenList(empty);
     double clientDim[4];
     DOMString computedName;
     DOMString computedRole;

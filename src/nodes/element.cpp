@@ -77,7 +77,7 @@ DOMString dom::Element::computeInnerHTML() const {
 DOMString dom::Element::computeHTML() const {
     std::stringstream output;
     output << "" << tagName;
-    for (unsigned long i = 0; i < attributes.getLength(); output << attributes.getItem(i++));
+    for (unsigned long i = 0; i < attributes.size(); output << attributes.getItem(i++));
     output << "";
     return output.str();
 }

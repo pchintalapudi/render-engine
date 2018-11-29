@@ -6,53 +6,38 @@
 #define FEATHER_ATTR_H
 
 #include "include/typedefs.h"
+#include "include/utils/observable/invalidatable.h"
 
 namespace dom {
     class Element;
+
     class Attr;
 }
 
-class dom::Attr {
+class dom::Attr : public observable::Invalidatable {
 public:
 
     Attr(DOMString name, Element *owner) : namespaceURI(""), localName(name), prefix(""), ownerElement(owner) {}
 
-    Attr(DOMString name, Element *owner, DOMString val) : Attr(name, owner) { setValue(val); }
+    inline DOMString getName() const { return prefix + localName; }
 
-    inline DOMString getName() {
-        return prefix + localName;
-    }
+    inline DOMString getNamespaceURI() const { return namespaceURI; }
 
-    inline DOMString getNamespaceURI() {
-        return namespaceURI;
-    }
+    inline DOMString getLocalName() const { return localName; }
 
-    inline DOMString getLocalName() {
-        return localName;
-    }
+    inline DOMString getPrefix() const { return prefix; }
 
-    inline DOMString getPrefix() {
-        return prefix;
-    }
+    inline Element *getOwnerElement() const { return ownerElement; }
 
-    inline Element *getOwnerElement() {
-        return ownerElement;
-    }
+    virtual DOMString getValue() const = 0;
 
-    inline DOMString getValue() {
-        return value;
-    }
-
-    inline void setValue(DOMString value) {
-        this->value = value;
-    }
+    virtual void setValue(DOMString val) = 0;
 
 private:
     DOMString namespaceURI;
     DOMString localName;
     DOMString prefix;
     Element *ownerElement;
-    DOMString value;
 };
 
 #endif //FEATHER_ATTR_H

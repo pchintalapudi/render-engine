@@ -8,64 +8,57 @@
 #include <algorithm>
 #include <vector>
 #include "../typedefs.h"
+#include "observable/dumb_observable_list.h"
 
 namespace dom {
     class DOMTokenList;
 }
 
-class dom::DOMTokenList {
+class dom::DOMTokenList : public observable::DumbObservableList<DOMString> {
 public:
-    inline unsigned long getLength() const { return backing.size(); }
 
-    inline DOMString getValue() const {
-        DOMString val = cachedsum == checksum ? cached : (cached = _get_cacheable_value());
-        cachedsum = checksum;
-        return val;
+    DOMTokenList(DOMString *features) : features(features) {}
+
+    inline bool supports(DOMString feature) {
+        if (!features) return false;
+        for (unsigned long i = 0; i < sizeof(features); i++) if (*(features + i) == feature) return true;
+        return false;
     }
 
-    inline DOMString getItem(unsigned long index) const { return backing[index]; }
-
-    inline bool contains(DOMString val) const {
-        return std::find(backing.begin(), backing.end(), val) != backing.end();
+    DOMString getValue() const {
+        if (this->isValid()) return value;
+        getBacking();
+        return value;
     }
 
-    inline void add(DOMString val) {
-        backing.push_back(val);
-        checksum++;
+    void setValue(DOMString val) {
+        std::vector<DOMString> toSwap;
+        DOMString next = "";
+        for (auto character : val) {
+            if (!isspace(character)) next += character;
+            else if (!next.empty()) {
+                toSwap.push_back(next);
+                next = "";
+            }
+        }
+        if (!next.empty()) toSwap.push_back(next);
+        swap(toSwap);
+        value = val;
+        this->validate();
     }
 
-    inline void add(std::vector<DOMString> vals) {
-        backing.insert(backing.end(), vals.begin(), vals.end());
-        checksum++;
-    }
-
-    void remove(DOMString val);
-
-    void replace(DOMString replacement, DOMString target);
-
-    virtual bool supports(DOMString feature) = 0;
-
-    bool toggle(DOMString token);
-
-    template<typename Op>
-    void forEach(Op op) {
-        std::for_each(backing.begin(), backing.end(), op);
-    }
-
-    inline unsigned long getChecksum() { return checksum; }
-
-    void clear() {
-        backing.clear();
-        checksum++;
+protected:
+    const std::vector<DOMString> *compute() const override {
+        const std::vector<DOMString> *ret = DumbObservableList::compute();
+        value = "";
+        for (unsigned long i = 0; i < ret->size() - 1; i++) (value += (*ret)[i]) += " ";
+        value += ret->back();
+        return ret;
     }
 
 private:
-    std::vector<DOMString> backing;
-    unsigned long checksum;
-    mutable unsigned long cachedsum;
-    mutable DOMString cached;
-
-    DOMString _get_cacheable_value() const;
+    DOMString *features;
+    mutable DOMString value;
 };
 
 #endif //FEATHER_DOM_TOKEN_LIST_H

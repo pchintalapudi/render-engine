@@ -6,60 +6,52 @@
 #define FEATHER_NAMED_NODE_MAP_H
 
 #include <algorithm>
-#include <vector>
-#include <unordered_map>
+#include <list>
+#include <map>
 #include "dom_token_list.h"
 #include "include/nodes/attr.h"
 #include "include/typedefs.h"
+#include "observable/invalidatable.h"
 
 namespace dom {
     class NamedNodeMap;
 }
-class dom::NamedNodeMap {
+class dom::NamedNodeMap : public observable::Invalidatable {
 public:
-
-    NamedNodeMap(Element *owner, DOMTokenList *classList) : owner(owner), classList(classList) {}
-
-    inline unsigned long getLength() const { return insertionOrder.size(); }
-
-    inline Attr *getNamedItem(DOMString name) const {
-        return name == "class" ? getClassAttr() : dataMap.at(name);
+    inline Attr *getNamedItem(DOMString key) const {
+        return attrMap.find(key) != attrMap.end() ? attrMap.at(key) : nullptr;
     }
 
-    void setNamedItem(Attr &data);
+    void setNamedItem(Attr *attr) {
+        DOMString name = attr->getName();
+        if (attrMap.find(name) != attrMap.end()) delete attrMap[name];
+        attrMap[name] = attr;
+        insertionOrder.remove(name);
+        insertionOrder.push_front(name);
+        this->invalidate();
+    }
 
-    inline Attr *removeNamedItem(DOMString name) {
-        Attr *val = dataMap[name];
-        dataMap.erase(name);
-        insertionOrder.erase(std::find(insertionOrder.begin(), insertionOrder.end(), name));
+    Attr *removeNamedItem(DOMString key) {
+        auto val = getNamedItem(key);
+        attrMap.erase(key);
+        insertionOrder.remove(key);
         return val;
     }
 
-    inline Attr *getItem(unsigned long index) const {
-        return dataMap.at(insertionOrder[index]);
+    std::vector<DOMString> keys() const {
+        std::vector<DOMString> keys;
+        for (auto it : attrMap) keys.push_back(it.first);
+        return keys;
     }
 
-    std::vector<DOMString> keys();
+    Attr *getItem(unsigned long index) const { return attrMap.at(*std::next(insertionOrder.begin(), index)); }
 
-    ~NamedNodeMap() {
-        for (auto pair : dataMap) {
-            delete pair.second;
-        }
-        delete classAttr;
-    }
+    inline unsigned long size() const { return attrMap.size(); }
 
-    //TODO: Add the methods relating to namespaces that idk about
 private:
-    std::unordered_map<DOMString, Attr *> dataMap;
-    std::vector<DOMString> insertionOrder;
-    Element *const owner;
-    DOMTokenList *const classList;
-    mutable Attr *classAttr;
-    mutable unsigned long checksum;
-
-    Attr *getClassAttr() const;
-
-    void setClassAttr(Attr *classAttr);
+    Element *owner;
+    std::map<DOMString, Attr *> attrMap;
+    mutable std::list<DOMString> insertionOrder;
 };
 
 #endif //FEATHER_NAMED_NODE_MAP_H
