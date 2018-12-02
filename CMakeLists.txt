@@ -22,10 +22,12 @@ add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/chara
         include/utils/observable/filtered_list.h include/utils/observable/invalidatable.h include/utils/observable/smart_observable_list.h
         include/utils/node_list.h include/utils/html_collection.h src/utils/html_collection.cpp include/css/css_style_sheet.h
         include/css/style_sheet.h include/css/css_rules/css_rule.h include/css/css_rules/css_rule_type.h include/css/css_rules/css_import_rule.h
-        include/utils/observable/observable_map.h include/utils/observable/smart_observable_map.h include/utils/observable/dumb_observable_list.h include/nodes/attrs/standard_attr.h include/nodes/attrs/class_attr.h)
+        include/utils/observable/observable_map.h include/utils/observable/smart_observable_map.h include/utils/observable/dumb_observable_list.h
+        include/nodes/attrs/standard_attr.h include/nodes/attrs/class_attr.h include/utils/observable/concatenated_list.h
+        include/utils/observable/event/event_type.h include/typedefs.h src/typedefs.cpp)
 target_include_directories(feather PRIVATE include)
 
-add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)
+add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp src/typedefs.cpp)
 target_include_directories(render-engine PRIVATE include)
 target_link_libraries(render-engine feather)
 find_package(curl)

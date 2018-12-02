@@ -6,6 +6,7 @@
 #define FEATHER_ELEMENT_H
 
 #include "include/geom/dom_rect.h"
+#include "include/utils/observable/concatenated_list.h"
 #include "include/utils/dom_token_list.h"
 #include "include/utils/named_node_map.h"
 #include "attrs/standard_attr.h"
@@ -22,15 +23,11 @@ namespace dom {
     class ShadowRoot;
 }
 
-namespace {
-    DOMString empty[0];
-}
-
 class dom::Element
         : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
 public:
 
-    explicit Element(DOMString tagName);
+    explicit Element(DOMString tagName, DOMString baseURI, Document *owner, Node *parent);
 
     inline NamedNodeMap &getAttributes() { return attributes; }
 
@@ -38,7 +35,7 @@ public:
 
     inline DOMString getClassName() const { return classList.getValue(); }
 
-    void setClassName(DOMString className);
+    inline void setClassName(DOMString className) { classList.setValue(className); }
 
     inline double getClientLeft() const { return clientDim[0]; }
 
@@ -98,13 +95,15 @@ public:
 
     std::vector<DOMRect> getClientRects();
 
-    std::vector<Element *> getElementsByClassName(DOMString classNames);
+    observable::FilteredList<Element *> *getElementsByClassName(DOMString classNames);
+
+    observable::FilteredList<Element *> *getElementsByTagName(DOMString tagName);
 
     virtual ~Element();
 
 private:
     NamedNodeMap attributes;
-    DOMTokenList classList = DOMTokenList(empty);
+    DOMTokenList classList;
     double clientDim[4];
     DOMString computedName;
     DOMString computedRole;
@@ -113,8 +112,10 @@ private:
     DOMString tagName;
     ShadowRoot *shadow;
     bool closed;
-
     HTMLCollection children;
+
+    //Caches
+    observable::ConcatenatedList<Element *> allChildren;
 
     DOMString computeInnerHTML() const;
 

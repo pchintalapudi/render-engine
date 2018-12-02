@@ -12,24 +12,28 @@ namespace dom {
     class ClassAttr;
 }
 
-class dom::ClassAttr : Attr {
+class dom::ClassAttr : public Attr {
 public:
 
-    ClassAttr(DOMString name, Element *owner) : Attr(name, owner), classes(nullptr) {
-        classes.addInvalidator(this, [this]() { this->invalidate(); });
+    ClassAttr(Element *owner, DOMTokenList &classes) : Attr("class", owner), classes(classes) {
+        classes.addInvalidator(this, invalidator);
     }
 
     DOMString getValue() const override {
         if (this->isValid()) return cached;
+        DOMString val = classes.getValue();
         this->validate();
+        return val;
     }
 
     void setValue(DOMString value) override { classes.setValue(value); }
 
     DOMTokenList &getClassList() { return classes; }
 
+    ~ClassAttr() { classes.clear(); }
+
 private:
-    DOMTokenList classes;
+    DOMTokenList &classes;
     mutable DOMString cached;
 };
 

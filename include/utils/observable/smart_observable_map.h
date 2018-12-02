@@ -6,6 +6,7 @@
 #define FEATHER_SMART_OBSERVABLE_MAP_H
 
 #include "observable_map.h"
+#include "event/event_type.h"
 
 namespace observable {
     template<typename K, typename V>
@@ -18,7 +19,7 @@ public:
         if (backing.find(key) != backing.end()) backing[key]->removeInvalidator(this);
         backing[key] = value;
         value->addInvalidator(this, [this]() { this->invalidate(); });
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::MAP_CHANGE));
     }
 
 protected:

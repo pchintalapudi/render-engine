@@ -16,19 +16,19 @@ namespace dom {
 
 class dom::HTMLCollection : public observable::ObservableList<Element *> {
 public:
-    explicit HTMLCollection(ObservableList<Node *> *watched) : watched(watched) {
-        if (watched) watched->addInvalidator(this, [this]() { this->invalidate(); });
+    explicit HTMLCollection(ObservableList<Node *> &watched) : watched(watched) {
+        watched.addInvalidator(this, invalidator);
     }
 
     ~HTMLCollection() {
-        if (watched) watched->removeInvalidator(this);
+        watched.removeInvalidator(this);
     }
 
 protected:
     const std::vector<Element *> *compute() const;
 
 private:
-    ObservableList<Node *> *watched;
+    ObservableList<Node *> &watched;
     mutable std::vector<Element *> backing;
 };
 

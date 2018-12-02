@@ -32,16 +32,7 @@ public:
     }
 
     void setValue(DOMString val) {
-        std::vector<DOMString> toSwap;
-        DOMString next = "";
-        for (auto character : val) {
-            if (!isspace(character)) next += character;
-            else if (!next.empty()) {
-                toSwap.push_back(next);
-                next = "";
-            }
-        }
-        if (!next.empty()) toSwap.push_back(next);
+        std::vector<DOMString> toSwap = parseStringList(val);
         swap(toSwap);
         value = val;
         this->validate();

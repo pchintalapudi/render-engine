@@ -1,9 +1,15 @@
 //
-// Created by prem on 11/9/2018.
+// Created by prem on 11/30/2018.
 //
 
-#ifndef FEATHER_TYPDEFS_H
-#define FEATHER_TYPDEFS_H
+#ifndef FEATHER_TYPEDEFS_H
+#define FEATHER_TYPEDEFS_H
+
 #include <string>
+#include <vector>
+
 typedef std::string DOMString;
-#endif //FEATHER_TYPDEFS_H
+
+std::vector<DOMString> parseStringList(DOMString list);
+
+#endif //FEATHER_TYPEDEFS_H

@@ -6,6 +6,7 @@
 #define FEATHER_SMART_OBSERVABLE_LIST_H
 
 #include "observable_list.h"
+#include "event/event_type.h"
 
 namespace observable {
     template<typename T>
@@ -17,41 +18,41 @@ class observable::SmartObservableList : public ObservableList<T> {
 public:
     void set(unsigned long index, T t) {
         source[index]->removeInvalidator(this);
-        t->addInvalidator(this, invalidation);
+        t->addInvalidator(this, this->invalidator);
         source[index] = t;
     }
 
     void add(T t) {
-        t->addInvalidator(this, [this]() { this->invalidate(); });
+        t->addInvalidator(this, this->invalidator);
         source.push_back(t);
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
     void addAll(std::vector<T> elements) {
         for (auto element : elements) {
-            element->addInvalidator(this, invalidation);
+            element->addInvalidator(this, this->invalidator);
             source.push_back(element);
         }
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
     void insert(unsigned long index, T t) {
-        t->addInvalidator(this, invalidation);
+        t->addInvalidator(this, this->invalidator);
         source.insert(source.begin() + index, t);
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
     void insertAll(unsigned long index, std::vector<T> &elements) {
-        for (auto element : elements) element->addInvalidator(this, invalidation);
+        for (auto element : elements) element->addInvalidator(this, this->invalidator);
         source.insert(source.begin() + index, elements.begin(), elements.end());
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
     T remove(unsigned long index) {
         auto t = source[index];
         source[index]->removeInvalidator(this);
         source.erase(source.begin() + index);
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
         return t;
     }
 
@@ -73,13 +74,13 @@ public:
             erased.push_back(source[i]);
         }
         source.erase(source.begin() + begin, source.begin() + end);
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
         return erased;
     }
 
     void clear() {
         source.clear();
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
 protected:
@@ -87,7 +88,6 @@ protected:
 
 private:
     std::vector<T> source;
-    const std::function<void()> invalidation = [this]() { this->invalidate(); };
 };
 
 #endif //FEATHER_SMART_OBSERVABLE_LIST_H

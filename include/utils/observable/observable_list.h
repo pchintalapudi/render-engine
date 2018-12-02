@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include "invalidatable.h"
+#include "event/event_type.h"
 
 namespace observable {
     template<typename T>
@@ -19,7 +20,6 @@ namespace observable {
 template<typename T>
 class observable::ObservableList : public Invalidatable {
 public:
-    ObservableList() : backing() {}
 
     inline T get(unsigned long index) const {
         return getBacking()[index];
@@ -80,13 +80,15 @@ protected:
 
     virtual const std::vector<T> *compute() const = 0;
 
-    inline void deleteBacking() { delete backing; }
-
     const std::vector<T> &getBacking() const {
         if (this->isValid()) return *backing;
         backing = compute();
         validate();
         return *backing;
+    }
+
+    bool handle(long long bitField) {
+        return present(bitField, EventType::LIST_CHANGE);
     }
 
 private:

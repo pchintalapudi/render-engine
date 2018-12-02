@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <set>
 #include <sstream>
+#include "typedefs.h"
 #include "include/nodes/processing_instruction.h"
 #include "include/nodes/text.h"
 #include "include/nodes/element.h"
@@ -12,22 +13,15 @@
 #include "include/utils/selectors/css_selector_parsing_impl.h"
 #include "include/utils/selectors/css_selector.h"
 
-void dom::Element::setClassName(DOMString className) {
-    classList.clear();
-    std::stringstream stream;
-    for (unsigned long i = 0; i < className.length(); i++) {
-        if (className[i] == ' ') {
-            DOMString str = stream.str();
-            if (!std::all_of(str.begin(), str.end(), isspace))
-                classList.add(str);
-            stream.str("");
-            stream.clear();
-        }
-        stream << className[i];
-    }
-    DOMString str = stream.str();
-    if (!std::all_of(str.begin(), str.end(), isspace))
-        classList.add(str);
+namespace {
+    DOMString empty[0];
+}
+
+dom::Element::Element(DOMString tagName, DOMString baseURI, Document *owner, Node *parent)
+        : Node(baseURI, tagName, NodeType::ELEMENT_NODE, owner, parent),
+          classList(empty), children(getChildNodes()) {
+    Attr *classAttr = new ClassAttr(this, classList);
+    attributes.setNamedItem(classAttr);
 }
 
 void dom::Element::setInnerHTML(DOMString html) {
@@ -125,12 +119,19 @@ dom::Element *dom::Element::closest(DOMString selector) {
     return parent;
 }
 
-DOMString* dom::Element::getAttribute(DOMString attributeName) {
+DOMString *dom::Element::getAttribute(DOMString attributeName) {
     auto attr = attributes.getNamedItem(attributeName);
     return attr ? new DOMString(attr->getValue()) : nullptr;
 }
 
-
+observable::FilteredList<dom::Element *> *dom::Element::getElementsByClassName(DOMString classNames) {
+    std::vector<DOMString> classes = parseStringList(classNames);
+    std::function<bool(Element *)> filter = [classes](Element *element) {
+        for (const auto clazz : classes) if (!element->getClassList().contains(clazz)) return false;
+        return true;
+    };
+    return new observable::FilteredList<Element *>(&this->getChildren(), filter);
+}
 
 dom::Element::~Element() {
     delete shadow;

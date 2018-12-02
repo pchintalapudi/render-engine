@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <list>
 #include <map>
+#include <include/utils/observable/event/event_type.h>
 #include "dom_token_list.h"
 #include "include/nodes/attr.h"
 #include "include/typedefs.h"
@@ -28,7 +29,7 @@ public:
         attrMap[name] = attr;
         insertionOrder.remove(name);
         insertionOrder.push_front(name);
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::MAP_CHANGE));
     }
 
     Attr *removeNamedItem(DOMString key) {
@@ -47,6 +48,10 @@ public:
     Attr *getItem(unsigned long index) const { return attrMap.at(*std::next(insertionOrder.begin(), index)); }
 
     inline unsigned long size() const { return attrMap.size(); }
+
+    ~NamedNodeMap() {
+        for (auto attr : attrMap) delete attr.second;
+    }
 
 private:
     Element *owner;

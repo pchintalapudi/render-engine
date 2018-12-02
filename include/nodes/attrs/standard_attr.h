@@ -6,6 +6,7 @@
 #define FEATHER_STANDARD_ATTR_H
 
 #include "../attr.h"
+#include "include/utils/observable/event/event_type.h"
 
 namespace dom {
     class StandardAttr;
@@ -22,7 +23,7 @@ public:
 
     void setValue(DOMString value) override {
         this->value = value;
-        this->invalidate();
+        this->invalidate(observable::generate(observable::EventType::INTERNAL_CHANGE));
     }
 
 private:
