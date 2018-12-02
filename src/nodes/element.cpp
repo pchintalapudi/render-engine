@@ -11,7 +11,6 @@
 #include "include/nodes/element.h"
 #include "include/nodes/shadow_root.h"
 #include "include/utils/selectors/css_selector_parsing_impl.h"
-#include "include/utils/selectors/css_selector.h"
 
 namespace {
     DOMString empty[0];
@@ -19,7 +18,7 @@ namespace {
 
 dom::Element::Element(DOMString tagName, DOMString baseURI, Document *owner, Node *parent)
         : Node(baseURI, tagName, NodeType::ELEMENT_NODE, owner, parent),
-          classList(empty), children(getChildNodes()) {
+          classList(empty), children(getChildNodes()), allChildren(children) {
     Attr *classAttr = new ClassAttr(this, classList);
     attributes.setNamedItem(classAttr);
 }
@@ -130,7 +129,15 @@ observable::FilteredList<dom::Element *> *dom::Element::getElementsByClassName(D
         for (const auto clazz : classes) if (!element->getClassList().contains(clazz)) return false;
         return true;
     };
-    return new observable::FilteredList<Element *>(&this->getChildren(), filter);
+    return new observable::MutableFilteredList<Element *>(&this->getChildren(), filter);
+}
+
+observable::FilteredList<dom::Element *> *dom::Element::getElementsByTagName(DOMString tagName) {
+    std::function<bool(Element *)> func = [tagName](Element *element) {
+        return element->getTagName() == tagName;
+    };
+    return new observable::FilteredList<Element *>(&allChildren,
+                                                   tagName == "*" ? [](Element *) { return true; } : func);
 }
 
 dom::Element::~Element() {

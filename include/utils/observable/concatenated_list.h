@@ -15,22 +15,32 @@ namespace observable {
 template<typename T>
 class observable::ConcatenatedList : public ObservableList<T> {
 public:
-    void addList(ObservableList <T> *observableList) {}
+    ConcatenatedList() {
+        observed->addInvalidator(this, this->invalidator);
+    }
 
 protected:
     const std::vector<T> *compute() const override {
         concat.clear();
-        for (auto obs : observed) {
+        unsigned long netSize = 0;
+        for (unsigned long i = 0; i < observed->size(); i++) {
+            auto obs = observed->get(i);
+            if (obs) netSize += obs->size();
+        }
+        concat.reserve(netSize);
+        for (unsigned long i = 0; i < observed->size(); i++) {
+            auto obs = observed->get(i);
             if (obs) {
-                concat.reserve(concat.size() + obs->size());
-                for (unsigned long i = 0; i < obs->size(); i++) concat.push_back(obs->get(i));
+                for (unsigned long j = 0; j < obs->size(); j++) {
+                    concat.push_back(obs->get(j));
+                }
             }
         }
         return &concat;
     }
 
 private:
-    std::vector<ObservableList < T>*>
+    ObservableList<ObservableList<T> *> *
     observed;
     mutable std::vector<T> concat;
 };

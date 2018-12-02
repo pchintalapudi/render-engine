@@ -88,6 +88,11 @@ public:
         delete nodeValue;
     }
 
+protected:
+    inline long long edit(long long) const override {
+        return observable::generate(observable::EventType::INTERNAL_CHANGE);
+    }
+
 private:
     const DOMString baseURI;
     mutable NodeList childNodes;

@@ -6,7 +6,7 @@
 #define FEATHER_ELEMENT_H
 
 #include "include/geom/dom_rect.h"
-#include "include/utils/observable/concatenated_list.h"
+#include "include/utils/full_child_list.h"
 #include "include/utils/dom_token_list.h"
 #include "include/utils/named_node_map.h"
 #include "attrs/standard_attr.h"
@@ -99,6 +99,9 @@ public:
 
     observable::FilteredList<Element *> *getElementsByTagName(DOMString tagName);
 
+    //Internal implementation methods
+    dom::FullChildList &getAllChildren() const { return allChildren; }
+
     virtual ~Element();
 
 private:
@@ -115,7 +118,7 @@ private:
     HTMLCollection children;
 
     //Caches
-    observable::ConcatenatedList<Element *> allChildren;
+    mutable dom::FullChildList allChildren;
 
     DOMString computeInnerHTML() const;
 

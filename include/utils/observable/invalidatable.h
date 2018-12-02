@@ -21,19 +21,21 @@ public:
 
     inline void removeInvalidator(void *key) { invalidators.erase(key); }
 
+    bool isValid() const { return valid; }
+
     virtual ~Invalidatable() {}
 
 protected:
     inline void invalidate(long long l) const {
-        for (auto it : invalidators)it.second(l);
         if (handle(l)) valid = false;
+        for (auto it : invalidators)it.second(edit(l));
     }
 
     virtual bool handle(long long) const {
         return true;
     }
 
-    bool isValid() const { return valid; }
+    virtual long long edit(long long l) const { return l; }
 
     void validate() const { valid = true; }
 
