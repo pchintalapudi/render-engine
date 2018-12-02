@@ -11,13 +11,6 @@ class TrieTest : public ::testing::Test {
 protected:
     feather::parser::Trie<bool> emptyTrie;
     feather::parser::Trie<bool> trie;
-
-    void SetUp() override {
-        trie.add(std::string("word"), true);
-        trie.add(std::string("some other word"), true);
-        trie.add(std::string("water"), true);
-        trie.add(std::string("waiter"), true);
-    }
 };
 
 
