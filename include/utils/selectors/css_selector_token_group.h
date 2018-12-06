@@ -14,7 +14,8 @@
 namespace css { class CSSSelectorTokenGroup; }
 class css::CSSSelectorTokenGroup {
 public:
-    CSSSelectorTokenGroup(CSSSelectorToken *end, std::vector<std::pair<CSSSelectorToken *, CSSSelectorRelation >> tokens);
+    CSSSelectorTokenGroup(CSSSelectorToken *end,
+                          std::vector<std::pair<CSSSelectorToken *, CSSSelectorRelation> *> tokens);
 
     bool matches(const dom::Element *element) const;
 
@@ -22,9 +23,11 @@ public:
 
     unsigned long getLength() const;
 
+    ~CSSSelectorTokenGroup();
+
 private:
     CSSSelectorToken *end;
-    std::deque<std::pair<CSSSelectorToken *, CSSSelectorRelation>> tokens;
+    std::deque<std::pair<CSSSelectorToken *, CSSSelectorRelation> *> tokens;
 };
 
 #endif //FEATHER_CSS_SELECTOR_TOKEN_GROUP_H

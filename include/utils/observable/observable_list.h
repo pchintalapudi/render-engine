@@ -72,7 +72,7 @@ public:
     template<typename Filter>
     inline bool noneMatch(Filter filter) const { return !anyMatch(filter); }
 
-    bool contains(T t) { return std::find(getBacking().begin(), backing->end(), t) != backing->end(); }
+    inline bool contains(T t) const { return std::find(getBacking().begin(), backing->end(), t) != backing->end(); }
 
     inline unsigned long size() const { return getBacking().size(); }
 

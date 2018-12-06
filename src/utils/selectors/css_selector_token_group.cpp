@@ -9,7 +9,7 @@
 
 css::CSSSelectorTokenGroup::CSSSelectorTokenGroup(
         css::CSSSelectorToken *end,
-        std::vector<std::pair<css::CSSSelectorToken *, css::CSSSelectorRelation>> tokens) : end(end) {
+        std::vector<std::pair<css::CSSSelectorToken *, css::CSSSelectorRelation> *> tokens) : end(end) {
     this->tokens.insert(this->tokens.end(), tokens.begin(), tokens.end());
 }
 
@@ -19,9 +19,9 @@ bool css::CSSSelectorTokenGroup::matches(const dom::Element *element) const {
         auto focused = element;
         for (unsigned long i = tokens.size(); i-- > 0;) {
             auto token = tokens[i];
-            switch (token.second) {
+            switch (token->second) {
                 case CSSSelectorRelation::DESCENDANT:
-                    if (focused->getParentElement() && (*token.first).matches(focused->getParentElement())) {
+                    if (focused->getParentElement() && (*token->first).matches(focused->getParentElement())) {
                         focused = focused->getParentElement();
                         break;
                     } else return false;
@@ -29,7 +29,7 @@ bool css::CSSSelectorTokenGroup::matches(const dom::Element *element) const {
                     auto sibling = focused->getPreviousSibling();
                     while (sibling && sibling->getNodeType() != dom::NodeType::ELEMENT_NODE)
                         sibling = sibling->getPreviousSibling();
-                    if (sibling && (*token.first).matches(
+                    if (sibling && (*token->first).matches(
                             static_cast<dom::Element *>(sibling))) {
                         focused = static_cast<dom::Element *>(sibling);
                         break;
@@ -39,7 +39,7 @@ bool css::CSSSelectorTokenGroup::matches(const dom::Element *element) const {
                     auto sibling = focused->getPreviousSibling();
                     while (sibling) {
                         if (sibling->getNodeType() == dom::NodeType::ELEMENT_NODE) {
-                            if ((*token.first).matches(static_cast<dom::Element *>(sibling))) {
+                            if ((*token->first).matches(static_cast<dom::Element *>(sibling))) {
                                 focused = static_cast<dom::Element *>(sibling);
                                 break;
                             }
@@ -62,8 +62,8 @@ DOMString css::CSSSelectorTokenGroup::toString() const {
     if (end) {
         DOMString str;
         for (auto token : tokens) {
-            str += (*token.first).toString();
-            switch (token.second) {
+            str += (*token->first).toString();
+            switch (token->second) {
                 case CSSSelectorRelation::DESCENDANT:
                     str += " > ";
                     break;
@@ -77,7 +77,7 @@ DOMString css::CSSSelectorTokenGroup::toString() const {
                     break;
             }
         }
-        str += (*end).toString();
+        str += end->toString();
         return str;
     } else return "";
 }
@@ -85,6 +85,14 @@ DOMString css::CSSSelectorTokenGroup::toString() const {
 unsigned long css::CSSSelectorTokenGroup::getLength() const {
     if (!end) return 0;
     unsigned long length = 1;
-    for (auto token : tokens) if (token.second == CSSSelectorRelation::DESCENDANT) length++;
+    for (auto token : tokens) if (token->second == CSSSelectorRelation::DESCENDANT) length++;
     return length;
+}
+
+css::CSSSelectorTokenGroup::~CSSSelectorTokenGroup() {
+    delete end;
+    for (auto token : tokens) {
+        delete token->first;
+        delete token;
+    }
 }

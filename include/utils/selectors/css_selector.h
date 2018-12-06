@@ -29,6 +29,8 @@ public:
 
     DOMString toString() const;
 
+    ~CSSSelector();
+
 private:
     std::deque<CSSSelectorTokenGroup *> groups;
 };

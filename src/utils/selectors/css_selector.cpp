@@ -53,16 +53,20 @@ void css::CSSSelector::preprocess(const dom::Element *element) {
 }
 
 DOMString css::CSSSelector::toString() const {
-    std::stringstream stream;
+    DOMString string;
     switch (groups.size()) {
         case 0:
             break;
         case 1:
-            stream << (*groups.front()).toString();
+            string += groups.front()->toString();
             break;
         default:
-            for (auto group : groups) stream << " " << (*group).toString();
+            for (auto group : groups) (string += " ") += group->toString();
             break;
     }
-    return stream.str();
+    return string;
+}
+
+css::CSSSelector::~CSSSelector() {
+    for (auto group : groups) delete group;
 }

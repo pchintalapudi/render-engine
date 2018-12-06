@@ -172,19 +172,19 @@ unsigned char dom::Node::compareDocumentPosition(const Node *other) const {
         return 0;
     }
     if (!other || other->getRootNode() != getRootNode()) {
-        return 1 | (1 << 5) | (1 << (this < other ? 1 : 2));
+        return 1u | (1u << 5u) | (1u << (this < other ? 1u : 2u));
     }
     if (other->contains(this)) {
-        return (1 << 1) | (1 << 3);
+        return (1u << 1u) | (1u << 3u);
     }
     if (this->contains(other)) {
-        return (1 << 2) | (1 << 4);
+        return (1u << 2u) | (1u << 4u);
     }
     auto pointer = traverseTree(getOwner(), other, this);
     if (pointer && other == pointer) {
-        return 1 << 1;
+        return 1u << 1u;
     }
-    return 1 << 2;
+    return 1u << 2u;
 }
 
 bool dom::Node::handle(long long l) const {

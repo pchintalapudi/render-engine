@@ -8,17 +8,17 @@ namespace observable {
     enum class EventType;
 
     inline long long set(long long bitField, EventType eventType) {
-        return bitField << (1 | static_cast<int>(eventType));
+        return bitField << (1u | static_cast<int>(eventType));
     }
 
     inline long long unset(long long bitField, EventType eventType) {
-        return bitField & ~(1 << static_cast<int>(eventType));
+        return bitField & ~(1u << static_cast<int>(eventType));
     }
 
-    inline long long generate(EventType eventType) { return 1 << static_cast<int>(eventType); }
+    inline long long generate(EventType eventType) { return 1u << static_cast<int>(eventType); }
 
     inline bool present(long long bitField, EventType eventType) {
-        return (bitField & 1 << static_cast<int>(eventType)) != 0;
+        return (bitField & 1u << static_cast<int>(eventType)) != 0;
     }
 }
 

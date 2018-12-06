@@ -10,6 +10,7 @@
 #include "include/nodes/text.h"
 #include "include/nodes/element.h"
 #include "include/nodes/shadow_root.h"
+#include "include/utils/observable/mutable_filtered_list.h"
 
 namespace {
     DOMString empty[0];

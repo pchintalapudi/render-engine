@@ -141,7 +141,7 @@ bool inListIgnoreCase(DOMString list, DOMString val) {
     return stream.str() == val;
 }
 
-std::pair<std::function<bool(dom::Element *)>, DOMString>
+std::pair<std::function<bool(const dom::Element *)>, DOMString> *
 parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
     unsigned long k = *i + 1;
     std::stringstream stream, combined;
@@ -191,34 +191,34 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
         switch (type) {
             case AttrSelectorType::MATCH:
                 if (!caseSensitive)
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 return attribute && attribute->getValue() == val;
                             }, combined.str());
                 else
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 return attribute && equalsIgnoreCase(attribute->getValue(), val);
                             }, combined.str());
             case AttrSelectorType::CONTAIN:
                 if (!caseSensitive)
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 return attribute && attribute->getValue().find(val) != DOMString::npos;
                             }, combined.str());
                 else
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 return attribute && containsIgnoreCase(attribute->getValue(), val);
                             }, combined.str());
             case AttrSelectorType::END:
                 if (!caseSensitive)
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute) return false;
                                 auto value = attribute->getValue();
@@ -226,8 +226,8 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
                                        value.substr(value.length() - val.length(), val.length()) == val;
                             }, combined.str());
                 else
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute) return false;
                                 auto value = attribute->getValue();
@@ -236,16 +236,16 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
                             }, combined.str());
             case AttrSelectorType::BEGIN:
                 if (!caseSensitive)
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute)return false;
                                 auto value = attribute->getValue();
                                 return value.length() > val.length() && value.substr(0, val.length()) == val;
                             }, combined.str());
                 else
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute)return false;
                                 auto value = attribute->getValue();
@@ -254,8 +254,8 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
                             }, combined.str());
             case AttrSelectorType::HYPHEN:
                 if (!caseSensitive)
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute) return false;
                                 auto value = attribute->getValue();
@@ -264,8 +264,8 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
                                         (val + "-") == value.substr(0, val.length() + 1));
                             }, combined.str());
                 else
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute)return false;
                                 auto value = attribute->getValue();
@@ -275,16 +275,16 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
                             }, combined.str());
             case AttrSelectorType::LIST:
                 if (!caseSensitive)
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute) return false;
                                 auto value = attribute->getValue();
                                 return inList(value, val);
                             }, combined.str());
                 else
-                    return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                            [attr, val](dom::Element *element) {
+                    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                            [attr, val](const dom::Element *element) {
                                 auto attribute = element->getAttributes().getNamedItem(attr);
                                 if (!attribute) return false;
                                 auto value = attribute->getValue();
@@ -295,8 +295,8 @@ parseAttrSelector(unsigned long *i, unsigned long j, DOMString selector) {
         auto attr = stream.str();
         combined << '[' << attr << ']';
         *i = k;
-        return std::pair<std::function<bool(dom::Element *)>, DOMString>(
-                [attr](dom::Element *element) { return element->getAttributes().getNamedItem(attr) != nullptr; },
+        return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(
+                [attr](const dom::Element *element) { return element->getAttributes().getNamedItem(attr) != nullptr; },
                 combined.str());
     }
 }
@@ -306,11 +306,13 @@ int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-bool isNthChild(NthSel &formula, dom::Element *element) {
+bool isNthChild(NthSel &formula, const dom::Element *element) {
     if (element->getParentNode()) {
         long long idx = 0;
         if (element->getParentElement()) {
-            idx = static_cast<long long>(element->getParentElement()->getChildren().indexOf(element));
+            auto children = element->getParentElement()->getChildren();
+            while (idx < children.size() && children.get(idx++) != element);
+            idx--;
         } else {
             for (unsigned long i = 0; i < element->getParentNode()->getChildNodes().size(); i++) {
                 auto child = element->getParentNode()->getChildNodes().get(i);
@@ -323,12 +325,14 @@ bool isNthChild(NthSel &formula, dom::Element *element) {
     } else return formula.b == 0;
 }
 
-bool isNthLastChild(NthSel &formula, dom::Element *element) {
+bool isNthLastChild(NthSel &formula, const dom::Element *element) {
     if (element->getParentNode()) {
         long long idx = 0;
         if (element->getParentElement()) {
-            idx = static_cast<long long>(element->getParentElement()->getChildren().size())
-                  - static_cast<long long>(element->getParentElement()->getChildren().indexOf(element));
+            auto children = element->getParentElement()->getChildren();
+            auto size = children.size();
+            while (idx < children.size() && children.get(size - idx++ - 1) != element);
+            idx--;
         } else {
             for (unsigned long i = element->getParentNode()->getChildNodes().size(); i-- > 0;) {
                 auto child = element->getParentNode()->getChildNodes().get(i);
@@ -341,7 +345,7 @@ bool isNthLastChild(NthSel &formula, dom::Element *element) {
     } else return formula.b == 0;
 }
 
-bool isNthOfType(NthSel &formula, DOMString type, dom::Element *element) {
+bool isNthOfType(NthSel &formula, DOMString type, const dom::Element *element) {
     if (type == "*") return isNthChild(formula, element);
     long long idx = 0;
     if (element->getParentElement()) {
@@ -365,7 +369,7 @@ bool isNthOfType(NthSel &formula, DOMString type, dom::Element *element) {
     return (!idx || (sgn(idx) == sgn(formula.A) && !(idx % formula.A)));
 }
 
-bool isNthLastOfType(NthSel &formula, DOMString type, dom::Element *element) {
+bool isNthLastOfType(NthSel &formula, DOMString type, const dom::Element *element) {
     if (type == "*") return isNthLastChild(formula, element);
     long long idx = 0;
     if (element->getParentElement()) {
@@ -389,17 +393,17 @@ bool isNthLastOfType(NthSel &formula, DOMString type, dom::Element *element) {
     return (!idx || (sgn(idx) == sgn(formula.A) && !(idx % formula.A)));
 }
 
-bool isActive(dom::Element *element) {
+bool isActive(const dom::Element *element) {
     return element->getOwner() ? element->getOwner()->getPseudoclassManager().isActive(element) : false;
 }
 
-bool isAnyLink(dom::Element *element) {
+bool isAnyLink(const dom::Element *element) {
     DOMString tag = element->getTagName();
     dom::Attr *attr = element->getAttributes().getNamedItem("href");
     return (tag == "a" || tag == "area" || tag == "link") && (attr && !attr->getValue().empty());
 }
 
-bool isFirstChild(dom::Element *element) {
+bool isFirstChild(const dom::Element *element) {
     if (!element->getParentNode()) return true;
     auto children = element->getParentNode()->getChildNodes();
     for (unsigned long i = 0; i < children.size(); i++) {
@@ -409,7 +413,7 @@ bool isFirstChild(dom::Element *element) {
     return false;
 }
 
-bool isFirstOfType(dom::Element *element) {
+bool isFirstOfType(const dom::Element *element) {
     if (!element->getParentNode()) return true;
     auto children = element->getParentNode()->getChildNodes();
     for (unsigned long i = 0; i < children.size(); i++) {
@@ -421,19 +425,19 @@ bool isFirstOfType(dom::Element *element) {
     return false;
 }
 
-bool isFocus(dom::Element *element) {
+bool isFocus(const dom::Element *element) {
     return element->getOwner() && element->getOwner()->getPseudoclassManager().isFocused(element);
 }
 
-bool containsFocus(dom::Element *element) {
+bool containsFocus(const dom::Element *element) {
     return element->getOwner() && element->getOwner()->getPseudoclassManager().hasFocus(element);
 }
 
-bool isHover(dom::Element *element) {
+bool isHover(const dom::Element *element) {
     return element->getOwner() && element->getOwner()->getPseudoclassManager().isHover(element);
 }
 
-bool isLastChild(dom::Element *element) {
+bool isLastChild(const dom::Element *element) {
     if (!element->getParentNode()) return true;
     auto children = element->getParentNode()->getChildNodes();
     for (unsigned long i = children.size(); i > 0; i--) {
@@ -444,7 +448,7 @@ bool isLastChild(dom::Element *element) {
     return false;
 }
 
-bool isLastOfType(dom::Element *element) {
+bool isLastOfType(const dom::Element *element) {
     if (!element->getParentNode()) return true;
     auto children = element->getParentNode()->getChildNodes();
     for (unsigned long i = children.size(); i-- > 0;) {
@@ -457,7 +461,7 @@ bool isLastOfType(dom::Element *element) {
     return false;
 }
 
-bool isOnlyChild(dom::Element *element) {
+bool isOnlyChild(const dom::Element *element) {
     if (!element->getParentNode()) return true;
     auto children = element->getParentNode()->getChildNodes();
     for (unsigned long i = 0; i < children.size(); i++) {
@@ -467,7 +471,7 @@ bool isOnlyChild(dom::Element *element) {
     return true;
 }
 
-bool isOnlyOfType(dom::Element *element) {
+bool isOnlyOfType(const dom::Element *element) {
     if (!element->getParentNode()) return true;
     auto children = element->getParentNode()->getChildNodes();
     for (unsigned long i = 0; i < children.size(); i++) {
@@ -479,16 +483,21 @@ bool isOnlyOfType(dom::Element *element) {
     return true;
 }
 
-bool isRoot(dom::Element *element) {
+bool isRoot(const dom::Element *element) {
     return element->getOwner() && element->getOwner()->getDocumentElement() == element;
 }
 
-bool isTarget(dom::Element *element) {
+bool isTarget(const dom::Element *element) {
     return false;//TODO: somehow determine current url fragment from the element; maybe it's a property of Document
 }
 
+std::pair<std::function<bool(const dom::Element *)>, DOMString> *
+generatePair(std::function<bool(const dom::Element *)> func, DOMString type) {
+    return new std::pair<std::function<bool(const dom::Element *)>, DOMString>(func, type);
+}
+
 void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &classes,
-                     std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFuncs,
+                     std::vector<std::pair<std::function<bool(const dom::Element *)>, DOMString> *> &weirdFuncs,
                      DOMString str) {
     if (!str.empty())
         switch (str[0]) {
@@ -506,31 +515,31 @@ void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &
                                                        : str.substr(1, str.length() - 1) : str.substr(1,
                                                                                                       str.length() - 1);
                 if (str == "active") {
-                    weirdFuncs.emplace_back(isActive, ":active");
+                    weirdFuncs.push_back(generatePair(isActive, ":active"));
                 } else if (str == "any-link" || str == "link") {
-                    weirdFuncs.emplace_back(isAnyLink, ":link");
+                    weirdFuncs.push_back(generatePair(isAnyLink, ":link"));
                 } else if (str == "first-child") {
-                    weirdFuncs.emplace_back(isFirstChild, ":first-child");
+                    weirdFuncs.push_back(generatePair(isFirstChild, ":first-child"));
                 } else if (str == "first-of-type") {
-                    weirdFuncs.emplace_back(isFirstOfType, ":first-of-type");
+                    weirdFuncs.push_back(generatePair(isFirstOfType, ":first-of-type"));
                 } else if (str == "focus") {
-                    weirdFuncs.emplace_back(isFocus, ":focus");
+                    weirdFuncs.push_back(generatePair(isFocus, ":focus"));
                 } else if (str == "focus-within") {
-                    weirdFuncs.emplace_back(containsFocus, ":focus-within");
+                    weirdFuncs.push_back(generatePair(containsFocus, ":focus-within"));
                 } else if (str == "hover") {
-                    weirdFuncs.emplace_back(isHover, ":hover");
+                    weirdFuncs.push_back(generatePair(isHover, ":hover"));
                 } else if (str == "last-child") {
-                    weirdFuncs.emplace_back(isLastChild, ":last-child");
+                    weirdFuncs.push_back(generatePair(isLastChild, ":last-child"));
                 } else if (str == "last-of-type") {
-                    weirdFuncs.emplace_back(isLastOfType, ":last-of-type");
+                    weirdFuncs.push_back(generatePair(isLastOfType, ":last-of-type"));
                 } else if (str == "only-child") {
-                    weirdFuncs.emplace_back(isOnlyChild, ":only-child");
+                    weirdFuncs.push_back(generatePair(isOnlyChild, ":only-child"));
                 } else if (str == "only-of-type") {
-                    weirdFuncs.emplace_back(isOnlyOfType, ":only-of-type");
+                    weirdFuncs.push_back(generatePair(isOnlyOfType, ":only-of-type"));
                 } else if (str == "root") {
-                    weirdFuncs.emplace_back(isRoot, ":root");
+                    weirdFuncs.push_back(generatePair(isRoot, ":root"));
                 } else if (str == "target") {
-                    weirdFuncs.emplace_back(isTarget, ":target");
+                    weirdFuncs.push_back(generatePair(isTarget, ":target"));
                 }
                 break;
         }
@@ -538,8 +547,8 @@ void interpretBuffer(DOMString *tagName, DOMString *id, std::vector<DOMString> &
 
 void handleSwitch(bool *spaceFound, css::CSSSelectorRelation *relation, DOMString *type, DOMString *id,
                   std::vector<DOMString> &classes,
-                  std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFuncs,
-                  std::vector<std::pair<css::CSSSelectorToken *, css::CSSSelectorRelation>> &relations,
+                  std::vector<std::pair<std::function<bool(const dom::Element *)>, DOMString> *> &weirdFuncs,
+                  std::vector<std::pair<css::CSSSelectorToken *, css::CSSSelectorRelation> *> &relations,
                   std::vector<css::CSSSelectorTokenGroup *> &selVector) {
     if (*spaceFound) {
         if (*relation == css::CSSSelectorRelation::NONE) {
@@ -559,7 +568,7 @@ void handleSwitch(bool *spaceFound, css::CSSSelectorRelation *relation, DOMStrin
         *id = "";
         classes.clear();
         weirdFuncs.clear();
-        relations.emplace_back(token, *relation);
+        relations.push_back(new std::pair<css::CSSSelectorToken *, css::CSSSelectorRelation>(token, *relation));
         *relation = css::CSSSelectorRelation::NONE;
     }
 }
@@ -580,12 +589,12 @@ css::CSSSelector css::parse(DOMString selector) {
     //Set up selector vector
     std::vector<CSSSelectorTokenGroup *> selVector;
     //Set up token group relations
-    std::vector<std::pair<CSSSelectorToken *, CSSSelectorRelation>> relations;
+    std::vector<std::pair<CSSSelectorToken *, CSSSelectorRelation> *> relations;
     //Set up token
     DOMString tagName = "*";
     DOMString id;
     std::vector<DOMString> classes;
-    std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> weirdFuncs;
+    std::vector<std::pair<std::function<bool(const dom::Element *)>, DOMString> *> weirdFuncs;
     //Monitor spaces
     CSSSelectorRelation relation = CSSSelectorRelation::NONE;
     bool spaceFound = false;
@@ -601,11 +610,12 @@ css::CSSSelector css::parse(DOMString selector) {
                 if (prev == ":dir") {
                 } else if (prev == ":host-context") {
                     auto sub = getSubselector(&i, j, selector);
-                    auto func = [sub](dom::Element *element) { return false;/*we don't support shadow roots yet*/ };
-                    weirdFuncs.emplace_back(func, ":host-context(" + sub.toString() + ")");
+                    auto func = [sub](
+                            const dom::Element *element) { return false;/*we don't support shadow roots yet*/ };
+                    weirdFuncs.push_back(generatePair(func, ":host-context(" + sub.toString() + ")"));
                 } else if (prev == ":is" || prev == ":matches" || prev == ":where") {
                     auto subList = getSubselectors(&i, j, selector);
-                    auto func = [subList](dom::Element *element) {
+                    auto func = [subList](const dom::Element *element) {
                         for (const auto sub : subList) if (sub.matches(element)) return true;
                         return false;
                     };
@@ -613,37 +623,37 @@ css::CSSSelector css::parse(DOMString selector) {
                     (output += ":is(") += subList[0].toString();
                     for (unsigned long k = 1; k < subList.size(); k++) (output += ", ") += subList[k].toString();
                     output += ')';
-                    weirdFuncs.emplace_back(func, output);
+                    weirdFuncs.push_back(generatePair(func, output));
                 } else if (prev == ":lang") {
                 } else if (prev == ":not") {
                     auto sub = getSubselector(&i, j, selector);
-                    auto func = [sub](dom::Element *element) { return !sub.matches(element); };
-                    weirdFuncs.emplace_back(func, ":not(" + sub.toString() + ")");
+                    auto func = [sub](const dom::Element *element) { return !sub.matches(element); };
+                    weirdFuncs.push_back(generatePair(func, ":not(" + sub.toString() + ")"));
                 } else if (prev == ":nth-child") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.emplace_back(
-                            [&formula](dom::Element *element) { return isNthChild(formula, element); },
-                            ":nth-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
+                    weirdFuncs.push_back(generatePair(
+                            [&formula](const dom::Element *element) { return isNthChild(formula, element); },
+                            ":nth-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")"));
                 } else if (prev == ":nth-last-child") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.emplace_back(
-                            [&formula](dom::Element *element) { return isNthLastChild(formula, element); },
-                            ":nth-last-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
+                    weirdFuncs.push_back(generatePair(
+                            [&formula](const dom::Element *element) { return isNthLastChild(formula, element); },
+                            ":nth-last-child(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")"));
                 } else if (prev == ":nth-last-of-type") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.emplace_back(
-                            [&formula, tagName](dom::Element *element) {
+                    weirdFuncs.push_back(generatePair(
+                            [&formula, tagName](const dom::Element *element) {
                                 return isNthLastOfType(formula, tagName, element);
                             },
                             ":nth-last-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) +
-                            ")");
+                            ")"));
                 } else if (prev == ":nth-of-type") {
                     auto formula = parseFormula(&i, j, selector);
-                    weirdFuncs.emplace_back(
-                            [&formula, tagName](dom::Element *element) {
+                    weirdFuncs.push_back(generatePair(
+                            [&formula, tagName](const dom::Element *element) {
                                 return isNthOfType(formula, tagName, element);
                             },
-                            ":nth-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")");
+                            ":nth-of-type(" + std::to_string(formula.A) + "n + " + std::to_string(formula.b) + ")"));
                 }
                 buffer.str("");
                 buffer.clear();

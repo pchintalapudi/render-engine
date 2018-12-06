@@ -17,14 +17,16 @@ private:
     DOMString type;
     DOMString id;
     std::vector<DOMString> classes;
-    std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> attributesAndPseudoclasses;
+    std::vector<std::pair<std::function<bool(const dom::Element *)>, DOMString> *> attributesAndPseudoclasses;
 public:
     CSSSelectorToken(DOMString type, DOMString id, std::vector<DOMString> &classes,
-                     std::vector<std::pair<std::function<bool(dom::Element *)>, DOMString>> &weirdFunctions);
+                     std::vector<std::pair<std::function<bool(const dom::Element *)>, DOMString> *> &weirdFunctions);
 
     bool matches(const dom::Element *element) const;
 
     DOMString toString() const;
+
+    ~CSSSelectorToken();
 };
 
 #endif //FEATHER_CSS_SELECTOR_TOKEN_H

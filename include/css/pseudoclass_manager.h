@@ -22,25 +22,25 @@ class css::PseudoclassManager {
 public:
     inline void clearMoused() { moused.clear(); }
 
-    void hover(std::vector<dom::Node *> elements);
+    void hover(const std::vector<const dom::Node *> elements);
 
-    void active(std::vector<dom::Node *> elements);
+    void active(const std::vector<const dom::Node *> elements);
 
-    inline bool isHover(dom::Node *element) { return hovered && moused.find(element) != moused.end(); }
+    inline bool isHover(const dom::Node *element) const { return hovered && moused.find(element) != moused.end(); }
 
-    inline bool isActive(dom::Node *element) { return !hovered && moused.find(element) != moused.end(); }
+    inline bool isActive(const dom::Node *element) const { return !hovered && moused.find(element) != moused.end(); }
 
-    void focus(std::vector<dom::Node *> nodes);
+    void focus(const std::vector<const dom::Node *> nodes);
 
-    inline bool isFocused(dom::Element *element) { return element == focused; }
+    inline bool isFocused(const dom::Element *element) const { return element == focused; }
 
-    inline bool hasFocus(dom::Element *element) { return focusedNodes.find(element) != focusedNodes.end(); }
+    bool hasFocus(const dom::Element *element) const;
 
 private:
-    std::set<dom::Node *> moused;
+    std::set<const dom::Node *> moused;
     bool hovered;
-    std::set<dom::Node *> focusedNodes;
-    dom::Element *focused;
+    std::set<const dom::Node *> focusedNodes;
+    const dom::Element *focused;
 };
 
 #endif //FEATHER_PSEUDOCLASS_MANAGER_H
