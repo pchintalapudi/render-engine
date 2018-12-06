@@ -19,8 +19,12 @@ namespace {
 dom::Element::Element(DOMString tagName, DOMString baseURI, Node *parent)
         : Node(baseURI, tagName, NodeType::ELEMENT_NODE, parent),
           classList(empty), children(getChildNodes()), allChildren(children) {
-    Attr *classAttr = new ClassAttr(this, classList);
-    attributes.setNamedItem(classAttr);
+}
+
+dom::Element::Element(dom::Element &other)
+        : Node(other), classList(empty), children(getChildNodes()), allChildren(children),
+          computedName(other.computedName), computedRole(other.computedRole) {
+    std::copy(other.scrollDim, other.scrollDim + 4, scrollDim);
 }
 
 void dom::Element::setInnerHTML(DOMString html) {

@@ -28,7 +28,7 @@ public:
         this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
-    void addAll(std::vector<T> &elements) {
+    void addAll(const std::vector<T> &elements) {
         for (auto element : elements) {
             element->addInvalidator(this, this->invalidator);
             source.push_back(element);
@@ -42,7 +42,7 @@ public:
         this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
-    void insertAll(unsigned long index, std::vector<T> &elements) {
+    void insertAll(unsigned long index, const std::vector<T> &elements) {
         for (auto element : elements) element->addInvalidator(this, this->invalidator);
         source.insert(source.begin() + index, elements.begin(), elements.end());
         this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
@@ -58,7 +58,7 @@ public:
 
     inline T remove(int index) { return remove(static_cast<unsigned long>(index)); }
 
-    void remove(T t) {
+    void remove(const T t) {
         for (unsigned long i = 0; i < source.size(); i++) {
             if (source[i] == t) {
                 remove(i);

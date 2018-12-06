@@ -28,7 +28,9 @@ class dom::Element
         : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
 public:
 
-    explicit Element(DOMString tagName, DOMString baseURI, Node *parent);
+    Element(DOMString tagName, DOMString baseURI, Node *parent);
+
+    explicit Element(Element &other);
 
     inline NamedNodeMap &getAttributes() { return attributes; }
 

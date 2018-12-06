@@ -14,7 +14,8 @@ namespace dom {
 }
 
 class dom::NodeList : public observable::SmartObservableList<Node *> {
-
+public:
+    NodeList(NodeList &other) { addAll(other.getBacking()); }
 };
 
 #endif //FEATHER_NODE_LIST_H
