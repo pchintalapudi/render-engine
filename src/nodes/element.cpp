@@ -22,8 +22,8 @@ dom::Element::Element(DOMString tagName, DOMString baseURI, Node *parent)
 }
 
 dom::Element::Element(dom::Element &other)
-        : Node(other), classList(empty), children(getChildNodes()), allChildren(children),
-          computedName(other.computedName), computedRole(other.computedRole) {
+        : Node(other), classList(empty), children(getChildNodes()), computedName(other.computedName),
+          computedRole(other.computedRole), allChildren(children) {
     std::copy(other.scrollDim, other.scrollDim + 4, scrollDim);
 }
 

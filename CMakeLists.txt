@@ -24,7 +24,7 @@ add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/chara
         include/css/style_sheet.h include/css/css_rules/css_rule.h include/css/css_rules/css_rule_type.h include/css/css_rules/css_import_rule.h
         include/utils/observable/observable_map.h include/utils/observable/smart_observable_map.h include/utils/observable/dumb_observable_list.h
         include/nodes/attrs/standard_attr.h include/nodes/attrs/class_attr.h include/utils/observable/concatenated_list.h
-        include/utils/observable/event/event_type.h include/typedefs.h src/typedefs.cpp include/utils/full_child_list.h src/utils/full_child_list.cpp include/utils/observable/mutable_filtered_list.h src/css/pseudoclass_manager.cpp)
+        include/utils/observable/event/event_type.h include/typedefs.h src/typedefs.cpp include/utils/full_child_list.h src/utils/full_child_list.cpp include/utils/observable/mutable_filtered_list.h src/css/pseudoclass_manager.cpp include/utils/stylesheet_list.h)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp src/typedefs.cpp)

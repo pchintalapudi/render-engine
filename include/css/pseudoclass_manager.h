@@ -30,17 +30,19 @@ public:
 
     inline bool isActive(const dom::Node *element) const { return !hovered && moused.find(element) != moused.end(); }
 
-    void focus(const std::vector<const dom::Node *> nodes);
+    void focus(const std::vector<dom::Node *> nodes);
 
     inline bool isFocused(const dom::Element *element) const { return element == focused; }
 
     bool hasFocus(const dom::Element *element) const;
 
+    dom::Element *getFocused() const { return focused; }
+
 private:
     std::set<const dom::Node *> moused;
     bool hovered;
     std::set<const dom::Node *> focusedNodes;
-    const dom::Element *focused;
+    dom::Element *focused;
 };
 
 #endif //FEATHER_PSEUDOCLASS_MANAGER_H

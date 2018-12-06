@@ -18,7 +18,7 @@ public:
     CSSStyleSheet() : CSSStyleSheet(nullptr) {}
 
     CSSStyleSheet(CSSImportRule *owner) : owner(owner) {
-        rules.addInvalidator(this, [this]() { this->invalidate(); });
+        rules.addInvalidator(this, [this](long long l) { this->invalidate(l); });
     }
 
     inline const CSSRuleList &getCssRules() const { return rules; }

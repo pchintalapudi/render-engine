@@ -11,8 +11,9 @@
 * Comment
 * CDataSection
 * ProcessingInstruction
+* Element
 
 ## Incomplete DOM models:
 * Document
-* Element
 * DocumentFragment
+* DocumentOrShadowRoot

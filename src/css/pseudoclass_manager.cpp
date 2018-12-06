@@ -20,12 +20,12 @@ void css::PseudoclassManager::hover(const std::vector<const dom::Node *> element
     hovered = true;
 }
 
-void css::PseudoclassManager::focus(const std::vector<const dom::Node *> nodes) {
+void css::PseudoclassManager::focus(const std::vector<dom::Node *> nodes) {
     focusedNodes.clear();
     focusedNodes.insert(nodes.begin(), nodes.end());
     for (unsigned long i = nodes.size(); i-- > 0;) {
         if (nodes[i]->getNodeType() == dom::NodeType::ELEMENT_NODE) {
-            focused = static_cast<const dom::Element *>(nodes[i]);
+            focused = static_cast<dom::Element *>(nodes[i]);
             return;
         }
     }

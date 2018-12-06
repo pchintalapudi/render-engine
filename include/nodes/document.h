@@ -5,21 +5,20 @@
 #ifndef FEATHER_DOCUMENT_H
 #define FEATHER_DOCUMENT_H
 
-#include "include/css/pseudoclass_manager.h"
-#include "node.h"
+#include "document_or_shadow_root.h"
 
 namespace dom {
     class Document;
 }
 
-class dom::Document : public Node {
+class dom::Document : public DocumentOrShadowRoot {
 public:
-    inline css::PseudoclassManager &getPseudoclassManager() { return pseudoclassManager; }
+
+    inline css::PseudoclassManager &getPseudoclassManager() { return getPseudoclassManagerInternal(); }
 
     inline dom::Element *getDocumentElement() { return root; }
 
 private:
-    css::PseudoclassManager pseudoclassManager;
     dom::Element *root;
 };
 
