@@ -16,7 +16,7 @@ class css::CSSSelectorTokenGroup {
 public:
     CSSSelectorTokenGroup(CSSSelectorToken *end, std::vector<std::pair<CSSSelectorToken *, CSSSelectorRelation >> tokens);
 
-    bool matches(dom::Element *element) const;
+    bool matches(const dom::Element *element) const;
 
     DOMString toString() const;
 

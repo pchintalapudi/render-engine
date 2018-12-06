@@ -14,12 +14,12 @@ namespace dom {
 
 class dom::Text : public CharacterData, public Slotable {
 public:
-    Text(DOMString baseURI, Document *owner, Node *parent)
-            : CharacterData(baseURI, "#text", NodeType::TEXT_NODE, owner, parent) {}
+    Text(DOMString baseURI, Node *parent)
+            : CharacterData(baseURI, "#text", NodeType::TEXT_NODE, parent) {}
 
     explicit Text(Node &parent) : CharacterData("#text", NodeType::TEXT_NODE, parent) {}
 
-    Text(DOMString baseURI, Document *owner, Node *parent, DOMString text) : Text(baseURI, owner, parent) {
+    Text(DOMString baseURI, Node *parent, DOMString text) : Text(baseURI, parent) {
         setData(text);
     }
 
@@ -33,8 +33,8 @@ public:
 
 protected:
     //This is necessary for CDataSection to provide a correct name attribute
-    Text(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)
-            : CharacterData(baseURI, name, nodeType, owner, parent) {}
+    Text(DOMString baseURI, DOMString name, NodeType nodeType, Node *parent)
+            : CharacterData(baseURI, name, nodeType, parent) {}
 
     Text(DOMString name, NodeType nodeType, Node &parent) : CharacterData(name, nodeType, parent) {}
 };

@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <sstream>
 #include "include/utils/selectors/css_selector_token_group.h"
-#include "include/utils/selectors/css_selector_relation.h"
 #include "include/nodes/element.h"
 
 css::CSSSelectorTokenGroup::CSSSelectorTokenGroup(
@@ -14,10 +13,10 @@ css::CSSSelectorTokenGroup::CSSSelectorTokenGroup(
     this->tokens.insert(this->tokens.end(), tokens.begin(), tokens.end());
 }
 
-bool css::CSSSelectorTokenGroup::matches(dom::Element *element) const {
+bool css::CSSSelectorTokenGroup::matches(const dom::Element *element) const {
     if (end) {
         if (!(*end).matches(element)) return false;
-        dom::Element *focused = element;
+        auto focused = element;
         for (unsigned long i = tokens.size(); i-- > 0;) {
             auto token = tokens[i];
             switch (token.second) {

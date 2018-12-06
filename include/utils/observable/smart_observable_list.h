@@ -28,7 +28,7 @@ public:
         this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
     }
 
-    void addAll(std::vector<T> elements) {
+    void addAll(std::vector<T> &elements) {
         for (auto element : elements) {
             element->addInvalidator(this, this->invalidator);
             source.push_back(element);
@@ -77,6 +77,8 @@ public:
         this->invalidate(observable::generate(observable::EventType::LIST_CHANGE));
         return erased;
     }
+
+    inline void reserve(unsigned long amount) { source.reserve(amount); }
 
     void clear() {
         source.clear();

@@ -15,8 +15,8 @@ namespace dom {
 
 class dom::CharacterData : public Node, public ChildNode, public NonDocumentTypeChildNode {
 public:
-    CharacterData(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)
-            : Node(baseURI, name, nodeType, owner, parent) {}
+    CharacterData(DOMString baseURI, DOMString name, NodeType nodeType, Node *parent)
+            : Node(baseURI, name, nodeType, parent) {}
 
     CharacterData(DOMString name, NodeType nodeType, Node &parent) : Node(name, nodeType, parent) {}
 

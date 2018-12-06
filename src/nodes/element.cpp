@@ -10,14 +10,13 @@
 #include "include/nodes/text.h"
 #include "include/nodes/element.h"
 #include "include/nodes/shadow_root.h"
-#include "include/utils/selectors/css_selector_parsing_impl.h"
 
 namespace {
     DOMString empty[0];
 }
 
-dom::Element::Element(DOMString tagName, DOMString baseURI, Document *owner, Node *parent)
-        : Node(baseURI, tagName, NodeType::ELEMENT_NODE, owner, parent),
+dom::Element::Element(DOMString tagName, DOMString baseURI, Node *parent)
+        : Node(baseURI, tagName, NodeType::ELEMENT_NODE, parent),
           classList(empty), children(getChildNodes()), allChildren(children) {
     Attr *classAttr = new ClassAttr(this, classList);
     attributes.setNamedItem(classAttr);
@@ -138,6 +137,100 @@ observable::FilteredList<dom::Element *> *dom::Element::getElementsByTagName(DOM
     };
     return new observable::FilteredList<Element *>(&allChildren,
                                                    tagName == "*" ? [](Element *) { return true; } : func);
+}
+
+dom::Element *dom::Element::insertAdjacentElement(DOMString where, dom::Element *element) {
+    if (where == "beforebegin") {
+        return static_cast<Element *>(insertBefore(element));
+    } else if (where == "afterbegin") {
+        if (element->getParentNode()) element->getParentNode()->getChildNodes().remove(element);
+        getChildNodes().insert(0, element);
+        element->setParentNode(this);
+        return element;
+    } else if (where == "beforeend") {
+        if (element->getParentNode()) element->getParentNode()->getChildNodes().remove(element);
+        getChildNodes().add(element);
+        element->setParentNode(this);
+        return element;
+    } else if (where == "afterend") {
+        return static_cast<Element *>(insertAfter(element));
+    } else return nullptr;
+}
+
+dom::Element *dom::Element::insertAdjacentHTML(DOMString where, DOMString html) {
+    //TODO parse html
+    Element *element;
+    return insertAdjacentElement(where, element);
+}
+
+dom::Text *dom::Element::insertAdjacentText(DOMString where, DOMString text) {
+    Text *t = new Text(getBaseURI(), getParentNode(), text);
+    if (where == "beforebegin")
+        if (insertBefore(t)) return t;
+        else if (where == "afterbegin") {
+            getChildNodes().insert(0, t);
+            return t;
+        } else if (where == "beforeend") {
+            getChildNodes().add(t);
+            return t;
+        } else if (where == "afterend") {
+            if (insertAfter(t)) return t;
+        }
+    delete t;
+    return nullptr;
+}
+
+dom::Element *dom::Element::querySelector(DOMString selector) const {
+    auto cssSel = css::parse(selector);
+    cssSel.preprocess(this);
+    return querySelectorInternal(cssSel);
+}
+
+std::vector<dom::Element *> dom::Element::querySelectorAll(DOMString selector) const {
+    auto cssSel = css::parse(selector);
+    cssSel.preprocess(this);
+    auto list = std::vector<dom::Element *>();
+    querySelectorAllInternal(cssSel, list);
+    return list;
+}
+
+dom::Element *dom::Element::querySelectorInternal(css::CSSSelector &selector) const {
+    if (selector.matches(this)) return static_cast<Element *>(getThis());
+    auto popped = selector.process(this);
+    for (unsigned long i = 0; i < getChildren().size(); i++) {
+        auto query = getChildren().get(i)->querySelectorInternal(selector);
+        if (query) return query;
+    }
+    if (popped) selector.push(popped);
+    return nullptr;
+}
+
+void dom::Element::querySelectorAllInternal(css::CSSSelector &selector, std::vector<Element *> &list) const {
+    if (selector.matches(this)) list.push_back(static_cast<Element *>(getThis()));
+    auto popped = selector.process(this);
+    for (unsigned long i = 0; i < getChildren().size(); i++)
+        getChildren().get(i)->querySelectorAllInternal(selector, list);
+    if (popped) selector.push(popped);
+}
+
+bool dom::Element::toggleAttribute(DOMString attr) {
+    if (attributes.contains(attr)) {
+        delete attributes.removeNamedItem(attr);
+        return false;
+    } else {
+        attributes.setNamedItem(new StandardAttr(attr, this, ""));
+        return true;
+    }
+}
+
+bool dom::Element::toggleAttribute(DOMString attr, bool force) {
+    if (force) {
+        if (!attributes.contains(attr)) attributes.setNamedItem(new StandardAttr(attr, this, ""));
+        return true;
+    } else {
+        delete attributes.removeNamedItem(attr);
+        return false;
+    }
 }
 
 dom::Element::~Element() {

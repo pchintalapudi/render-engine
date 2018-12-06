@@ -24,6 +24,6 @@ namespace observable {
 
 enum class observable::EventType {
 
-    INTERNAL_CHANGE, LIST_CHANGE, SET_CHANGE, MAP_CHANGE
+    INTERNAL_CHANGE, LIST_CHANGE, SET_CHANGE, MAP_CHANGE, PARENT_CHANGE
 };
 #endif //FEATHER_EVENT_TYPE_H

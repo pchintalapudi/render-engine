@@ -51,7 +51,6 @@ void dom::CharacterData::before(std::vector<Node *> &nodes) {
             if (child->getParentNode())
                 child->getParentNode()->removeChild(child);
             child->setParentNode(getParentNode());
-            child->setOwner(getOwner());
         });
         children.insertAll(children.indexOf(this) + 1, nodes);
     }
@@ -63,7 +62,6 @@ void dom::CharacterData::after(Node *node) {
         if (node->getParentNode())
             node->getParentNode()->removeChild(node);
         node->setParentNode(getParentNode());
-        node->setOwner(getOwner());
         children.insert(children.indexOf(this) + 1, node);
     }
 }
@@ -75,7 +73,6 @@ void dom::CharacterData::after(std::vector<Node *> &nodes) {
             if (child->getParentNode())
                 child->getParentNode()->removeChild(child);
             child->setParentNode(getParentNode());
-            child->setOwner(getOwner());
         });
         children.insertAll(children.indexOf(this) + 1, nodes);
     }
@@ -95,11 +92,9 @@ void dom::CharacterData::replaceWith(std::vector<Node *> &nodes) {
             if (child->getParentNode())
                 child->getParentNode()->removeChild(child);
             child->setParentNode(getParentNode());
-            child->setOwner(getOwner());
         });
         children.insertAll(idx, nodes);
         setParentNode(nullptr);
-        setOwner(nullptr);
     }
 }
 
@@ -107,6 +102,5 @@ void dom::CharacterData::remove() {
     if (getParentNode()) {
         getParentNode()->getChildNodes().remove(this);
         setParentNode(nullptr);
-        setOwner(nullptr);
     }
 }

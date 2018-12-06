@@ -6,7 +6,6 @@
 #include <deque>
 #include <sstream>
 #include "include/nodes/text.h"
-#include "include/nodes/node.h"
 #include "include/nodes/element.h"
 #include "include/nodes/document.h"
 
@@ -41,7 +40,6 @@ dom::Node *dom::Node::getPreviousSibling() const {
 void switchParent(dom::Node *switched, dom::Node *parent) {
     switched->getParentNode()->removeChild(switched);
     switched->setParentNode(parent);
-    switched->setOwner(parent->getOwner());
 }
 
 dom::Node *dom::Node::appendChild(Node *child) {
@@ -58,15 +56,11 @@ dom::Node *dom::Node::appendChild(Node *child) {
                 childNodes.add(nextChild);
                 switchParent(nextChild, this);
             } else if (child->nodeType == NodeType::DOCUMENT_FRAGMENT_NODE) {
+                childNodes.reserve(child->childNodes.size());
                 child->childNodes.forEach([this](Node *node) {
                     switchParent(node, this);
                     childNodes.add(node);
                 });
-//                for (auto nextChild : child->childNodes) {
-//                    nextChild->parent = this;
-//                    nextChild->owner = this->owner;
-//                    childNodes.push_back(nextChild);
-//                }
             }
             child->childNodes.clear();
         }
@@ -75,32 +69,37 @@ dom::Node *dom::Node::appendChild(Node *child) {
 }
 
 bool dom::Node::contains(const dom::Node *other) const {
-    if (other == this) {
-        return true;
-    }
-    return childNodes.anyMatch([other](Node *child) { return child->contains(other); });
+    return other == this || childNodes.anyMatch([other](Node *child) { return child->contains(other); });
 }
 
 dom::Node *dom::Node::getRootNode() const {
-    if (owner) {
-        return owner;
+    if (getOwner()) {
+        return getOwner();
     }
     Node *node = parent;
-    if (node)
-        while (node->parent) {
-            node = node->parent;
-        }
-    return const_cast<Node *>(this);
+    if (!node) return getThis();
+    while (node->parent) node = node->parent;
+    return node;
 }
 
-void dom::Node::insertBefore(Node *child) {
+dom::Node *dom::Node::insertBefore(Node *child) {
     if (parent) {
-        if (child->parent)
-            child->parent->removeChild(child);
-        child->parent = parent;
-        child->owner = owner;
+        if (child->parent) child->parent->removeChild(child);
+        child->setParentNode(parent);
         parent->childNodes.insert(parent->childNodes.indexOf(this), child);
+        return child;
     }
+    return nullptr;
+}
+
+dom::Node *dom::Node::insertAfter(dom::Node *child) {
+    if (parent) {
+        if (child->parent) child->parent->removeChild(child);
+        child->setParentNode(parent);
+        parent->childNodes.insert(parent->childNodes.indexOf(this) + 1, child);
+        return child;
+    }
+    return nullptr;
 }
 
 void dom::Node::normalize() {
@@ -125,14 +124,13 @@ void dom::Node::normalize() {
     }
     if (size) {
         std::vector<Node *> erased = childNodes.remove(0, size);
-        std::stringstream sstream;
-        std::for_each(erased.begin(), erased.end(), [&sstream](Node *erase) {
-            sstream << erase->getNodeValue();
-            delete erase;
-        });
-        DOMString concatenated = sstream.str();
-        if (!std::all_of(concatenated.begin(), concatenated.end(), isspace)) {
-            childNodes.insert(0, new Text(*this, concatenated));
+        DOMString concat;
+        for (auto node : erased) {
+            concat += *node->getNodeValue();
+            delete node;
+        }
+        if (!std::all_of(concat.begin(), concat.end(), isspace)) {
+            childNodes.insert(0, new Text(*this, concat));
         }
     } else if (childNodes.get(0)->nodeType == NodeType::TEXT_NODE) {
         DOMString text = *childNodes.get(0)->nodeValue;
@@ -143,16 +141,13 @@ void dom::Node::normalize() {
 }
 
 void dom::Node::removeChild(Node *child) {
-    child->parent = nullptr;
-    child->owner = nullptr;
+    child->setParentNode(nullptr);
     childNodes.remove(child);
 }
 
 void dom::Node::replaceChild(Node *replacement, Node *target) {
-    replacement->parent = this;
-    target->parent = nullptr;
-    replacement->owner = owner;
-    target->owner = nullptr;
+    replacement->setParentNode(this);
+    target->setParentNode(nullptr);
     childNodes.set(childNodes.indexOf(target), replacement);
 }
 
@@ -185,9 +180,45 @@ unsigned char dom::Node::compareDocumentPosition(const Node *other) const {
     if (this->contains(other)) {
         return (1 << 2) | (1 << 4);
     }
-    auto pointer = traverseTree(owner, other, this);
+    auto pointer = traverseTree(getOwner(), other, this);
     if (pointer && other == pointer) {
         return 1 << 1;
     }
     return 1 << 2;
+}
+
+bool dom::Node::handle(long long l) const {
+    if (observable::present(l, observable::EventType::PARENT_CHANGE)) {
+        ownerValid = false;
+        long long parentChange = observable::generate(observable::EventType::PARENT_CHANGE);
+        childNodes.forEach([parentChange](Node *child) { child->invalidate(parentChange); });
+    }
+    return true;
+}
+
+void dom::Node::setParentNode(dom::Node *parent) {
+    invalidate(observable::generate(observable::EventType::PARENT_CHANGE));
+    this->parent = parent;
+}
+
+dom::Document *dom::Node::getOwner() const {
+    if (ownerValid) return owner;
+    ownerValid = true;
+    return owner = computeOwner();
+}
+
+std::vector<dom::Node *> dom::Node::buildDispatchChain() const {
+    std::list<Node *> chain;
+    Node *node = getThis();
+    chain.push_front(node);
+    while ((node = node->getParentNode()))chain.push_front(node);
+    std::vector<Node *> dispatchChain;
+    dispatchChain.reserve(chain.size());
+    dispatchChain.insert(dispatchChain.begin(), chain.begin(), chain.end());
+    return dispatchChain;
+}
+
+dom::Node::~Node() {
+    childNodes.forEach([](auto child) { delete child; });
+    delete nodeValue;
 }

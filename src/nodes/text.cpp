@@ -20,7 +20,7 @@ DOMString dom::Text::getWholeText() const {
 }
 
 dom::Text *dom::Text::cloneNode() {
-    return new Text(getBaseURI(), getOwner(), getParentNode(), getData());
+    return new Text(getBaseURI(), getParentNode(), getData());
 }
 
 bool dom::Text::isEqualNode(const dom::Node *other) const {

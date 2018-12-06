@@ -14,8 +14,8 @@ namespace dom {
 class dom::ProcessingInstruction : public CharacterData {
 public:
 
-    ProcessingInstruction(DOMString baseURI, Document *owner, Node *parent, DOMString target)
-            : CharacterData(baseURI, target, NodeType::PROCESSING_INSTRUCTION_NODE, owner, parent), target(target) {}
+    ProcessingInstruction(DOMString baseURI, Node *parent, DOMString target)
+            : CharacterData(baseURI, target, NodeType::PROCESSING_INSTRUCTION_NODE, parent), target(target) {}
 
     ProcessingInstruction(Node &parent, DOMString target)
             : CharacterData(target, NodeType::PROCESSING_INSTRUCTION_NODE, parent), target(target) {}

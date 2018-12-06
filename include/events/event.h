@@ -28,7 +28,7 @@ public:
 
     inline bool getComposed() { return composed; }
 
-    inline EventTarget &getCurrentTarget() { return *deepPath[deepPath.size() - 1]; }
+    inline EventTarget &getCurrentTarget() { return *deepPath.back(); }
 
     inline std::vector<EventTarget *> &getDeepPath() { return deepPath; }
 
@@ -48,7 +48,7 @@ public:
 
     inline unsigned long getTimeStamp() { return timeStamp; }
 
-    inline DOMString getType() { return types[0]; }
+    inline DOMString getType() { return types.front(); }
 
     inline std::vector<DOMString> &getTypeList() { return types; }
 

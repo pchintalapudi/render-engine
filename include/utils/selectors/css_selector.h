@@ -11,12 +11,21 @@
 namespace css {
     class CSSSelector;
 }
+
 class css::CSSSelector {
 public:
 
     CSSSelector(std::vector<CSSSelectorTokenGroup *> groups);
 
-    bool matches(dom::Element *element) const;
+    bool matches(const dom::Element *element) const;
+
+    inline unsigned long size() { return groups.size(); }
+
+    void preprocess(const dom::Element *element);
+
+    CSSSelectorTokenGroup *process(const dom::Element *element);
+
+    inline void push(CSSSelectorTokenGroup *group) { groups.push_front(group); }
 
     DOMString toString() const;
 

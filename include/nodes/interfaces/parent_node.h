@@ -15,23 +15,23 @@ namespace dom {
 }
 
 class dom::ParentNode {
-    unsigned long getChildElementCount() const;
+    inline unsigned long getChildElementCount() const { return getChildren().size(); }
 
     virtual HTMLCollection &getChildren() = 0;
 
     virtual const HTMLCollection &getChildren() const = 0;
 
-    Element *getFirstElementChild();
+    inline Element *getFirstElementChild() { return getChildren().get(0); }
 
-    Element *getLastElementChild();
+    inline Element *getLastElementChild() { return getChildren().get(getChildElementCount() - 1); }
 
-    virtual void append(std::vector<Node *> children) = 0;
+    virtual void append(std::vector<Node *> &children) = 0;
 
-    virtual void prepend(std::vector<Node *> children) = 0;
+    virtual void prepend(std::vector<Node *> &children) = 0;
 
-    virtual Element *querySelector(DOMString selector) = 0;
+    virtual Element *querySelector(DOMString selector) const = 0;
 
-    virtual NodeList &querySelectorAll(DOMString selector) = 0;
+    virtual std::vector<Element *> querySelectorAll(DOMString selector) const = 0;
 };
 
 #endif //FEATHER_PARENT_NODE_H

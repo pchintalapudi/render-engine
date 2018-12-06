@@ -21,11 +21,11 @@ namespace dom {
 class dom::Node : public js::EventTarget, public observable::Invalidatable {
 public:
 
-    Node(DOMString baseURI, DOMString name, NodeType nodeType, Document *owner, Node *parent)
-            : baseURI(baseURI), name(name), nodeType(nodeType), owner(owner), parent(parent) {}
+    Node(DOMString baseURI, DOMString name, NodeType nodeType, Node *parent)
+            : baseURI(baseURI), name(name), nodeType(nodeType), parent(parent), ownerValid(false) {}
 
     Node(DOMString name, NodeType nodeType, Node &parent)
-            : baseURI(parent.baseURI), name(name), nodeType(nodeType), owner(parent.owner), parent(&parent) {}
+            : baseURI(parent.baseURI), name(name), nodeType(nodeType), parent(&parent), ownerValid(false) {}
 
     inline DOMString getBaseURI() const { return baseURI; }
 
@@ -33,7 +33,7 @@ public:
 
     inline Node *getFirstChild() const { return childNodes.size() ? childNodes.get(0) : nullptr; }
 
-    inline bool isConnected() const { return owner != nullptr; }
+    inline bool isConnected() const { return getOwner() != nullptr; }
 
     inline Node *getLastChild() const { return childNodes.size() ? childNodes.get(childNodes.size() - 1) : nullptr; }
 
@@ -47,13 +47,11 @@ public:
 
     inline void setNodeValue(DOMString value) { nodeValue = new DOMString(value); }
 
-    inline Document *getOwner() const { return owner; }
-
-    inline void setOwner(Document *owner) { this->owner = owner; }
+    Document *getOwner() const;
 
     inline Node *getParentNode() const { return parent; }
 
-    inline void setParentNode(Node *parent) { this->parent = parent; }
+    void setParentNode(Node *parent);
 
     Element *getParentElement() const;
 
@@ -71,7 +69,9 @@ public:
 
     inline bool hasChildNodes() const { return childNodes.size() != 0; }
 
-    void insertBefore(Node *child);
+    Node *insertBefore(Node *child);
+
+    Node *insertAfter(Node *child);
 
     virtual bool isEqualNode(const Node *other) const = 0;
 
@@ -83,15 +83,18 @@ public:
 
     void replaceChild(Node *replacement, Node *target);
 
-    ~Node() override {
-        childNodes.forEach([](auto child) { delete child; });
-        delete nodeValue;
-    }
+    std::vector<Node *> buildDispatchChain() const;
+
+    ~Node() override;
 
 protected:
     inline long long edit(long long) const override {
         return observable::generate(observable::EventType::INTERNAL_CHANGE);
     }
+
+    bool handle(long long l) const override;
+
+    Node *getThis() const { return thisRef; }
 
 private:
     const DOMString baseURI;
@@ -99,8 +102,14 @@ private:
     const DOMString name;
     const NodeType nodeType;
     DOMString *nodeValue;
-    Document *owner;
     Node *parent;
+    mutable Document *owner;
+    mutable bool ownerValid;
+    Node *const thisRef = this;//Quick and dirty override for getting around const correctness
+
+    inline Document *computeOwner() const {
+        return !parent || nodeType == NodeType::DOCUMENT_NODE ? nullptr : parent->getOwner();
+    }
 };
 
 #endif //FEATHER_NODE_H

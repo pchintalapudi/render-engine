@@ -19,6 +19,11 @@ namespace dom {
 }
 class dom::NamedNodeMap : public observable::Invalidatable {
 public:
+
+    inline bool contains(DOMString attr) const {
+        return attrMap.find(attr) != attrMap.end();
+    }
+
     inline Attr *getNamedItem(DOMString key) const {
         return attrMap.find(key) != attrMap.end() ? attrMap.at(key) : nullptr;
     }
@@ -34,8 +39,10 @@ public:
 
     Attr *removeNamedItem(DOMString key) {
         auto val = getNamedItem(key);
-        attrMap.erase(key);
-        insertionOrder.remove(key);
+        if (val) {
+            attrMap.erase(key);
+            insertionOrder.remove(key);
+        }
         return val;
     }
 

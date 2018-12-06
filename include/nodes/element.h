@@ -15,7 +15,8 @@
 #include "interfaces/child_node.h"
 #include "interfaces/parent_node.h"
 #include "interfaces/non_document_type_child_node.h"
-#include "node.h"
+#include "include/utils/selectors/css_selector_parsing_impl.h"
+#include "text.h"
 
 namespace dom {
     class Element;
@@ -27,11 +28,15 @@ class dom::Element
         : public Node, public ChildNode, public ParentNode, public NonDocumentTypeChildNode, public Slotable {
 public:
 
-    explicit Element(DOMString tagName, DOMString baseURI, Document *owner, Node *parent);
+    explicit Element(DOMString tagName, DOMString baseURI, Node *parent);
 
     inline NamedNodeMap &getAttributes() { return attributes; }
 
     inline DOMTokenList &getClassList() { return classList; }
+
+    inline const NamedNodeMap &getAttributes() const { return attributes; }
+
+    inline const DOMTokenList &getClassList() const { return classList; }
 
     inline DOMString getClassName() const { return classList.getValue(); }
 
@@ -45,39 +50,45 @@ public:
 
     inline double getClientHeight() const { return clientDim[3]; }
 
-    inline DOMString getComputedName() { return computedName; }
+    inline DOMString getComputedName() const { return computedName; }
 
-    inline DOMString getComputedRole() { return computedRole; }
+    inline DOMString getComputedRole() const { return computedRole; }
 
     inline void setId(DOMString id) { attributes.setNamedItem(new StandardAttr("id", this, id)); }
 
-    inline DOMString getId() { return attributes.getNamedItem("id")->getValue(); }
+    inline DOMString getId() const { return attributes.getNamedItem("id")->getValue(); }
 
-    inline DOMString getInnerHTML() { return computeInnerHTML(); }
+    inline DOMString getInnerHTML() const { return computeInnerHTML(); }
 
     void setInnerHTML(DOMString html);
 
-    inline DOMString getOuterHTML() { return computeOuterHTML(); }
+    inline DOMString getOuterHTML() const { return computeOuterHTML(); }
 
     void setOuterHTML(DOMString html);
 
-    inline double getScrollLeft() { return scrollDim[0]; }
+    inline double getScrollLeft() const { return scrollDim[0]; }
 
-    inline double getScrollTop() { return scrollDim[1]; }
+    inline double getScrollTop() const { return scrollDim[1]; }
 
-    inline void setScrollLeft(double scrollLeft) { scrollDim[0] = scrollLeft; }
+    inline void setScrollLeft(double scrollLeft) {
+        scrollDim[0] = scrollLeft;
+        invalidate(observable::generate(observable::EventType::INTERNAL_CHANGE));
+    }
 
-    inline void setScrollTop(double scrollTop) { scrollDim[1] = scrollTop; }
+    inline void setScrollTop(double scrollTop) {
+        scrollDim[1] = scrollTop;
+        invalidate(observable::generate(observable::EventType::INTERNAL_CHANGE));
+    }
 
-    inline double getScrollWidth() { return scrollDim[2]; }
+    inline double getScrollWidth() const { return scrollDim[2]; }
 
-    inline double getScrollHeight() { return scrollDim[3]; }
+    inline double getScrollHeight() const { return scrollDim[3]; }
 
-    inline ShadowRoot *getShadowRoot() { return closed ? nullptr : shadow; }
+    inline ShadowRoot *getShadowRoot() const { return closed ? nullptr : shadow; }
 
-    inline DOMString getSlot() { return slot; }
+    inline DOMString getSlot() const { return slot; }
 
-    inline DOMString getTagName() { return tagName; }
+    inline DOMString getTagName() const { return tagName; }
 
     ShadowRoot *attachShadow(bool closed);
 
@@ -85,7 +96,7 @@ public:
 
     DOMString *getAttribute(DOMString attributeName);
 
-    inline std::vector<DOMString> getAttributeNames() { return attributes.keys(); }
+    inline std::vector<DOMString> getAttributeNames() const { return attributes.keys(); }
 
     inline dom::HTMLCollection &getChildren() override { return children; }
 
@@ -93,11 +104,64 @@ public:
 
     DOMRect getBoundingClientRect();
 
-    std::vector<DOMRect> getClientRects();
+    std::vector<DOMRect> &getClientRects();
 
     observable::FilteredList<Element *> *getElementsByClassName(DOMString classNames);
 
     observable::FilteredList<Element *> *getElementsByTagName(DOMString tagName);
+
+    inline bool hasAttribute(DOMString attribute) { return attributes.contains(attribute); }
+
+    inline bool hasAttributes() { return attributes.size() > 0; }
+
+    //TODO: somehow figure out what pointer capture means.
+    inline bool hasPointerCapture(unsigned long) { return false; }
+
+    Element *insertAdjacentElement(DOMString where, Element *element);
+
+    Element *insertAdjacentHTML(DOMString where, DOMString html);
+
+    Text *insertAdjacentText(DOMString where, DOMString text);
+
+    inline void append(std::vector<Node *> &children) override { getChildNodes().addAll(children); }
+
+    inline void prepend(std::vector<Node *> &children) override { getChildNodes().insertAll(0, children); }
+
+    inline bool matches(DOMString selector) { return css::parse(selector).matches(this); }
+
+    Element *querySelector(DOMString selector) const override;
+
+    std::vector<Element *> querySelectorAll(DOMString selector) const override;
+
+    //TODO: Make this work; It'll likely reside on the Document implementation
+    inline void releasePointerCapture(unsigned long) {}
+
+    inline void remove() override { if (getParentNode()) getParentNode()->removeChild(this); }
+
+    inline void removeAttribute(DOMString attr) { delete attributes.getNamedItem(attr); }
+
+    //TODO: Implement me
+    void requestFullscreen() {}
+
+    //TODO: Implement me
+    void requestPointerLock(unsigned long) {}
+
+    inline void scrollTo(double x, double y) {
+        setScrollLeft(x);
+        setScrollTop(y);
+    }
+
+    inline void scrollBy(double x, double y) { scrollTo(x + getScrollLeft(), y + getScrollTop()); }
+
+    //TODO: Implement me; will require much styling/computation
+    void scrollIntoView();
+
+    //TODO: Implement me
+    void setPointerLock(unsigned long) {}
+
+    bool toggleAttribute(DOMString attr);
+
+    bool toggleAttribute(DOMString attr, bool force);
 
     //Internal implementation methods
     dom::FullChildList &getAllChildren() const { return allChildren; }
@@ -127,6 +191,10 @@ private:
     DOMString computeHTML() const;
 
     void computeStringValue(Node *node, std::stringstream &output) const;
+
+    Element *querySelectorInternal(css::CSSSelector &selector) const;
+
+    void querySelectorAllInternal(css::CSSSelector &selector, std::vector<Element *> &list) const;
 };
 
 #endif //FEATHER_ELEMENT_H

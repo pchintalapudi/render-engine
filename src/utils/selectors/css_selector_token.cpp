@@ -16,19 +16,12 @@ css::CSSSelectorToken::CSSSelectorToken(
                                             weirdFunctions.begin(), weirdFunctions.end());
 }
 
-bool css::CSSSelectorToken::matches(dom::Element *element) const {
-    if (type != "*" && type != element->getTagName()) {
-        return false;
-    }
-    if (!id.empty() && id != element->getId()) {
-        return false;
-    }
-    if (!std::all_of(classes.begin(), classes.end(),
-                     [element](auto clazz) { return element->getClassList().contains(clazz); })) {
-        return false;
-    }
-    return std::all_of(attributesAndPseudoclasses.begin(), attributesAndPseudoclasses.end(),
-                       [element](auto test) { return test.first(element); });
+bool css::CSSSelectorToken::matches(const dom::Element *element) const {
+    return (type == "*" || type == element->getTagName()) && (id.empty() || id == element->getId())
+           && std::all_of(classes.begin(), classes.end(),
+                          [element](auto clazz) { return element->getClassList().contains(clazz); })
+           && std::all_of(attributesAndPseudoclasses.begin(), attributesAndPseudoclasses.end(),
+                          [element](auto test) { return test.first(element); });
 }
 
 DOMString css::CSSSelectorToken::toString() const {

@@ -13,13 +13,13 @@ namespace dom {
 
 class dom::Comment : public CharacterData {
 public:
-    Comment(DOMString baseURI, Document *owner, Node *parent)
-            : CharacterData(baseURI, "#comment", NodeType::COMMENT_NODE, owner, parent) {}
+    Comment(DOMString baseURI, Node *parent)
+            : CharacterData(baseURI, "#comment", NodeType::COMMENT_NODE, parent) {}
 
     explicit Comment(Node &parent) : CharacterData("#comment", NodeType::COMMENT_NODE, parent) {}
 
-    Comment(DOMString baseURI, Document *owner, Node *parent, DOMString text)
-            : Comment(baseURI, owner, parent) { setData(text); }
+    Comment(DOMString baseURI, Node *parent, DOMString text)
+            : Comment(baseURI, parent) { setData(text); }
 
     Comment(Node &parent, DOMString text) : Comment(parent) { setData(text); }
 };
