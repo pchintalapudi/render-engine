@@ -8,7 +8,9 @@
 #include <algorithm>
 #include <map>
 #include <functional>
+#include "event_types.h"
 #include "event.h"
+
 namespace js {
     class EventTarget;
 }
@@ -17,29 +19,22 @@ public:
 
     EventTarget() {}
 
-    inline void addEventListener(DOMString type, std::function<void(Event &)> listener) {
-        (handlers.find(type) == handlers.end() ? handlers[type] = new std::vector<std::function<void(Event &)>>()
-                                               : handlers[type])->push_back(listener);
-    }
+    void addEventHandler(DOMString type, std::function<void(Event &)> handler);
 
-    template<typename Listener>
-    inline void removeEventListener(DOMString type, Listener listener) {
-        if (handlers.find(type) != handlers.end()) {
-            auto handlerList = handlers[type];
-            handlerList->erase(std::remove(handlerList->begin(), handlerList->end(), listener), handlerList->end());
-        }
-    }
+    void removeEventHandler(DOMString type, std::function<void(Event &)> handler);
+
+    void setEndEventHandler(DOMString type, std::function<void(Event &)> handler);
 
     void dispatchEvent(Event &event) const;
 
-    virtual ~EventTarget() {
-        for (const auto &vec : handlers) {
-            delete vec.second;
-        }
-    }
+    ~EventTarget() { delete handlerMap; }
 
 private:
-    std::map<DOMString, std::vector<std::function<void(Event &)>> *> handlers;
+    mutable event_types::DOMEventHandlerMap *handlerMap = nullptr;
+
+    inline event_types::DOMEventHandlerMap &getHandlerMap() const {
+        return handlerMap ? *handlerMap : *(handlerMap = new event_types::DOMEventHandlerMap());
+    }
 };
 
 #endif //FEATHER_EVENT_TARGET_H

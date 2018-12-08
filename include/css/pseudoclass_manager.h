@@ -36,7 +36,11 @@ public:
 
     bool hasFocus(const dom::Element *element) const;
 
-    dom::Element *getFocused() const { return focused; }
+    inline dom::Element *getFocused() const { return focused; }
+
+    void defocus(const dom::Element *element);
+
+    inline void demouse() { focusedNodes.clear(); }
 
 private:
     std::set<const dom::Node *> moused;

@@ -14,7 +14,7 @@ namespace dom {
 class dom::CDataSection : public Text {
 public:
     CDataSection(DOMString baseURI, Document *owner, Node *parent)
-            : Text(baseURI, "#cdata-section", NodeType::CDATA_SECTION_NODE, owner, parent) {}
+            : Text(baseURI, "#cdata-section", NodeType::CDATA_SECTION_NODE, parent) {}
 
     explicit CDataSection(Node &parent) : Text("#cdata-section", NodeType::CDATA_SECTION_NODE, parent) {}
 

@@ -22,8 +22,8 @@ dom::Element::Element(DOMString tagName, DOMString baseURI, Node *parent)
 }
 
 dom::Element::Element(dom::Element &other)
-        : Node(other), classList(empty), children(getChildNodes()), computedName(other.computedName),
-          computedRole(other.computedRole), allChildren(children) {
+        : Node(other), classList(empty), computedName(other.computedName), computedRole(other.computedRole),
+          children(getChildNodes()), allChildren(children) {
     std::copy(other.scrollDim, other.scrollDim + 4, scrollDim);
 }
 
@@ -170,17 +170,17 @@ dom::Element *dom::Element::insertAdjacentHTML(DOMString where, DOMString html) 
 
 dom::Text *dom::Element::insertAdjacentText(DOMString where, DOMString text) {
     Text *t = new Text(getBaseURI(), getParentNode(), text);
-    if (where == "beforebegin")
+    if (where == "beforebegin") {
         if (insertBefore(t)) return t;
-        else if (where == "afterbegin") {
-            getChildNodes().insert(0, t);
-            return t;
-        } else if (where == "beforeend") {
-            getChildNodes().add(t);
-            return t;
-        } else if (where == "afterend") {
-            if (insertAfter(t)) return t;
-        }
+    } else if (where == "afterbegin") {
+        getChildNodes().insert(0, t);
+        return t;
+    } else if (where == "beforeend") {
+        getChildNodes().add(t);
+        return t;
+    } else if (where == "afterend") {
+        if (insertAfter(t)) return t;
+    }
     delete t;
     return nullptr;
 }

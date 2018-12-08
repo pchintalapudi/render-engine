@@ -331,7 +331,7 @@ bool isNthLastChild(NthSel &formula, const dom::Element *element) {
         if (element->getParentElement()) {
             auto children = element->getParentElement()->getChildren();
             auto size = children.size();
-            while (idx < children.size() && children.get(size - idx++ - 1) != element);
+            while (idx < static_cast<long long>(children.size()) && children.get(size - idx++ - 1) != element);
             idx--;
         } else {
             for (unsigned long i = element->getParentNode()->getChildNodes().size(); i-- > 0;) {

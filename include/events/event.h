@@ -6,89 +6,106 @@
 #define FEATHER_EVENT_H
 namespace js {
     class EventTarget;
+
     class Event;
 }
 
-#include <vector>
+#include <chrono>
 #include "../typedefs.h"
 #include "event_phase.h"
+#include "event_types.h"
+
+namespace js {
+    namespace event_properties {
+        enum EventProperties {
+            BUBBLES, CANCELABLE, COMPOSED, DEFAULT_PREVENTED, TRUSTED, CONSUMED, VIOLENT
+        };
+    }
+}
 
 class js::Event {
 public:
 
-    Event(bool bubbles, bool cancelable, bool composed, EventTarget &target, std::vector<DOMString> type, bool trusted);
+    Event(bool bubbles, bool cancelable, bool composed, bool trusted, EventTarget &target,
+          const event_types::DOMEventSet &typeset)
+            : Event(bubbles, cancelable, composed, trusted, target, typeset, "") {}
 
-    inline bool getBubbles() { return bubbles; }
+    Event(bool bubbles, bool cancelable, bool composed, bool trusted,
+          EventTarget &target, const event_types::DOMEventSet &typeset, const DOMString customName)
+            : eventPhase(EventPhase::CAPTURING_PHASE), originalTarget(target), typeset(typeset), customName(customName),
+              timeStamp(std::chrono::system_clock::now().time_since_epoch() / std::chrono::milliseconds(1)),
+              bitField((bubbles & 1u) << event_properties::BUBBLES
+                       | (cancelable & 1u) << event_properties::CANCELABLE
+                       | (composed & 1u) << event_properties::COMPOSED
+                       | (trusted & 1u) << event_properties::TRUSTED) {}
 
-    inline bool getCancelBubble() { return consumed; }
+    inline bool getBubbles() const { return bitField & 1u << event_properties::BUBBLES; }
 
-    inline void setCancelBubble(bool cancel) { consumed = cancel; }
+    inline bool getCancelBubble() const { return bitField & 1u << event_properties::CONSUMED; }
 
-    inline bool getCancelable() { return cancelable; }
+    inline void setCancelBubble(bool cancel) {
+        if (cancel) bitField |= 1u << event_properties::CONSUMED;
+        else bitField &= ~(1u << event_properties::CONSUMED);
+    }
 
-    inline bool getComposed() { return composed; }
+    inline bool getCancelable() const { return bitField & 1u << event_properties::CANCELABLE; }
 
-    inline EventTarget &getCurrentTarget() { return *deepPath.back(); }
+    inline bool getComposed() const { return bitField & 1u << event_properties::COMPOSED; }
 
-    inline std::vector<EventTarget *> &getDeepPath() { return deepPath; }
+    inline EventTarget &getCurrentTarget() const { return *deepPath.back(); }
 
-    inline bool getDefaultPrevented() { return defaultPrevented; }
+    inline const std::vector<EventTarget *> &getDeepPath() const { return deepPath; }
 
-    inline EventPhase getEventPhase() { return eventPhase; }
+    inline bool getDefaultPrevented() const { return bitField & 1u << event_properties::DEFAULT_PREVENTED; }
+
+    inline EventPhase getEventPhase() const { return eventPhase; }
 
     inline void setEventPhase(EventPhase phase) { eventPhase = phase; }
 
-    inline bool getReturnValue() { return defaultPrevented; }
+    inline bool getReturnValue() const { return getDefaultPrevented(); }
 
-    inline void setReturnValue(bool returnValue) { defaultPrevented = returnValue; }
+    inline void setReturnValue(bool returnValue) {
+        if (returnValue) preventDefault();
+        else bitField &= ~(1u << event_properties::DEFAULT_PREVENTED);
+    }
 
-    inline EventTarget &getSrcElement() { return originalTarget; }
+    inline EventTarget &getSrcElement() const { return originalTarget; }
 
-    inline EventTarget &getTarget() { return originalTarget; }
+    inline EventTarget &getTarget() const { return originalTarget; }
 
-    inline unsigned long getTimeStamp() { return timeStamp; }
+    inline unsigned long getTimeStamp() const { return timeStamp; }
 
-    inline DOMString getType() { return types.front(); }
+    inline const event_types::DOMEventSet &getTypes() const { return typeset; }
 
-    inline std::vector<DOMString> &getTypeList() { return types; }
+    inline bool isTrusted() const { return bitField & 1u << event_properties::TRUSTED; }
 
-    inline bool isTrusted() { return trusted; }
+    inline const std::vector<EventTarget *> getComposedPath() const { return deepPath; }
 
-    inline std::vector<EventTarget *> getComposedPath() { return deepPath; }
+    inline void preventDefault() { bitField |= 1u << event_properties::DEFAULT_PREVENTED; }
 
-    inline void preventDefault() { defaultPrevented = true; }
-
-    inline void stopPropagation() { consumed = true; }
+    inline void stopPropagation() { bitField |= 1u << event_properties::CONSUMED; }
 
     inline void stopImmediatePropagation() {
-        consumed = true;
-        violentlyConsumed = true;
+        bitField |= 1u << event_properties::CONSUMED
+                    | 1u << event_properties::VIOLENT;
     }
 
-    inline bool isConsumed() {
-        return consumed;
-    }
+    inline bool isConsumed() const { return bitField & 1u << event_properties::CONSUMED; }
 
-    inline bool isViolentlyConsumed() {
-        return violentlyConsumed;
-    }
+    inline bool isViolentlyConsumed() const { return bitField & 1u << event_properties::VIOLENT; }
 
-    virtual ~Event() {
-    }
+    inline DOMString getCustomName() const { return customName; }
+
+    virtual ~Event() {}
 
 private:
-    bool bubbles;
-    bool cancelable;
-    bool composed;
-    std::vector<EventTarget *> deepPath;
-    bool defaultPrevented;
+    const std::vector<EventTarget *> deepPath;
     EventPhase eventPhase;
     EventTarget &originalTarget;
-    unsigned long timeStamp;
-    std::vector<DOMString> types;
-    bool trusted;
-    bool consumed;
-    bool violentlyConsumed;
+    const event_types::DOMEventSet typeset;
+    DOMString customName;
+    const unsigned long timeStamp;
+    unsigned char bitField : 7;
 };
 
 #endif //FEATHER_EVENT_H

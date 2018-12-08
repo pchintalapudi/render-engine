@@ -96,6 +96,8 @@ protected:
 
     Node *getThis() const { return thisRef; }
 
+    void fireEvent(js::Event &event) const;
+
 private:
     const DOMString baseURI;
     mutable NodeList childNodes;

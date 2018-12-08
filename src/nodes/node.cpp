@@ -218,6 +218,8 @@ std::vector<dom::Node *> dom::Node::buildDispatchChain() const {
     return dispatchChain;
 }
 
+void dom::Node::fireEvent(js::Event &event) const { getOwner()->dispatchEvent(event); }
+
 dom::Node::~Node() {
     childNodes.forEach([](auto child) { delete child; });
     delete nodeValue;

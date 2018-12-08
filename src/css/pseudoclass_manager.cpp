@@ -31,3 +31,10 @@ void css::PseudoclassManager::focus(const std::vector<dom::Node *> nodes) {
     }
     focused = nullptr;
 }
+
+void css::PseudoclassManager::defocus(const dom::Element *element) {
+    if (focusedNodes.find(element) != focusedNodes.end()) {
+        focusedNodes.clear();
+        focused = nullptr;
+    }
+}

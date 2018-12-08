@@ -168,6 +168,8 @@ public:
     //Internal implementation methods
     dom::FullChildList &getAllChildren() const { return allChildren; }
 
+    DOMString getElementType() { return elementType; }
+
     virtual ~Element();
 
 private:
@@ -185,6 +187,9 @@ private:
 
     //Caches
     mutable dom::FullChildList allChildren;
+
+    //Internal implementation properties
+    DOMString elementType;
 
     DOMString computeInnerHTML() const;
 
