@@ -6,16 +6,16 @@
 
 using namespace feather::observable;
 
-void Invalidatable::invalidate(EventCountSize arg) const {
-    modify(&arg);
-    if (arg) {
+void Invalidatable::invalidate(RegularEnumSet <InvEvent> s) const {
+    modify(s);
+    if (s.contains(InvEvent::PROPAGATE)) {
         for (auto it = dependents.begin(); it != dependents.end();) {
             if (it->expired()) it = dependents.erase(it);
-            else it->lock()->invalidate(arg);
+            else it->lock()->invalidate(s);
         }
     }
-    lastInvalidationCall = arg;
-    valid &= !present(arg, InvEvent::INVALIDATED);
+    lastInvalidationCall = s;
+    valid &= s.contains(InvEvent::INVALIDATED);
 }
 
 void Invalidatable::bind(feather::WeakPointer<feather::observable::Invalidatable> dependent) const {

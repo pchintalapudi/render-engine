@@ -33,13 +33,13 @@ public:
     virtual ~Invalidatable() = default;
 
 protected:
-    void invalidate(EventCountSize l) const;
+    void invalidate(RegularEnumSet<InvEvent>) const;
 
-    virtual void modify(EventCountSize *l) const { *l = set(*l, InvEvent::INVALIDATED); }
+    virtual void modify(RegularEnumSet<InvEvent> &s) const { s.add(InvEvent::INVALIDATED); }
 
 private:
     mutable bool valid = false;
-    mutable Long lastInvalidationCall = 0;
+    mutable RegularEnumSet<InvEvent> lastInvalidationCall = RegularEnumSet<InvEvent>();
     mutable WeakSet<Invalidatable> dependents = WeakSet<Invalidatable>();
 };
 
