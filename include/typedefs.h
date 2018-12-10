@@ -14,6 +14,7 @@
 #include <string>
 #include <vector>
 #include "enums/enum_set.h"
+#include "enums/enum_map.h"
 
 namespace feather {
     typedef std::string DOMString;
@@ -50,6 +51,8 @@ namespace feather {
     using RegularEnumSet = EnumSet<E, ULong>;
     template<typename E>
     using JumboEnumSet = EnumSet<E, UHuge>;
+    template<typename E, typename V>
+    using EnumMap = EnumMapRaw<E, StrongPointer<V>>;
 
     class Base {
     public:
