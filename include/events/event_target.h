@@ -12,29 +12,33 @@
 #include "event.h"
 
 namespace js {
+    template<typename T>
     class EventTarget;
 }
+template<typename T>
 class js::EventTarget {
 public:
 
     EventTarget() {}
 
-    void addEventHandler(DOMString type, std::function<void(Event &)> handler);
+    void addEventHandler(DOMString type, std::function<void(Event &)> *handler);
 
-    void removeEventHandler(DOMString type, std::function<void(Event &)> handler);
+    void removeEventHandler(DOMString type, std::function<void(Event &)> *handler);
 
-    void setEndEventHandler(DOMString type, std::function<void(Event &)> handler);
+    void setEndEventHandler(DOMString type, std::function<void(Event &)> *handler);
+
+    void removeEndEventHandler(DOMString type);
 
     void dispatchEvent(Event &event) const;
 
-    ~EventTarget() { delete handlerMap; }
+//    ~EventTarget() { delete handlerMap; }
 
 private:
-    mutable event_types::DOMEventHandlerMap *handlerMap = nullptr;
-
-    inline event_types::DOMEventHandlerMap &getHandlerMap() const {
-        return handlerMap ? *handlerMap : *(handlerMap = new event_types::DOMEventHandlerMap());
-    }
+//    mutable event_types::DOMEventHandlerMap *handlerMap = nullptr;
+//
+//    inline event_types::DOMEventHandlerMap &getHandlerMap() const {
+//        return handlerMap ? *handlerMap : *(handlerMap = new event_types::DOMEventHandlerMap());
+//    }
 };
 
 #endif //FEATHER_EVENT_TARGET_H

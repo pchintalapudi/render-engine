@@ -14,104 +14,110 @@ namespace js {
 
     class Event;
 
-    namespace event_types {
-        enum class DOMEvent {
-            EVENT, NULL_VALUE
-        };
-
-        const unsigned long DOM_EVENT_COUNT = static_cast<int>(DOMEvent::NULL_VALUE);
-        const unsigned char DATA_CHUNK = sizeof(short);
-
-        class DOMEventSet;
-
-        class DOMEventHandlerMap;
-    }
+    enum class WindowEvents {
+        CACHED,
+        ERROR,
+        ABORT,
+        LOAD,
+        BEFORE_UNLOAD,
+        UNLOAD,
+        ONLINE,
+        OFFLINE,
+        FOCUS,
+        BLUR,
+        OPEN,
+        MESSAGE,
+        CLOSE,
+        PAGE_HIDE,
+        PAGE_SHOW,
+        POP_STATE,
+        ANIMATION_START,
+        ANIMATION_END,
+        ANIMATION_ITERATION,
+        TRANSITION_START,
+        TRANSITION_CANCEL,
+        TRANSITION_END,
+        TRANSITION_RUN,
+        RESET,
+        SUBMIT,
+        BEFORE_PRINT,
+        AFTER_PRINT,
+        COMPOSITION_START,
+        COMPOSITION_UPDATE,
+        COMPOSITION_END,
+        FULLSCREEN_CHANGE,
+        FULLSCREEN_ERROR,
+        RESIZE,
+        SCROLL,
+        CUT,
+        COPY,
+        PASTE,
+        KEYDOWN,
+        KEYPRESS,
+        KEYUP,
+        AUX_CLICK,
+        CLICK,
+        CONTEXT_MENU,
+        DBL_CLICK,
+        MOUSE_DOWN,
+        MOUSE_ENTER,
+        MOUSE_LEAVE,
+        MOUSE_MOVE,
+        MOUSE_OVER,
+        MOUSE_OUT,
+        MOUSE_UP,
+        POINTER_LOCK_CHANGE,
+        POINTER_LOCK_ERROR,
+        SELECT,
+        WHEEL,
+        DRAG,
+        DRAG_END,
+        DRAG_ENTER,
+        DRAG_START,
+        DRAG_LEAVE,
+        DRAG_OVER,
+        DROP,
+        AUDIO_PROCESS,
+        CAN_PLAY,
+        CAN_PLAY_THROUGH,
+        COMPLETE,
+        DURATION_CHANGE,
+        EMPTIED,
+        ENDED,
+        LOADED_DATA,
+        LOADED_METADATA,
+        PAUSE,
+        PLAY,
+        PLAYING,
+        RATE_CHANGE,
+        SEEKED,
+        SEEKING,
+        STALLED,
+        SUSPEND,
+        TIME_UPDATE,
+        VOLUME_CHANGE,
+        WAITING,
+        LOAD_END,
+        LOAD_START,
+        PROGRESS,
+        TIMEOUT,
+        CHANGE,
+        STORAGE,
+        CHECKING,
+        DOWNLOADING,
+        NOUPDATE,
+        OBSOLETE,
+        UPDATE_READY,
+        BROADCAST,
+        CHECKBOX_STATE_CHANGE,
+        HASH_CHANGE,
+        INPUT,
+        RADIO_STATE_CHANGE,
+        READY_STATE_CHANGE,
+        VALUE_CHANGE,
+        INVALID,
+        LOCALIZED,
+        SHOW
+    };
 }
-
-class js::event_types::DOMEventSet {
-public:
-
-    DOMEventSet() {}
-
-    DOMEventSet(const DOMEventSet &other) { addAll(other); }
-
-    inline bool present(DOMEvent event) const {
-        return !!(*(data + static_cast<int>(event) / DATA_CHUNK) & (1u << static_cast<int>(event) % DATA_CHUNK));
-    }
-
-    inline void add(DOMEvent event) {
-        *(data + static_cast<int>(event) / DATA_CHUNK) |= (1u << static_cast<int>(event) % DATA_CHUNK);
-    }
-
-    inline void remove(DOMEvent event) {
-        *(data + static_cast<int>(event) / DATA_CHUNK) &= ~(1u << static_cast<int>(event) % DATA_CHUNK);
-    }
-
-    void addAll(const DOMEventSet &other);
-
-    void removeAll(const DOMEventSet &other);
-
-    inline DOMEventSet &clone() { return *new DOMEventSet(*this); }
-
-    //DOMEventMap hook
-
-    unsigned short getRaw(unsigned char c) const { return data[c]; }
-
-private:
-    unsigned short data[DOM_EVENT_COUNT / DATA_CHUNK + 1];
-};
-
-class js::event_types::DOMEventHandlerMap {
-public:
-
-    inline void addEventHandler(DOMEvent event, std::function<void(Event &)> *handler) {
-        getEventHandlers(event).push_back(handler);
-    }
-
-    void removeEventHandler(DOMEvent event, std::function<void(Event &)> *handler);
-
-    inline void setEndEventHandler(DOMEvent event, std::function<void(Event &)> handler) {
-        getEndEventHandlers()[static_cast<int>(event)] = handler;
-    }
-
-    inline std::function<void(Event &)> *getEndEventHandler(DOMEvent event) {
-        return endEventHandlers ? &endEventHandlers[static_cast<int>(event)] : nullptr;
-    }
-
-    inline void registerEventHandler(DOMString eventType, std::function<void(Event &)> *handler) {
-        getArbitraryHandlerVector(eventType).push_back(handler);
-    }
-
-    void unregisterEventHandler(DOMString eventType, std::function<void(Event &)> *handler);
-
-    void fireAll(Event &event);
-
-    ~DOMEventHandlerMap();
-
-private:
-    mutable std::vector<std::function<void(js::Event &)> *> **eventHandlers;
-    mutable std::function<void(js::Event &)> *endEventHandlers;
-    mutable std::map<DOMString, std::vector<std::function<void(js::Event &)> *> *> *arbitraryEventHandlers;
-
-    inline std::vector<std::function<void(Event &)> *> **getEventHandlerArray() const {
-        return eventHandlers ? eventHandlers
-                             : (eventHandlers = new std::vector<std::function<void(Event &)> *> *[DOM_EVENT_COUNT]);
-    }
-
-    std::vector<std::function<void(Event &)> *> &getEventHandlers(DOMEvent eventType) const;
-
-    inline std::function<void(Event &)> *getEndEventHandlers() const {
-        return endEventHandlers ? endEventHandlers
-                                : (endEventHandlers = new std::function<void(Event &)>[DOM_EVENT_COUNT]);
-    }
-
-    inline std::map<DOMString, std::vector<std::function<void(Event &)> *> *> &getArbitraryEventHandlers() const {
-        return arbitraryEventHandlers
-               ? *arbitraryEventHandlers
-               : *(arbitraryEventHandlers = new std::map<DOMString, std::vector<std::function<void(Event &)> *> *>());
-    }
-
-    std::vector<std::function<void(Event &)> *> &getArbitraryHandlerVector(DOMString type);
-};
-
 #endif //FEATHER_EVENT_TYPES_H

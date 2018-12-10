@@ -5,6 +5,7 @@
 #ifndef FEATHER_EVENT_H
 #define FEATHER_EVENT_H
 namespace js {
+    template<typename T>
     class EventTarget;
 
     class Event;

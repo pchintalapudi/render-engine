@@ -18,7 +18,7 @@ namespace dom {
     class Node;
 }
 
-class dom::Node : public js::EventTarget, public observable::Invalidatable {
+class dom::Node : public js::EventTarget<Node>, public observable::Invalidatable {
 public:
 
     Node(DOMString baseURI, DOMString name, NodeType nodeType, Node *parent)

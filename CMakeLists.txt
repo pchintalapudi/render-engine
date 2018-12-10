@@ -26,7 +26,7 @@ add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/chara
         include/nodes/attrs/standard_attr.h include/nodes/attrs/class_attr.h include/utils/observable/concatenated_list.h include/events/event.h
         include/utils/observable/event/event_type.h include/typedefs.h src/typedefs.cpp include/utils/full_child_list.h src/utils/full_child_list.cpp
         include/utils/observable/mutable_filtered_list.h src/css/pseudoclass_manager.cpp include/utils/stylesheet_list.h include/nodes/elements/html_elements/html_element.h
-        include/utils/data_set_view.h src/utils/data_set_view.cpp src/nodes/elements/html_elements/html_element.cpp include/events/event_types.h src/events/event_types.cpp)
+        include/utils/data_set_view.h src/utils/data_set_view.cpp src/nodes/elements/html_elements/html_element.cpp include/events/event_types.h src/events/event_types.cpp include/window/window.h include/window/console.h)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp src/typedefs.cpp)
