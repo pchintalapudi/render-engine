@@ -33,9 +33,9 @@ public:
     virtual ~Invalidatable() = default;
 
 protected:
-    void invalidate(RegularEnumSet<InvEvent>) const;
+    void invalidate(RegularEnumSet<InvEvent>, const Invalidatable *) const;
 
-    virtual void modify(RegularEnumSet<InvEvent> &s) const { s.add(InvEvent::INVALIDATED); }
+    virtual void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const { s.add(InvEvent::INVALIDATED); }
 
 private:
     mutable bool valid = false;

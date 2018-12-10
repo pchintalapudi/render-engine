@@ -102,6 +102,11 @@ namespace feather {
 
             ~ObservableList() override = default;
 
+        protected:
+            void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const override {
+                s.remove(InvEvent::INVALIDATED);
+            }
+
         private:
 
             static StrongPointer<Function<Invalidatable(E)>> nullExtractor
@@ -114,7 +119,7 @@ namespace feather {
 
             inline void unbindE(E e) { if (extractor.get())(*extractor)(e).unbind(std::make_shared(this)); }
 
-            inline void invalidate() { invalidate(set(1, InvEvent::LIST_CHANGE)); }
+            inline void invalidate() { invalidate(set(1, InvEvent::LIST_CHANGE), std::make_shared(this)); }
         };
     }
 }
