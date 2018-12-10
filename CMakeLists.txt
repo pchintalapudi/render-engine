@@ -10,7 +10,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 file(GLOB SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/**/*.cpp)
 file(GLOB HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/**/*.h
         ${PROJECT_SOURCE_DIR}/include/**/*.hpp)
-add_library(feather ${SOURCE_FILES} include/typedefs.h include/observable/invalidatable.h src/observable/invalidatable.cpp)
+add_library(feather ${SOURCE_FILES} include/typedefs.h include/observable/invalidatable.h src/observable/invalidatable.cpp include/observable/observable_list.h include/bitfields.h include/observable/invalidation_event.h)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)

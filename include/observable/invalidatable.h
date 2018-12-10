@@ -5,7 +5,7 @@
 #ifndef FEATHER_INVALIDATABLE_H
 #define FEATHER_INVALIDATABLE_H
 
-#include "../typedefs.h"
+#include "invalidation_event.h"
 
 namespace feather {
     namespace observable {
@@ -18,29 +18,29 @@ public:
 
     Invalidatable() = default;
 
-    inline bool isValid() { return valid; }
+    inline bool isValid() const { return valid; }
 
-    void bind(WeakPointer<Invalidatable>);
+    void bind(WeakPointer<Invalidatable>) const;
 
-    inline void bind(StrongPointer<Invalidatable> dependent) { bind(WeakPointer<Invalidatable>(dependent)); }
+    inline void bind(StrongPointer<Invalidatable> dependent) const { bind(WeakPointer<Invalidatable>(dependent)); }
 
-    void unbind(WeakPointer<Invalidatable>);
+    void unbind(WeakPointer<Invalidatable>) const;
 
-    inline void unbind(StrongPointer<Invalidatable> dependent) { unbind(WeakPointer<Invalidatable>(dependent)); }
+    inline void unbind(StrongPointer<Invalidatable> dependent) const { unbind(WeakPointer<Invalidatable>(dependent)); }
 
     void gc(UByte) override;
 
     virtual ~Invalidatable() = default;
 
 protected:
-    void invalidate(Long);
+    void invalidate(EventCountSize l) const;
 
-    virtual void modify(Long *) {}
+    virtual void modify(EventCountSize *l) const { *l = set(*l, InvEvent::INVALIDATED); }
 
 private:
-    bool valid = false;
-    Long lastInvalidationCall = 0;
-    WeakSet<Invalidatable> dependents = WeakSet<Invalidatable>();
+    mutable bool valid = false;
+    mutable Long lastInvalidationCall = 0;
+    mutable WeakSet<Invalidatable> dependents = WeakSet<Invalidatable>();
 };
 
 #endif //FEATHER_INVALIDATABLE_H

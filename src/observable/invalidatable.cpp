@@ -2,11 +2,11 @@
 // Created by prem on 12/10/2018.
 //
 
-#include "include/observable/invalidatable.h"
+#include "observable/invalidatable.h"
 
 using namespace feather::observable;
 
-void Invalidatable::invalidate(feather::Long arg) {
+void Invalidatable::invalidate(EventCountSize arg) const {
     modify(&arg);
     if (arg) {
         for (auto it = dependents.begin(); it != dependents.end();) {
@@ -15,10 +15,10 @@ void Invalidatable::invalidate(feather::Long arg) {
         }
     }
     lastInvalidationCall = arg;
-    valid = static_cast<ULong>(arg) >> 1u != 0;
+    valid &= !present(arg, InvEvent::INVALIDATED);
 }
 
-void Invalidatable::bind(feather::WeakPointer<feather::observable::Invalidatable> dependent) {
+void Invalidatable::bind(feather::WeakPointer<feather::observable::Invalidatable> dependent) const {
     if (!dependent.expired()) {
         auto ptr = dependent.lock();
         if (!valid && ptr->isValid()) ptr->invalidate(lastInvalidationCall);
@@ -26,7 +26,7 @@ void Invalidatable::bind(feather::WeakPointer<feather::observable::Invalidatable
     }
 }
 
-void Invalidatable::unbind(feather::WeakPointer<feather::observable::Invalidatable> dependent) {
+void Invalidatable::unbind(feather::WeakPointer<feather::observable::Invalidatable> dependent) const {
     if (!dependent.expired()) {
         auto ptrLock = dependent.lock();
         for (auto it = dependents.begin(); it != dependents.end();) {
