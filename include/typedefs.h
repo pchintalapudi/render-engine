@@ -72,6 +72,8 @@ namespace feather {
     class Base : public std::enable_shared_from_this<Base> {
     public:
         virtual void gc(UByte) {}
+
+        WeakPointer<Base> getWeakPointerToThis() { return WeakPointer<Base>(this->shared_from_this()); }
     };
 }
 #endif //FEATHER_TYPEDEFS_H

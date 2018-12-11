@@ -37,6 +37,8 @@ protected:
 
     virtual void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const { s.add(InvEvent::INVALIDATED); }
 
+    void validate() { valid = true; }
+
 private:
     mutable bool valid = false;
     mutable RegularEnumSet<InvEvent> lastInvalidationCall = RegularEnumSet<InvEvent>();

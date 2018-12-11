@@ -10,7 +10,7 @@ include_directories(${PROJECT_SOURCE_DIR})
 file(GLOB SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/**/*.cpp)
 file(GLOB HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/**/*.h
         ${PROJECT_SOURCE_DIR}/include/**/*.hpp)
-add_library(feather ${SOURCE_FILES} include/typedefs.h include/observable/invalidatable.h src/observable/invalidatable.cpp include/observable/observable_list.h include/observable/invalidation_event.h include/enums/enum_set.h include/enums/enum_map.h include/events/event_target.h include/events/event.h src/events/event.cpp src/events/event_target.cpp)
+add_library(feather ${SOURCE_FILES} include/typedefs.h include/observable/invalidatable.h src/observable/invalidatable.cpp include/observable/observable_list.h include/observable/invalidation_event.h include/enums/enum_set.h include/enums/enum_map.h include/events/event_target.h include/events/event.h src/events/event.cpp src/events/event_target.cpp include/nodes/node.h include/nodes/documents/document.h include/nodes/elements/element.h include/observable/observable_item.h include/nodes/text.h include/nodes/character_data.h)
 target_include_directories(feather PRIVATE include)
 
 add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)

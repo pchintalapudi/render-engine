@@ -100,6 +100,8 @@ namespace feather {
                 invalidate();
             }
 
+            bool empty() const { return source.empty(); }
+
             ~ObservableList() override = default;
 
         protected:
@@ -109,8 +111,7 @@ namespace feather {
 
         private:
 
-            static StrongPointer<Function<Invalidatable(E)>> nullExtractor
-                    = StrongPointer<Function<Invalidatable(E)>>(nullptr);
+            static StrongPointer<Function<Invalidatable(E)>> nullExtractor = nullptr;
 
             Vector<E> source = Vector<E>();
             StrongPointer<Function<Invalidatable(E)>> extractor;

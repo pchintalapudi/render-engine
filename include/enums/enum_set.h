@@ -8,6 +8,13 @@ namespace feather {
     template<typename E, typename size_type>
     class EnumSet {
     public:
+
+        EnumSet() = default;
+
+        EnumSet(EnumSet &other) : EnumSet(other.field) {}
+
+        explicit EnumSet(size_type field) : field(field) {}
+
         inline void add(E e) { field |= static_cast<size_type>(1) << static_cast<size_type>(e); }
 
         inline void remove(E e) { field &= ~(static_cast<size_type>(1) << static_cast<size_type>(e)); }
@@ -17,6 +24,18 @@ namespace feather {
         inline void removeAll(EnumSet<E, size_type> other) { field &= ~other.field; }
 
         inline bool contains(E e) const { return (field & 1 << static_cast<size_type>(e)) != 0; }
+
+        inline bool containsAll(EnumSet<E, size_type> other) { return field & other.field == other.field; }
+
+        inline bool containsAny(EnumSet<E, size_type> other) { return field & other.field != 0; }
+
+        inline bool containsNone(EnumSet<E, size_type> other) { return field & other.field == 0; }
+
+        bool operator==(const EnumSet<E, size_type> &other) const { return field == other.field; }
+
+        inline void invert() { field = ~field; }
+
+        inline EnumSet<E, size_type> clone() const { return EnumSet(field); }
 
     private:
         size_type field;
