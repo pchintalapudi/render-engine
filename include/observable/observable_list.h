@@ -115,11 +115,11 @@ namespace feather {
             Vector<E> source = Vector<E>();
             StrongPointer<Function<Invalidatable(E)>> extractor;
 
-            inline void bindE(E e) { if (extractor.get())(*extractor)(e).bind(std::make_shared(this)); }
+            inline void bindE(E e) { if (extractor.get())(*extractor)(e).bind(this->shared_from_this()); }
 
-            inline void unbindE(E e) { if (extractor.get())(*extractor)(e).unbind(std::make_shared(this)); }
+            inline void unbindE(E e) { if (extractor.get())(*extractor)(e).unbind(this->shared_from_this()); }
 
-            inline void invalidate() { invalidate(set(1, InvEvent::LIST_CHANGE), std::make_shared(this)); }
+            inline void invalidate() { invalidate(set(1, InvEvent::LIST_CHANGE), this->shared_from_this()); }
         };
     }
 }

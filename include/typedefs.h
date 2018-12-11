@@ -6,12 +6,15 @@
 #define FEATHER_TYPEDEFS_H
 
 #include <algorithm>
+#include <chrono>
 #include <cstdint>
 #include <functional>
+#include <list>
 #include <map>
 #include <memory>
 #include <set>
 #include <string>
+#include <utility>
 #include <vector>
 #include "enums/enum_set.h"
 #include "enums/enum_map.h"
@@ -33,8 +36,14 @@ namespace feather {
     using Vector = std::vector<E>;
     template<typename K, typename V>
     using Map = std::map<K, V>;
+    template<typename K, typename V>
+    using Multimap = std::multimap<K, V>;
     template<typename E>
     using Set = std::set<E>;
+    template<typename K, typename V>
+    using Pair = std::pair<K, V>;
+    template<typename P>
+    using UnaryPair = std::pair<P, P>;
     template<typename P>
     using WeakPointer = std::weak_ptr<P>;
     template<typename P>
@@ -53,8 +62,14 @@ namespace feather {
     using JumboEnumSet = EnumSet<E, UHuge>;
     template<typename E, typename V>
     using EnumMap = EnumMapRaw<E, StrongPointer<V>>;
+    template<typename E>
+    using List = std::list<E>;
 
-    class Base {
+    typedef std::chrono::milliseconds Millis;
+    typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
+    const auto currentTime = std::chrono::system_clock::now;
+
+    class Base : public std::enable_shared_from_this<Base> {
     public:
         virtual void gc(UByte) {}
     };
