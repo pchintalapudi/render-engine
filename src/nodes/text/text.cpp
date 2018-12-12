@@ -20,7 +20,7 @@ feather::DOMString Text::getWholeText() const {
     concat.reserve(getLength());
     for (UInt i = 0; i < children.size(); i++) {
         auto child = children.get(i);
-        if (child->getNodeType() == NodeType::TEXT_NODE) {
+        if (child->getNodeTypeInternal() == NodeType::TEXT_NODE) {
             concat += std::static_pointer_cast<Text>(child)->getData();
             real = real || (child == me);
         } else if (!concat.empty()) {
@@ -45,5 +45,6 @@ feather::StrongPointer<Node> Text::cloneNode() const {
 }
 
 bool Text::isEqualNode(const feather::dom::Node &other) const {
-    return other.getNodeType() == getNodeType() && static_cast<const Text &>(other).getData() == getData();
+    return other.getNodeTypeInternal() == getNodeTypeInternal() &&
+           static_cast<const Text &>(other).getData() == getData();
 }

@@ -8,20 +8,19 @@ using namespace feather::observable;
 
 void Invalidatable::invalidate(RegularEnumSet <InvEvent> s, const Invalidatable *i) const {
     modify(s, i);
-    if (s.contains(InvEvent::PROPAGATE)) {
+    if (!s.contains(InvEvent::STOP_PROPAGATE)) {
         for (auto it = dependents.begin(); it != dependents.end();) {
             if (it->expired()) it = dependents.erase(it);
             else it->lock()->invalidate(s, this);
         }
     }
-    lastInvalidationCall = s;
     valid &= s.contains(InvEvent::INVALIDATED);
 }
 
 void Invalidatable::bind(feather::WeakPointer<feather::observable::Invalidatable> dependent) const {
     if (!dependent.expired()) {
         auto ptr = dependent.lock();
-        if (!valid && ptr->isValid()) ptr->invalidate(lastInvalidationCall, this);
+        ptr->invalidate(RegularEnumSet<InvEvent>(1u << static_cast<UByte>(InvEvent::REFRESH)), this);
         dependents.insert(dependent);
     }
 }

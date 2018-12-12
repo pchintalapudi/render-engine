@@ -7,7 +7,17 @@
 
 #include "../node.h"
 
-class feather::dom::Document : public Node {
-};
+namespace feather {
+    namespace dom {
+
+        class DocumentOrShadowRoot : public Node {
+
+        };
+
+        class Document : public DocumentOrShadowRoot {
+            StrongPointer<Element> getDocumentElement();
+        };
+    }
+}
 
 #endif //FEATHER_DOCUMENT_H

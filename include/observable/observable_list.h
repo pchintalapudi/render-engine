@@ -14,7 +14,7 @@ namespace feather {
         public:
             ObservableList() : extractor(nullptr) {}
 
-            explicit ObservableList(StrongPointer<Function<Invalidatable(E)>> extractor) : extractor(extractor) {}
+            explicit ObservableList(StrongPointer <Function<Invalidatable(E)>> extractor) : extractor(extractor) {}
 
             inline E get(UInt index) const { return source[index]; }
 
@@ -60,7 +60,7 @@ namespace feather {
 
             void insert(UInt index, E e) {
                 bindE(e);
-                source.insert(source.begin() + index);
+                source.insert(source.begin() + index, e);
                 invalidate();
             }
 
@@ -100,25 +100,63 @@ namespace feather {
                 invalidate();
             }
 
-            bool empty() const { return source.empty(); }
+            inline void clear() {
+                source.clear();
+                invalidate();
+            }
+
+            inline bool empty() const { return source.empty(); }
+
+            inline void reserve(UInt size) { source.reserve(size); }
+
+            inline void swap(Vector <E> v) {
+                source.swap(v);
+                invalidate();
+            }
+
+            void remove(UInt idx) {
+                unbindE(source[idx]);
+                source.erase(source.begin() + idx);
+                invalidate();
+            }
+
+            inline void removeAll(UInt start, UInt end) {
+                WeakPointer<ObservableList<E>> weakThis = std::static_pointer_cast<ObservableList<E>>(
+                        shared_from_this());
+                std::for_each(source.begin() + start, source.begin() + end,
+                              [weakThis](E e) { if (!weakThis.expired()) weakThis.lock()->unbindE(e); });
+                source.erase(source.begin() + start, source.begin() + end);
+                invalidate();
+            }
 
             ~ObservableList() override = default;
 
         protected:
-            void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const override {
+            void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
                 s.remove(InvEvent::INVALIDATED);
             }
 
         private:
 
-            Vector<E> source = Vector<E>();
-            StrongPointer<Function<Invalidatable(E)>> extractor;
+            Vector <E> source = Vector<E>();
+            StrongPointer <Function<Invalidatable(E)>> extractor;
 
-            inline void bindE(E e) { if (extractor.get())(*extractor)(e).bind(this->shared_from_this()); }
+            inline void bindE(E e) {
+                if (extractor.get())
+                    (*extractor)(e).bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+            }
 
-            inline void unbindE(E e) { if (extractor.get())(*extractor)(e).unbind(this->shared_from_this()); }
+            inline void unbindE(E e) {
+                if (extractor.get())
+                    (*extractor)(e).unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+            }
 
-            inline void invalidate() { invalidate(set(1, InvEvent::LIST_CHANGE), this->shared_from_this()); }
+            inline void invalidate() {
+                Invalidatable::invalidate(
+                        RegularEnumSet<InvEvent>(1u << static_cast<ULong>(InvEvent::LIST_CHANGE)),
+                        this
+                );
+            }
         };
     }
 }

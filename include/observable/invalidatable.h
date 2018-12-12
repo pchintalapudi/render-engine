@@ -22,11 +22,7 @@ public:
 
     void bind(WeakPointer<Invalidatable>) const;
 
-    inline void bind(StrongPointer<Invalidatable> dependent) const { bind(WeakPointer<Invalidatable>(dependent)); }
-
     void unbind(WeakPointer<Invalidatable>) const;
-
-    inline void unbind(StrongPointer<Invalidatable> dependent) const { unbind(WeakPointer<Invalidatable>(dependent)); }
 
     void gc(UByte) override;
 
@@ -41,7 +37,6 @@ protected:
 
 private:
     mutable bool valid = false;
-    mutable RegularEnumSet<InvEvent> lastInvalidationCall = RegularEnumSet<InvEvent>();
     mutable WeakSet<Invalidatable> dependents = WeakSet<Invalidatable>();
 };
 
