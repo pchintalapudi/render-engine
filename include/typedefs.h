@@ -68,6 +68,10 @@ namespace feather {
     template<typename E>
     using Deque = std::deque<E>;
 
+    enum class TriValue {
+        AUTO, NO, YES
+    };
+
     typedef std::chrono::milliseconds Millis;
     typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
     const auto currentTime = std::chrono::system_clock::now;
