@@ -28,6 +28,14 @@ namespace feather {
             StrongPointer<Node> cloneNode() const override;
 
             bool isEqualNode(const Node &other) const override;
+
+        protected:
+
+            Text(DOMString baseURI, DOMString name, NodeType nodeType, StrongPointer<Node> parent)
+                    : CharacterData(baseURI, name, nodeType, parent), Slotable() {}
+
+            Text(DOMString baseURI, DOMString name, NodeType nodeType, StrongPointer<Node> parent, DOMString init)
+                    : CharacterData(baseURI, name, nodeType, parent, init), Slotable() {}
         };
     }
 }
