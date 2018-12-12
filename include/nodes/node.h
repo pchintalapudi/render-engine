@@ -35,7 +35,6 @@ namespace feather {
         class Node : public js::EventTarget {
         public:
 
-            //TODO: Implement me
             Node(DOMString baseURI, DOMString name, NodeType type,
                  StrongPointer<DOMString> value, StrongPointer<Node> parent);
 
@@ -91,14 +90,13 @@ namespace feather {
 
             virtual StrongPointer<Node> cloneNode() const = 0;
 
-            //TODO: Implement me
-            UByte compareDocumentPosition(StrongPointer<Node>) const;
+            UByte compareDocumentPosition(StrongPointer<const Node>) const;
 
-            bool contains(StrongPointer<Node>) const;
+            bool contains(StrongPointer<const Node>) const;
 
-            inline StrongPointer<Node> getRootNode() { return getRootNode(false); }
+            inline StrongPointer<Node> getRootNode() const { return getRootNode(false); }
 
-            StrongPointer<Node> getRootNode(bool composed);
+            StrongPointer<Node> getRootNode(bool composed) const;
 
             inline bool hasChildNodes() const { return !childNodes.empty(); }
 

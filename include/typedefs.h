@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <list>
 #include <map>
@@ -64,6 +65,8 @@ namespace feather {
     using EnumMap = EnumMapRaw<E, StrongPointer<V>>;
     template<typename E>
     using List = std::list<E>;
+    template<typename E>
+    using Deque = std::deque<E>;
 
     typedef std::chrono::milliseconds Millis;
     typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;

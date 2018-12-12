@@ -141,13 +141,58 @@ feather::StrongPointer<Node> Node::appendChild(feather::StrongPointer<feather::d
     return child;
 }
 
-bool Node::contains(feather::StrongPointer<feather::dom::Node> other) const {
-    StrongPointer <Node> ptr = other;
+namespace {
+    enum class DocumentPosition {
+        DISCONNECTED, PRECEDING, FOLLOWING, CONTAINS, CONTAINED_BY, IMPLEMENTATION_SPECIFIC
+    };
+}
+
+namespace {
+    bool precedes(const Node &node1, const Node &node2) {
+        feather::Deque<Node *> deque;
+        auto parent = node1.getParentNode();
+        while (parent.get()) deque.push_back(parent.get());
+        parent = node2.getParentNode();
+        auto p2 = parent;
+        while (parent.get()) {
+            auto it = std::find(deque.begin(), deque.end(), parent.get());
+            if (it != deque.end()) {
+                feather::UInt idx = it - deque.begin() + 1;
+                auto children = parent->getChildNodes();
+                for (feather::UInt i = 0; i < idx; i++) if (children.get(i) == p2) return false;
+                return true;
+            }
+            p2 = parent;
+            parent = parent->getParentNode();
+        }
+        return false;
+    }
+}
+
+feather::UByte Node::compareDocumentPosition(feather::StrongPointer<const feather::dom::Node> node1) const {
+    if (node1.get() == this) return 0u;
+    const Node &node2 = *this;
+    if (node1.get() == nullptr || (node1->getRootNode(true) != getRootNode(true)))
+        return 1u << static_cast<UInt>(DocumentPosition::DISCONNECTED) |
+               1u << static_cast<UInt>(DocumentPosition::PRECEDING) |
+               1u << static_cast<UInt>(DocumentPosition::IMPLEMENTATION_SPECIFIC);
+    if (node1->contains(std::static_pointer_cast<const Node>(shared_from_this())))
+        return 1u << static_cast<UInt>(DocumentPosition::CONTAINS) |
+               1u << static_cast<UInt>(DocumentPosition::PRECEDING);
+    if (node2.contains(node1))
+        return 1u << static_cast<UInt>(DocumentPosition::CONTAINS) |
+               1u << static_cast<UInt>(DocumentPosition::FOLLOWING);
+    if (precedes(*node1.get(), node2)) return 1u << static_cast<UInt>(DocumentPosition::PRECEDING);
+    return 1u << static_cast<UInt>(DocumentPosition::FOLLOWING);
+}
+
+bool Node::contains(feather::StrongPointer<const feather::dom::Node> other) const {
+    StrongPointer<const Node> ptr = other;
     while (other.get() && other.get() != this) ptr = ptr->getParentNode();
     return ptr.get() != nullptr;
 }
 
-feather::StrongPointer<Node> Node::getRootNode(bool composed) {
+feather::StrongPointer<Node> Node::getRootNode(bool composed) const {
     switch (getNodeTypeInternal()) {
         case NodeType::SHADOW_ROOT:
             if (!composed) return nullptr;

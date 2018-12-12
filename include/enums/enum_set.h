@@ -39,6 +39,8 @@ namespace feather {
 
         inline EnumSet<E, size_type> clone() const { return EnumSet<E, size_type>(field); }
 
+        inline size_type toSizeType() { return field; }
+
     private:
         size_type field;
     };
