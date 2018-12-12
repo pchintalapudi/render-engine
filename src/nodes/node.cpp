@@ -142,14 +142,9 @@ feather::StrongPointer<Node> Node::appendChild(feather::StrongPointer<feather::d
 }
 
 bool Node::contains(feather::StrongPointer<feather::dom::Node> other) const {
-    if (other.get() == this) return true;
-    auto children = getChildNodes();
-    for (UInt i = 0; i < children.size(); i++) {
-        auto child = children.get(i);
-        if (child == other) return true;
-        else if (child->hasChildNodes() && child->contains(other)) return true;
-    }
-    return false;
+    StrongPointer <Node> ptr = other;
+    while (other.get() && other.get() != this) ptr = ptr->getParentNode();
+    return ptr.get() != nullptr;
 }
 
 feather::StrongPointer<Node> Node::getRootNode(bool composed) {
