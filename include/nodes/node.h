@@ -35,18 +35,13 @@ namespace feather {
         class Node : public js::EventTarget {
         public:
 
-            Node(DOMString baseURI, DOMString name, NodeType type, DOMString *const value, StrongPointer<Node> parent)
+            Node(DOMString baseURI, DOMString name, NodeType type,
+                 StrongPointer<DOMString> value, StrongPointer<Node> parent)
                     : baseURI(baseURI), name(name), type(type), value(value), parent(WeakPointer<Node>(parent)) {}
 
-            Node(Node &other);
+            Node(const Node &other);
 
             Node(Node &&other) noexcept;
-
-            Node &operator=(Node other);
-
-            Node &operator=(const Node &other);
-
-            Node &operator=(Node &&other) noexcept;
 
             inline DOMString getBaseURI() const { return baseURI; }
 
@@ -69,9 +64,11 @@ namespace feather {
 
             inline NodeType getNodeType() const { return type; }
 
-            const DOMString *getNodeValue() const { return value; }
+            inline StrongPointer<DOMString> getNodeValue() const {
+                return value.get() ? StrongPointer<DOMString>(new DOMString(*value)) : nullptr;
+            }
 
-            void setNodeValue(DOMString value) { *this->value = value; }
+            void setNodeValue(DOMString value) { if (this->value) *this->value = value; }
 
             //TODO: Implement me
             StrongPointer<Document> getOwnerDocument() const;
@@ -79,6 +76,8 @@ namespace feather {
             inline StrongPointer<Node> getParentNode() const {
                 return parent.expired() ? StrongPointer<Node>(nullptr) : parent.lock();
             }
+
+            void setParentNode(StrongPointer<Node> parentNode);
 
             //TODO: Implement me
             StrongPointer<Element> getParentElement() const;
@@ -111,23 +110,23 @@ namespace feather {
             inline bool hasChildNodes() const { return !childNodes.empty(); }
 
             //TODO: Implement me
-            StrongPointer<Node> insertBefore(StrongPointer<Node> add, StrongPointer<Node> ref);
+            StrongPointer<Node> insertBefore(StrongPointer<Node> add, StrongPointer<const Node> ref);
 
             //TODO: Implement me
-            StrongPointer<Node> insertAfter(StrongPointer<Node> add, StrongPointer<Node> ref);
+            StrongPointer<Node> insertAfter(StrongPointer<Node> add, StrongPointer<const Node> ref);
 
             //TODO: Implement me
-            bool isDefaultNamespace(DOMString ns);
+            bool isDefaultNamespace(DOMString ns) const;
 
-            virtual bool isEqualNode(const Node &other) = 0;
+            virtual bool isEqualNode(const Node &other) const = 0;
 
             inline bool isSameNode(const Node &other) { return this == &other; }
 
             //TODO: Implement me
-            DOMString lookupPrefix(DOMString ns);
+            DOMString lookupPrefix(DOMString ns) const;
 
             //TODO: Implement me
-            DOMString lookupNamespace(DOMString prefix);
+            DOMString lookupNamespace(DOMString prefix) const;
 
             //TODO: Implement me
             void normalize();
@@ -136,7 +135,26 @@ namespace feather {
             StrongPointer<Node> removeChild(StrongPointer<Node> child);
 
             //TODO: Implement me
-            StrongPointer<Node> replaceChild(StrongPointer<Node> newChild, StrongPointer<Node> oldChild);
+            StrongPointer<Node> replaceChild(StrongPointer<Node> newChild, StrongPointer<const Node> oldChild);
+
+            //Internal speedier methods for various interfaces
+
+            //From ChildNode
+
+            void insertBeforeChild(Vector<StrongPointer<Node>>, StrongPointer<const Node> ref);
+
+            void insertAfterChild(Vector<StrongPointer<Node>>, StrongPointer<const Node> ref);
+
+            void replaceChild(Vector<StrongPointer<Node>>, StrongPointer<const Node> replace);
+
+            //From NonDocumentTypeChildNode
+
+            StrongPointer<Element> getElementAfterChild(StrongPointer<const Node> ref) const;
+
+            StrongPointer<Element> getElementBeforeChild(StrongPointer<const Node> ref) const;
+
+        protected:
+            inline StrongPointer<DOMString> getValuePointer() const { return value; }
 
         private:
             DOMString baseURI;
@@ -145,7 +163,7 @@ namespace feather {
             observable::ObservableItem<WeakPointer<Node>> nextSibling = observable::ObservableItem<WeakPointer<Node>>();
             DOMString name;
             NodeType type;
-            DOMString *const value;
+            StrongPointer<DOMString> value;
             WeakPointer<Node> parent;
             observable::ObservableItem<WeakPointer<Node>> prevSibling = observable::ObservableItem<WeakPointer<Node>>();
         };

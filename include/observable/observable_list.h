@@ -12,7 +12,7 @@ namespace feather {
         template<typename E>
         class ObservableList : public Invalidatable {
         public:
-            ObservableList() : extractor(nullExtractor) {}
+            ObservableList() : extractor(nullptr) {}
 
             explicit ObservableList(StrongPointer<Function<Invalidatable(E)>> extractor) : extractor(extractor) {}
 
@@ -110,8 +110,6 @@ namespace feather {
             }
 
         private:
-
-            static StrongPointer<Function<Invalidatable(E)>> nullExtractor = nullptr;
 
             Vector<E> source = Vector<E>();
             StrongPointer<Function<Invalidatable(E)>> extractor;

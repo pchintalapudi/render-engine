@@ -11,7 +11,7 @@ namespace feather {
 
         EnumSet() = default;
 
-        EnumSet(EnumSet &other) : EnumSet(other.field) {}
+        EnumSet(const EnumSet &other) : EnumSet(other.field) {}
 
         explicit EnumSet(size_type field) : field(field) {}
 
@@ -19,23 +19,25 @@ namespace feather {
 
         inline void remove(E e) { field &= ~(static_cast<size_type>(1) << static_cast<size_type>(e)); }
 
-        inline void addAll(EnumSet<E, size_type> other) { field |= other.field; }
+        inline void addAll(const EnumSet<E, size_type> other) { field |= other.field; }
 
-        inline void removeAll(EnumSet<E, size_type> other) { field &= ~other.field; }
+        inline void removeAll(const EnumSet<E, size_type> other) { field &= ~other.field; }
 
         inline bool contains(E e) const { return (field & 1 << static_cast<size_type>(e)) != 0; }
 
-        inline bool containsAll(EnumSet<E, size_type> other) { return field & other.field == other.field; }
+        inline bool containsAll(const EnumSet<E, size_type> other) const {
+            return (field & other.field) == other.field;
+        }
 
-        inline bool containsAny(EnumSet<E, size_type> other) { return field & other.field != 0; }
+        inline bool containsAny(const EnumSet<E, size_type> other) const { return (field & other.field) != 0; }
 
-        inline bool containsNone(EnumSet<E, size_type> other) { return field & other.field == 0; }
+        inline bool containsNone(const EnumSet<E, size_type> other) const { return (field & other.field) == 0; }
 
         bool operator==(const EnumSet<E, size_type> &other) const { return field == other.field; }
 
         inline void invert() { field = ~field; }
 
-        inline EnumSet<E, size_type> clone() const { return EnumSet(field); }
+        inline EnumSet<E, size_type> clone() const { return EnumSet<E, size_type>(field); }
 
     private:
         size_type field;

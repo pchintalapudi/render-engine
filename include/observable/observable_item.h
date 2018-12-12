@@ -15,7 +15,7 @@ namespace feather {
 
             ObservableItem() = default;
 
-            explicit ObservableItem(RegularEnumSet<InvEvent> required) : required(required) {}
+            explicit ObservableItem(const RegularEnumSet <InvEvent> required) : required(required) {}
 
             inline I get() { return i; }
 
@@ -25,13 +25,13 @@ namespace feather {
             }
 
         protected:
-            void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *i) const override {
+            void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
                 if (s.containsAll(required))s.add(InvEvent::INVALIDATED); else s.remove(InvEvent::INVALIDATED);
             }
 
         private:
             I i;
-            RegularEnumSet<InvEvent> required = RegularEnumSet<InvEvent>();
+            const RegularEnumSet <InvEvent> required = RegularEnumSet<InvEvent>();
         };
     }
 }
