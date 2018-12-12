@@ -157,9 +157,9 @@ namespace {
         while (parent.get()) {
             auto it = std::find(deque.begin(), deque.end(), parent.get());
             if (it != deque.end()) {
-                feather::UInt idx = it - deque.begin() + 1;
+                feather::Int idx = it - deque.begin() + 1;
                 auto children = parent->getChildNodes();
-                for (feather::UInt i = 0; i < idx; i++) if (children.get(i) == p2) return false;
+                for (feather::Int i = 0; i < idx; i++) if (children.get(i) == p2) return false;
                 return true;
             }
             p2 = parent;
@@ -180,7 +180,7 @@ feather::UByte Node::compareDocumentPosition(feather::StrongPointer<const feathe
         return 1u << static_cast<UInt>(DocumentPosition::CONTAINS) |
                1u << static_cast<UInt>(DocumentPosition::PRECEDING);
     if (node2.contains(node1))
-        return 1u << static_cast<UInt>(DocumentPosition::CONTAINS) |
+        return 1u << static_cast<UInt>(DocumentPosition::CONTAINED_BY) |
                1u << static_cast<UInt>(DocumentPosition::FOLLOWING);
     if (precedes(*node1.get(), node2)) return 1u << static_cast<UInt>(DocumentPosition::PRECEDING);
     return 1u << static_cast<UInt>(DocumentPosition::FOLLOWING);
@@ -278,7 +278,7 @@ namespace {
 void Node::normalize() {
     auto children = getChildNodes();
     Vector <StrongPointer<Node>> normalized;
-    DOMString str = "";
+    DOMString str;
     for (UInt i = 0; i < children.size(); i++) {
         auto child = children.get(i);
         switch (child->getNodeTypeInternal()) {
@@ -325,7 +325,7 @@ feather::StrongPointer<Node> Node::replaceChild(feather::StrongPointer<feather::
 void Node::insertBeforeChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
                              feather::StrongPointer<const feather::dom::Node> ref) {
     auto children = getChildNodes();
-    for (auto child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
+    for (const auto &child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
     for (UInt i = 0; i < children.size(); i++) {
         if (children.get(i) == ref) {
             children.insertAll(i, v);
@@ -338,7 +338,7 @@ void Node::insertBeforeChild(feather::Vector<std::shared_ptr<feather::dom::Node>
 void Node::insertAfterChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
                             feather::StrongPointer<const feather::dom::Node> ref) {
     auto children = getChildNodes();
-    for (auto child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
+    for (const auto &child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
     for (UInt i = 0; i < children.size(); i++) {
         if (children.get(i) == ref) {
             children.insertAll(i + 1, v);
@@ -351,7 +351,7 @@ void Node::insertAfterChild(feather::Vector<std::shared_ptr<feather::dom::Node>>
 void Node::replaceChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
                         feather::StrongPointer<const feather::dom::Node> replace) {
     auto children = getChildNodes();
-    for (auto child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
+    for (const auto &child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
     for (UInt i = 0; i < children.size(); i++) {
         if (children.get(i) == replace) {
             children.get(i)->setParentNode(nullptr);
