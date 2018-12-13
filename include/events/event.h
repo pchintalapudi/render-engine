@@ -12,7 +12,7 @@ namespace feather {
         class EventTarget;
 
         enum class EventType {
-            DEFAULT, CUSTOM, __COUNT__
+            FULL_SCREEN_CHANGE, FULL_SCREEN_ERROR, DEFAULT, CUSTOM, __COUNT__
         };
 
         DOMString toString(EventType et);
@@ -31,11 +31,11 @@ namespace feather {
         public:
 
             Event(bool bubbles, bool cancelable, bool composed, bool trusted,
-                  EventTarget &originalTarget, List<StrongPointer<EventTarget>> realPath,
+                  WeakPointer<EventTarget> originalTarget, List<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
             Event(bool bubbles, bool cancelable, bool composed, DOMString name,
-                  EventTarget &originalTarget, List<StrongPointer<EventTarget>> realPath,
+                  WeakPointer<EventTarget> originalTarget, List<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
             inline bool getBubbles() const { return properties.contains(EventProperties::BUBBLES); }
@@ -52,7 +52,7 @@ namespace feather {
 
             inline bool getComposed() const { return properties.contains(EventProperties::COMPOSED); }
 
-            EventTarget &getEventTarget();
+            StrongPointer<EventTarget> getEventTarget();
 
             inline Long getTimestamp() {
                 return std::chrono::duration_cast<Millis>(timestamp.time_since_epoch()).count();
@@ -66,7 +66,9 @@ namespace feather {
 
             void setReturnValue(bool);
 
-            inline EventTarget &getOriginalTarget() { return originalTarget; }
+            inline StrongPointer<EventTarget> getOriginalTarget() {
+                return originalTarget.expired() ? nullptr : originalTarget.lock();
+            }
 
             inline DOMString getType() const { return name; }
 
@@ -102,7 +104,7 @@ namespace feather {
         private:
             List<StrongPointer<EventTarget>> realPath;
             List<StrongPointer<EventTarget>>::iterator current;
-            EventTarget &originalTarget;
+            WeakPointer<EventTarget> originalTarget;
             const TimePoint timestamp = currentTime();
             DOMString name;
             EventPhase phase = EventPhase::CAPTURING;

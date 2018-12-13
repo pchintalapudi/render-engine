@@ -14,7 +14,8 @@ namespace feather {
         public:
             ObservableList() : extractor(nullptr) {}
 
-            explicit ObservableList(StrongPointer <Function<Invalidatable(E)>> extractor) : extractor(extractor) {}
+            explicit ObservableList(StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor)
+                    : extractor(extractor) {}
 
             inline E get(UInt index) const { return source[index]; }
 
@@ -139,16 +140,16 @@ namespace feather {
         private:
 
             Vector <E> source = Vector<E>();
-            StrongPointer <Function<Invalidatable(E)>> extractor;
+            StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor;
 
             inline void bindE(E e) {
                 if (extractor.get())
-                    (*extractor)(e).bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                    (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
             }
 
             inline void unbindE(E e) {
                 if (extractor.get())
-                    (*extractor)(e).unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                    (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
             }
 
             inline void invalidate() {

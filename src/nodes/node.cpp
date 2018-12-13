@@ -12,11 +12,18 @@ namespace {
     const feather::RegularEnumSet<feather::observable::InvEvent> listWatcherSet
             = feather::RegularEnumSet<feather::observable::InvEvent>(
                     1u << static_cast<int>(feather::observable::InvEvent::LIST_CHANGE));
+
+    template<typename I, typename O>
+    feather::StrongPointer<feather::Function<feather::StrongPointer<O>(feather::StrongPointer<I>)>> caster() {
+        return feather::StrongPointer<feather::Function<feather::StrongPointer<O>(feather::StrongPointer<I>)>>(
+                new feather::Function<feather::StrongPointer<O>(feather::StrongPointer<I>)>(
+                        [](feather::StrongPointer<I> i) { return std::static_pointer_cast<O>(i); }));
+    }
 }
 
 Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::NodeType type,
            feather::StrongPointer<feather::DOMString> value, feather::StrongPointer<feather::dom::Node> parent)
-        : baseURI(baseURI),
+        : baseURI(baseURI), childNodes(caster<Node, Invalidatable>()),
           nextSiblingPtr(
                   std::make_shared<feather::observable::WatchedObservableItem<feather::WeakPointer<feather::dom::Node>>>(
                           listWatcherSet)),
@@ -117,9 +124,11 @@ void Node::setTextContent(feather::DOMString textContent) {
         case NodeType::ELEMENT_NODE:
         case NodeType::DOCUMENT_FRAGMENT_NODE:
             getChildNodes().clear();
-            getChildNodes().add(std::make_shared<Text>(getBaseURI(),
-                                                       std::static_pointer_cast<Node>(shared_from_this()),
-                                                       textContent));
+            getChildNodes().add(std::make_shared<Text>(
+                    getBaseURI(),
+                    std::static_pointer_cast<Node>(shared_from_this()),
+                    textContent)
+            );
             break;
         case NodeType::TEXT_NODE:
             setTextContent(textContent);

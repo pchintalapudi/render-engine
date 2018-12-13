@@ -12,7 +12,16 @@ namespace feather {
         typedef Long EventCountSize;
 
         enum class InvEvent {
-            INVALIDATED, STOP_PROPAGATE, LIST_CHANGE, SET_CHANGE, MAP_CHANGE, RELAYOUT, REPAINT, REFRESH, __COUNT__
+            INVALIDATED,
+            STOP_PROPAGATE,
+            LIST_CHANGE,
+            SET_CHANGE,
+            MAP_CHANGE,
+            RESTYLE,
+            RELAYOUT,
+            REPAINT,
+            REFRESH,
+            __COUNT__
         };
     }
 }

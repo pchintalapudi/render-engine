@@ -158,8 +158,7 @@ namespace feather {
 
         private:
             DOMString baseURI;
-            observable::ObservableList<StrongPointer<Node>> childNodes
-                    = observable::ObservableList<StrongPointer<Node>>();
+            observable::ObservableList<StrongPointer<Node>> childNodes;
             StrongPointer<observable::WatchedObservableItem<WeakPointer<Node>>> nextSiblingPtr, prevSiblingPtr;
             DOMString name;
             NodeType type;

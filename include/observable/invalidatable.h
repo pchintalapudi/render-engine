@@ -33,7 +33,7 @@ protected:
 
     virtual void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const { s.add(InvEvent::INVALIDATED); }
 
-    void validate() { valid = true; }
+    void validate() const { valid = true; }
 
 private:
     mutable bool valid = false;

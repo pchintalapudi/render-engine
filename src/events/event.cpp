@@ -7,7 +7,7 @@
 using namespace feather::js;
 
 Event::Event(bool bubbles, bool cancelable, bool composed, feather::DOMString name,
-             feather::js::EventTarget &originalTarget,
+             WeakPointer <EventTarget> originalTarget,
              feather::List<std::shared_ptr<feather::js::EventTarget>> realPath,
              EventType type)
         : realPath(realPath), current(realPath.begin()), originalTarget(originalTarget), name(name), type(type) {
@@ -16,7 +16,7 @@ Event::Event(bool bubbles, bool cancelable, bool composed, feather::DOMString na
     if (composed) properties.add(EventProperties::COMPOSED);
 }
 
-Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, feather::js::EventTarget &originalTarget,
+Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, WeakPointer <EventTarget> originalTarget,
              feather::List<std::shared_ptr<feather::js::EventTarget>> realPath, feather::js::EventType type)
         : realPath(realPath), current(realPath.begin()), originalTarget(originalTarget), name(""), type(type) {
     if (bubbles) properties.add(EventProperties::BUBBLES);
@@ -26,7 +26,7 @@ Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, feather
 }
 
 //TODO: Implement me
-EventTarget &Event::getEventTarget() {
+feather::StrongPointer<EventTarget> Event::getEventTarget() {
     //Preconditions: The first node must not be a shadow root (this is easily satisfied by the condition for a shadow root.)
     //Algorithm:
     //1. Assign first node in list to currentNode
