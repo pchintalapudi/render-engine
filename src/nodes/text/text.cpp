@@ -40,7 +40,7 @@ feather::StrongPointer<Text> Text::splitText(feather::ULong offset) {
     return ptr;
 }
 
-feather::StrongPointer<Node> Text::cloneNode() const {
+feather::StrongPointer<Node> Text::cloneNode(bool deep) const {
     return std::static_pointer_cast<Node>(std::make_shared<Text>(getBaseURI(), nullptr, getData()));
 }
 

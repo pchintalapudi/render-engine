@@ -32,6 +32,12 @@ namespace feather {
 
             inline UInt getLength() const { return backing.size(); }
 
+            inline bool contains(DOMString key) const { return backing.find(key) != backing.end(); }
+
+            Vector<DOMString> getKeys() const;
+
+            DOMString toHTML() const;
+
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) {
                 s.remove(observable::InvEvent::INVALIDATED);

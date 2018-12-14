@@ -88,7 +88,9 @@ namespace feather {
 
             StrongPointer<Node> appendChild(StrongPointer<Node> child);
 
-            virtual StrongPointer<Node> cloneNode() const = 0;
+            inline StrongPointer<Node> cloneNode() { return cloneNode(false); }
+
+            virtual StrongPointer<Node> cloneNode(bool deep) const = 0;
 
             UByte compareDocumentPosition(StrongPointer<const Node>) const;
 

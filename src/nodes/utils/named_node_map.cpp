@@ -29,3 +29,19 @@ feather::StrongPointer<feather::dom::Attr<void>> NamedNodeMap::removeNamedItem(f
     }
     return nullptr;
 }
+
+feather::Vector<feather::DOMString> NamedNodeMap::getKeys() const {
+    Vector <DOMString> v;
+    for (auto pair : backing) v.push_back(pair.first);
+    return v;
+}
+
+//Leaves extra space in front
+feather::DOMString NamedNodeMap::toHTML() const {
+    DOMString html;
+    UInt reserve = 0;
+    for (auto pair : backing) reserve += pair.first.length() + 3 + pair.second->getValue().length();
+    html.reserve(reserve);
+    for (auto pair : backing) ((((html += " ") += pair.first) += "='") += pair.second->getValue()) += "'";
+    return html;
+}

@@ -33,10 +33,14 @@ namespace feather {
 
             inline bool getSpecified() { return true; }
 
-            inline DOMString getValue() { return static_cast<A *>(this)->toString(); }
+            inline DOMString getValue() { return toString(); }
+
+            virtual DOMString toString() const = 0;
+
+            virtual void fromString(DOMString) = 0;
 
             inline void setValue(DOMString value) {
-                static_cast<A *>(this)->fromString(value);
+                fromString(value);
                 invalidate();
             }
 
@@ -62,9 +66,9 @@ namespace feather {
 
             StandardAttr(DOMString localName, StrongPointer <Element> owner) : Attr(localName, owner) {}
 
-            inline DOMString toString() { return value; }
+            inline DOMString toString() const override { return value; }
 
-            inline void fromString(DOMString value) { this->value = value; }
+            inline void fromString(DOMString value) override { this->value = value; }
 
         private:
             DOMString value = "";
@@ -77,9 +81,14 @@ namespace feather {
                       StrongPointer <Element> owner, StrongPointer <DOMTokenList> classList)
                     : Attr(ns, prefix, localName, owner), classList(classList) {}
 
-            inline DOMString toString() { return classList.expired() ? "" : classList.lock()->getValue(); }
+            inline DOMString toString() const override {
+                return classList.expired() ? "" : classList.lock()->getValue();
+            }
 
-            inline void fromString(DOMString value) { if (!classList.expired()) classList.lock()->setValue(value); }
+            inline void fromString(DOMString value) override {
+                if (!classList.expired())
+                    classList.lock()->setValue(value);
+            }
 
         private:
             WeakPointer <DOMTokenList> classList;

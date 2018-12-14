@@ -10,6 +10,15 @@
 namespace feather {
     namespace dom {
         class ShadowRoot : public DocumentOrShadowRoot {
+        public:
+
+            inline bool getMode() { return open; }
+
+            inline StrongPointer<Element> getHost() { return host.expired() ? nullptr : host.lock(); }
+
+        private:
+            bool open;
+            WeakPointer<Element> host;
         };
     }
 }

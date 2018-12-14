@@ -11,11 +11,10 @@ namespace feather {
     namespace dom {
 
         class DocumentOrShadowRoot : public Node {
-
         };
 
         class Document : public DocumentOrShadowRoot {
-            StrongPointer<Element> getDocumentElement();
+            StrongPointer <Element> getDocumentElement();
         };
     }
 }

@@ -56,7 +56,7 @@ void EventTarget::unregisterHandler(feather::DOMString s,
     }
 }
 
-void EventTarget::dispatchEvent(feather::js::Event &e) {
+bool EventTarget::dispatchEvent(feather::js::Event &e) {
     auto type = e.getInternalType();
     //Event prep phase
     bool atEnd = e.getEventPhase() == EventPhase::CAPTURING && e.atEnd();
@@ -70,18 +70,20 @@ void EventTarget::dispatchEvent(feather::js::Event &e) {
         for (; iterPair.first != iterPair.second; iterPair.first++) if (!e.immediate())(*iterPair.first->second)(e);
     }
     //Event dispatching phase
-    if (!e.consumed())
+    if (!e.consumed()) {
         switch (e.getEventPhase()) {
             case EventPhase::AT_TARGET:
                 e.setEventPhase(EventPhase::BUBBLING);
                 [[fallthrough]];
             case EventPhase::BUBBLING:
-                if (!e.atStart()) e.shiftTarget()->dispatchEvent(e);
-                break;
+                if (!e.atStart()) return e.shiftTarget()->dispatchEvent(e);
+                else return true;
             case EventPhase::CAPTURING:
-                e.shiftTarget()->dispatchEvent(e);
-                break;
+                return e.shiftTarget()->dispatchEvent(e);
+            default:
+                return true;
         }
+    } else return false;
 }
 
 EventTarget::~EventTarget() {

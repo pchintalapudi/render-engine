@@ -25,7 +25,7 @@ namespace feather {
 
             StrongPointer<Text> splitText(ULong offset);
 
-            StrongPointer<Node> cloneNode() const override;
+            StrongPointer<Node> cloneNode(bool deep) const override;
 
             bool isEqualNode(const Node &other) const override;
 

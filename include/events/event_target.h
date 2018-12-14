@@ -15,7 +15,7 @@ namespace feather {
         public:
             EventTarget() = default;
 
-            void registerHandler(DOMString s, StrongPointer<Function<void(Event &)>>);
+            void registerHandler(DOMString, StrongPointer<Function<void(Event &)>>);
 
             void unregisterHandler(DOMString, StrongPointer<Function<void(Event &)>>);
 
@@ -23,9 +23,14 @@ namespace feather {
 
             void unregisterEndHandler(DOMString, StrongPointer<Function<void(Event &)>>);
 
-            void dispatchEvent(Event &);
+            bool dispatchEvent(Event &);
 
             ~EventTarget() override;
+
+        protected:
+            inline StrongPointer<Function<void(Event &)>> getEndHandler(DOMString type) const {
+                return endHandlers ? endHandlers->at(fromString(type)) : nullptr;
+            }
 
         private:
             mutable Multimap<EventType, StrongPointer<Function<void(Event &)>>> *handlers = nullptr;
