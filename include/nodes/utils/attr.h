@@ -12,7 +12,6 @@ namespace feather {
     namespace dom {
         class Element;
 
-        template<typename A>
         class Attr : observable::Invalidatable {
         public:
 
@@ -58,7 +57,7 @@ namespace feather {
             }
         };
 
-        class StandardAttr : public Attr<StandardAttr> {
+        class StandardAttr : public Attr {
         public:
 
             StandardAttr(DOMString ns, DOMString prefix, DOMString localName, StrongPointer <Element> owner)
@@ -74,7 +73,7 @@ namespace feather {
             DOMString value = "";
         };
 
-        class ClassAttr : public Attr<ClassAttr> {
+        class ClassAttr : public Attr {
         public:
 
             ClassAttr(DOMString ns, DOMString prefix, DOMString localName,

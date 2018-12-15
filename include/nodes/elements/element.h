@@ -65,10 +65,7 @@ namespace feather {
 
             inline double getClientWidth() const { return clientDim[static_cast<int>(Dimensions::WIDTH)]; }
 
-            inline DOMString getId() const {
-                StrongPointer<DOMString> attr = getAttribute("id");
-                return attr ? *attr : "";
-            }
+            inline DOMString getId() const { return getAttributeSafe("id"); }
 
             inline void setId(DOMString id) { setAttribute("id", id); }
 
@@ -106,10 +103,7 @@ namespace feather {
 
             inline StrongPointer<ShadowRoot> getShadowRoot() { return shadowRoot; }
 
-            inline DOMString getSlot() const {
-                auto val = getAttribute("slot");
-                return val ? *val : "";
-            }
+            inline DOMString getSlot() const { return getAttributeSafe("slot"); }
 
             inline DOMString getTagName() const { return getNodeName(); }
 
@@ -137,6 +131,11 @@ namespace feather {
 
             //TODO: Implement me
             StrongPointer<DOMString> getAttribute(DOMString name) const;
+
+            inline DOMString getAttributeSafe(DOMString name) const {
+                auto ptr = getAttribute(name);
+                return ptr ? *ptr : "";
+            }
 
             inline Vector<DOMString> getAttributeNames() const { return attributes->getKeys(); }
 
