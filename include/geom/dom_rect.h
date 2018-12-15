@@ -1,73 +1,52 @@
 //
-// Created by prem on 11/26/2018.
+// Created by prem on 12/13/2018.
 //
 
 #ifndef FEATHER_DOM_RECT_H
 #define FEATHER_DOM_RECT_H
-namespace dom {
-    class DOMRect;
+namespace feather {
+    namespace dom {
+        class DOMRectReadOnly {
+        public:
+            DOMRectReadOnly() = default;
+
+            DOMRectReadOnly(double x, double y, double width, double height)
+                    : x(x), y(y), width(width), height(height) {}
+
+            inline double getX() const { return x; }
+
+            inline double getY() const { return y; }
+
+            inline double getWidth() const { return width; }
+
+            inline double getHeight() const { return height; }
+
+            inline double getTop() const { return height < 0 ? y + height : y; }
+
+            inline double getRight() const { return width < 0 ? x : (x + width); }
+
+            inline double getBottom() const { return height < 0 ? y : (y + height); }
+
+            inline double getLeft() const { return width < 0 ? y + width : y; }
+
+        protected:
+            double x = 0, y = 0, width = 0, height = 0;
+        };
+
+        class DOMRect : public DOMRectReadOnly {
+            DOMRect() : DOMRectReadOnly() {}
+
+            DOMRect(double x, double y, double width, double height)
+                    : DOMRectReadOnly(x, y, width, height) {}
+
+            inline void setX(double x) { this->x = x; }
+
+            inline void setY(double y) { this->y = y; }
+
+            inline void setWidth(double width) { this->width = width; }
+
+            inline void setHeight(double height) { this->height = height; }
+        };
+    }
 }
-
-class dom::DOMRect {
-public:
-
-    DOMRect() : DOMRect(false) {}
-
-    DOMRect(bool readOnly) : readOnly(readOnly), x(0), y(0), width(0), height(0) {}
-
-    DOMRect(double x, double y, double width, double height) : readOnly(false), x(x), y(y), width(width),
-                                                               height(height) {}
-
-    DOMRect(bool readOnly, double x, double y, double width, double height) : readOnly(readOnly), x(x), y(y),
-                                                                              width(width), height(height) {}
-
-    DOMRect(DOMRect &other) : readOnly(other.readOnly), x(other.x), y(other.y), width(other.width),
-                              height(other.height) {}
-
-    inline bool isReadOnly() { return readOnly; }
-
-    inline double getX() { return x; }
-
-    inline bool setX(double x) {
-        if (!readOnly) this->x = x;
-        return !readOnly;
-    }
-
-    inline double getY() { return y; }
-
-    inline bool setY(double y) {
-        if (!readOnly) this->y = y;
-        return !readOnly;
-    }
-
-    inline double getWidth() { return width; }
-
-    inline bool setWidth(double width) {
-        if (!readOnly) this->width = width;
-        return !readOnly;
-    }
-
-    inline double getHeight() { return height; }
-
-    inline bool setHeight(double height) {
-        if (!readOnly) this->height = height;
-        return !readOnly;
-    }
-
-    inline double getTop() { return y + (height < 0 ? height : 0); }
-
-    inline double getLeft() { return x + (width < 0 ? width : 0); }
-
-    inline double getBottom() { return y + (height > 0 ? height : 0); }
-
-    inline double getRight() { return x + (width > 0 ? width : 0); }
-
-private:
-    bool readOnly;
-    double x;
-    double y;
-    double width;
-    double height;
-};
-
 #endif //FEATHER_DOM_RECT_H

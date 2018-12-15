@@ -1,94 +1,116 @@
 //
-// Created by prem on 11/9/2018.
+// Created by prem on 12/10/2018.
 //
 
 #ifndef FEATHER_EVENT_H
 #define FEATHER_EVENT_H
-namespace js {
-    class EventTarget;
-    class Event;
+
+#include "typedefs.h"
+
+namespace feather {
+    namespace js {
+        class EventTarget;
+
+        enum class EventType {
+            FULL_SCREEN_CHANGE, FULL_SCREEN_ERROR, DEFAULT, CUSTOM, __COUNT__
+        };
+
+        DOMString toString(EventType et);
+
+        EventType fromString(DOMString s);
+
+        enum class EventProperties {
+            BUBBLES, CANCELABLE, COMPOSED, DEFAULT, TRUSTED, CONSUMED, IMMEDIATE
+        };
+
+        enum class EventPhase {
+            CAPTURING, AT_TARGET, BUBBLING
+        };
+
+        class Event {
+        public:
+
+            Event(bool bubbles, bool cancelable, bool composed, bool trusted,
+                  WeakPointer<EventTarget> originalTarget, Vector<StrongPointer<EventTarget>> realPath,
+                  EventType type);
+
+            Event(bool bubbles, bool cancelable, bool composed, DOMString name,
+                  WeakPointer<EventTarget> originalTarget, Vector<StrongPointer<EventTarget>> realPath,
+                  EventType type);
+
+            inline bool getBubbles() const { return properties.contains(EventProperties::BUBBLES); }
+
+            inline bool getCancelBubble() const { return properties.contains(EventProperties::CONSUMED); }
+
+            inline void setCancelBubble(bool b) { if (b) stopPropagation(); }
+
+            List<StrongPointer<EventTarget>> getDeepPath() const { return getComposedPath(); }
+
+            inline bool getDefaultPrevented() const { return properties.contains(EventProperties::DEFAULT); }
+
+            inline bool getCancelable() const { return properties.contains(EventProperties::CANCELABLE); }
+
+            inline bool getComposed() const { return properties.contains(EventProperties::COMPOSED); }
+
+            StrongPointer<EventTarget> getEventTarget();
+
+            inline Long getTimestamp() {
+                return std::chrono::duration_cast<Millis>(timestamp.time_since_epoch()).count();
+            }
+
+            inline EventPhase getEventPhase() { return phase; }
+
+            inline void setEventPhase(EventPhase phase) { this->phase = phase; }
+
+            inline bool getReturnValue() const { return properties.contains(EventProperties::DEFAULT); }
+
+            void setReturnValue(bool);
+
+            inline StrongPointer<EventTarget> getOriginalTarget() {
+                return originalTarget.expired() ? nullptr : originalTarget.lock();
+            }
+
+            inline DOMString getType() const { return name; }
+
+            bool isTrusted() const { return properties.contains(EventProperties::TRUSTED); }
+
+            List<StrongPointer<EventTarget>> getComposedPath() const;
+
+            inline void preventDefault() { properties.remove(EventProperties::DEFAULT); }
+
+            inline void stopPropagation() { properties.add(EventProperties::CONSUMED); }
+
+            inline void stopImmediatePropagation() {
+                properties.add(EventProperties::IMMEDIATE);
+                properties.add(EventProperties::CONSUMED);
+            }
+
+            inline bool consumed() { return properties.contains(EventProperties::CONSUMED); }
+
+            inline bool immediate() { return properties.contains(EventProperties::IMMEDIATE); }
+
+            inline EventType getInternalType() { return type; }
+
+            inline Vector<StrongPointer<EventTarget>>::iterator &getNextTarget() { return current; }
+
+            inline bool atEnd() { return current == realPath.end(); }
+
+            inline bool atStart() { return current == realPath.begin(); }
+
+            inline StrongPointer<EventTarget> shiftTarget() {
+                return static_cast<int>(phase) ? *current-- : *current++;
+            }
+
+        private:
+            Vector<StrongPointer<EventTarget>> realPath;
+            Vector<StrongPointer<EventTarget>>::iterator current;
+            WeakPointer<EventTarget> originalTarget;
+            const TimePoint timestamp = currentTime();
+            DOMString name;
+            EventPhase phase = EventPhase::CAPTURING;
+            EnumSet<EventProperties, UByte> properties;
+            EventType type;
+        };
+    }
 }
-
-#include <vector>
-#include "../typedefs.h"
-#include "event_phase.h"
-
-class js::Event {
-public:
-
-    Event(bool bubbles, bool cancelable, bool composed, EventTarget &target, std::vector<DOMString> type, bool trusted);
-
-    inline bool getBubbles() { return bubbles; }
-
-    inline bool getCancelBubble() { return consumed; }
-
-    inline void setCancelBubble(bool cancel) { consumed = cancel; }
-
-    inline bool getCancelable() { return cancelable; }
-
-    inline bool getComposed() { return composed; }
-
-    inline EventTarget &getCurrentTarget() { return *deepPath[deepPath.size() - 1]; }
-
-    inline std::vector<EventTarget *> &getDeepPath() { return deepPath; }
-
-    inline bool getDefaultPrevented() { return defaultPrevented; }
-
-    inline EventPhase getEventPhase() { return eventPhase; }
-
-    inline void setEventPhase(EventPhase phase) { eventPhase = phase; }
-
-    inline bool getReturnValue() { return defaultPrevented; }
-
-    inline void setReturnValue(bool returnValue) { defaultPrevented = returnValue; }
-
-    inline EventTarget &getSrcElement() { return originalTarget; }
-
-    inline EventTarget &getTarget() { return originalTarget; }
-
-    inline unsigned long getTimeStamp() { return timeStamp; }
-
-    inline DOMString getType() { return types[0]; }
-
-    inline std::vector<DOMString> &getTypeList() { return types; }
-
-    inline bool isTrusted() { return trusted; }
-
-    inline std::vector<EventTarget *> getComposedPath() { return deepPath; }
-
-    inline void preventDefault() { defaultPrevented = true; }
-
-    inline void stopPropagation() { consumed = true; }
-
-    inline void stopImmediatePropagation() {
-        consumed = true;
-        violentlyConsumed = true;
-    }
-
-    inline bool isConsumed() {
-        return consumed;
-    }
-
-    inline bool isViolentlyConsumed() {
-        return violentlyConsumed;
-    }
-
-    virtual ~Event() {
-    }
-
-private:
-    bool bubbles;
-    bool cancelable;
-    bool composed;
-    std::vector<EventTarget *> deepPath;
-    bool defaultPrevented;
-    EventPhase eventPhase;
-    EventTarget &originalTarget;
-    unsigned long timeStamp;
-    std::vector<DOMString> types;
-    bool trusted;
-    bool consumed;
-    bool violentlyConsumed;
-};
-
 #endif //FEATHER_EVENT_H

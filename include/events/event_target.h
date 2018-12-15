@@ -1,45 +1,57 @@
 //
-// Created by prem on 11/9/2018.
+// Created by prem on 12/10/2018.
 //
 
 #ifndef FEATHER_EVENT_TARGET_H
 #define FEATHER_EVENT_TARGET_H
 
-#include <algorithm>
-#include <map>
-#include <functional>
+#include "observable/invalidatable.h"
 #include "event.h"
-namespace js {
-    class EventTarget;
+
+namespace feather {
+    namespace js {
+
+        class EventTarget : public observable::Invalidatable {
+        public:
+            EventTarget() = default;
+
+            void registerHandler(DOMString, StrongPointer<Function<void(Event &)>>);
+
+            void unregisterHandler(DOMString, StrongPointer<Function<void(Event &)>>);
+
+            void registerEndHandler(DOMString, StrongPointer<Function<void(Event &)>>);
+
+            void unregisterEndHandler(DOMString, StrongPointer<Function<void(Event &)>>);
+
+            bool dispatchEvent(Event &);
+
+            ~EventTarget() override;
+
+        protected:
+            inline StrongPointer<Function<void(Event &)>> getEndHandler(DOMString type) const {
+                return endHandlers ? endHandlers->at(fromString(type)) : nullptr;
+            }
+
+        private:
+            mutable Multimap<EventType, StrongPointer<Function<void(Event &)>>> *handlers = nullptr;
+            mutable Map<EventType, StrongPointer<Function<void(Event &)>>> *endHandlers = nullptr;
+            mutable Multimap<DOMString, StrongPointer<Function<void(Event &)>>> *customMap = nullptr;
+
+            inline Multimap<EventType, StrongPointer<Function<void(Event &)>>> &getHandlers() const {
+                return handlers ? *handlers
+                                : *(handlers = new Multimap<EventType, StrongPointer<Function<void(Event &)>>>());
+            }
+
+            inline Multimap<DOMString, StrongPointer<Function<void(Event &)>>> &getCustomMap() const {
+                return customMap ? *customMap
+                                 : *(customMap = new Multimap<DOMString, StrongPointer<Function<void(Event &)>>>());
+            }
+
+            inline Map<EventType, StrongPointer<Function<void(Event &)>>> &getEndHandlers() const {
+                return endHandlers ? *endHandlers
+                                   : *(endHandlers = new Map<EventType, StrongPointer<Function<void(Event &)>>>());
+            }
+        };
+    }
 }
-class js::EventTarget {
-public:
-
-    EventTarget() {}
-
-    inline void addEventListener(DOMString type, std::function<void(Event &)> listener) {
-        (handlers.find(type) == handlers.end() ? handlers[type] = new std::vector<std::function<void(Event &)>>()
-                                               : handlers[type])->push_back(listener);
-    }
-
-    template<typename Listener>
-    inline void removeEventListener(DOMString type, Listener listener) {
-        if (handlers.find(type) != handlers.end()) {
-            auto handlerList = handlers[type];
-            handlerList->erase(std::remove(handlerList->begin(), handlerList->end(), listener), handlerList->end());
-        }
-    }
-
-    void dispatchEvent(Event &event) const;
-
-    virtual ~EventTarget() {
-        for (const auto &vec : handlers) {
-            delete vec.second;
-        }
-    }
-
-private:
-    std::map<DOMString, std::vector<std::function<void(Event &)>> *> handlers;
-};
-
 #endif //FEATHER_EVENT_TARGET_H

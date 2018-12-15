@@ -10,24 +10,10 @@ include_directories(${PROJECT_SOURCE_DIR})
 file(GLOB SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/**/*.cpp)
 file(GLOB HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/**/*.h
         ${PROJECT_SOURCE_DIR}/include/**/*.hpp)
-add_library(feather ${SOURCE_FILES} include/nodes/document.h include/nodes/character_data.h include/nodes/interfaces/child_node.h
-        include/nodes/interfaces/parent_node.h include/nodes/interfaces/non_document_type_child_node.h src/nodes/character_data.cpp
-        include/nodes/interfaces/slotable.h include/nodes/text.h src/nodes/text.cpp include/nodes/comment.h
-        include/nodes/c_data_section.h include/nodes/processing_instruction.h include/utils/named_node_map.h
-        include/utils/selectors/css_selector.h include/utils/selectors/css_selector_relation.h include/utils/selectors/css_selector_token.h
-        include/utils/selectors/css_selector_token_group.h src/utils/selectors/css_selector.cpp src/utils/selectors/css_selector_token.cpp
-        src/utils/selectors/css_selector_token_group.cpp include/utils/css_rule_list.h include/utils/css_style_declaration.h
-        src/utils/selectors/css_selector_parsing_impl.cpp include/utils/selectors/css_selector_parsing_impl.h include/css/pseudoclass_manager.h
-        include/nodes/shadow_root.h include/nodes/document_or_shadow_root.h include/geom/dom_rect.h include/utils/observable/observable_list.h
-        include/utils/observable/filtered_list.h include/utils/observable/invalidatable.h include/utils/observable/smart_observable_list.h
-        include/utils/node_list.h include/utils/html_collection.h src/utils/html_collection.cpp include/css/css_style_sheet.h
-        include/css/style_sheet.h include/css/css_rules/css_rule.h include/css/css_rules/css_rule_type.h include/css/css_rules/css_import_rule.h
-        include/utils/observable/observable_map.h include/utils/observable/smart_observable_map.h include/utils/observable/dumb_observable_list.h
-        include/nodes/attrs/standard_attr.h include/nodes/attrs/class_attr.h include/utils/observable/concatenated_list.h
-        include/utils/observable/event/event_type.h include/typedefs.h src/typedefs.cpp include/utils/full_child_list.h src/utils/full_child_list.cpp include/utils/observable/mutable_filtered_list.h)
+add_library(feather ${SOURCE_FILES} include/typedefs.h include/observable/invalidatable.h src/observable/invalidatable.cpp include/observable/observable_list.h include/observable/invalidation_event.h include/enums/enum_set.h include/enums/enum_map.h include/events/event_target.h include/events/event.h src/events/event.cpp src/events/event_target.cpp include/nodes/node.h include/nodes/documents/document.h include/nodes/elements/element.h include/observable/observable_item.h include/nodes/text/character_data.h include/nodes/text/text.h include/nodes/slotable.h src/nodes/node.cpp src/nodes/text/text.cpp include/nodes/text/comment.h include/nodes/elements/html_elements/html_element.h include/nodes/elements/html_elements/html_html_element.h include/nodes/text/c_data_section.h include/nodes/text/processing_instruction.h include/nodes/elements/selectors/css_selector.h include/nodes/elements/selectors/xpath_selector.h include/nodes/utils/dom_token_list.h src/nodes/utils/dom_token_list.cpp include/nodes/utils/named_node_map.h include/nodes/utils/attr.h src/nodes/utils/named_node_map.cpp include/nodes/documents/shadow_root.h include/nodes/utils/html_collection.h src/nodes/utils/html_collection.cpp include/geom/dom_rect.h src/nodes/elements/element.cpp include/css/pseudoclass_manager.h)
 target_include_directories(feather PRIVATE include)
 
-add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp src/typedefs.cpp)
+add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)
 target_include_directories(render-engine PRIVATE include)
 target_link_libraries(render-engine feather)
 find_package(curl)
