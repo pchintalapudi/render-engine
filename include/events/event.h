@@ -31,11 +31,11 @@ namespace feather {
         public:
 
             Event(bool bubbles, bool cancelable, bool composed, bool trusted,
-                  WeakPointer<EventTarget> originalTarget, List<StrongPointer<EventTarget>> realPath,
+                  WeakPointer<EventTarget> originalTarget, Vector<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
             Event(bool bubbles, bool cancelable, bool composed, DOMString name,
-                  WeakPointer<EventTarget> originalTarget, List<StrongPointer<EventTarget>> realPath,
+                  WeakPointer<EventTarget> originalTarget, Vector<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
             inline bool getBubbles() const { return properties.contains(EventProperties::BUBBLES); }
@@ -91,7 +91,7 @@ namespace feather {
 
             inline EventType getInternalType() { return type; }
 
-            inline List<StrongPointer<EventTarget>>::iterator &getNextTarget() { return current; }
+            inline Vector<StrongPointer<EventTarget>>::iterator &getNextTarget() { return current; }
 
             inline bool atEnd() { return current == realPath.end(); }
 
@@ -102,8 +102,8 @@ namespace feather {
             }
 
         private:
-            List<StrongPointer<EventTarget>> realPath;
-            List<StrongPointer<EventTarget>>::iterator current;
+            Vector<StrongPointer<EventTarget>> realPath;
+            Vector<StrongPointer<EventTarget>>::iterator current;
             WeakPointer<EventTarget> originalTarget;
             const TimePoint timestamp = currentTime();
             DOMString name;

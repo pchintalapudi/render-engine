@@ -6,11 +6,16 @@
 #define FEATHER_DOCUMENT_H
 
 #include "../node.h"
+#include "css/pseudoclass_manager.h"
 
 namespace feather {
     namespace dom {
 
         class DocumentOrShadowRoot : public Node {
+            css::PseudoclassManager getPseudoclassManager() { return pseudoclassManager; }
+
+        private:
+            css::PseudoclassManager pseudoclassManager;
         };
 
         class Document : public DocumentOrShadowRoot {

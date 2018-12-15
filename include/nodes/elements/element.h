@@ -20,13 +20,30 @@ namespace feather {
             HEIGHT, LEFT, TOP, WIDTH
         };
 
-        class FilteredByClassName {
+        class FilteredByClassName : public observable::Invalidatable {
+        public:
+            inline StrongPointer<Element> get(UInt idx) { return getCached()[idx].lock(); }
+
+            inline UInt size() { return getCached().size(); }
+
+        protected:
+            void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *) const override;
+
+        private:
+            DOMString className;
+            mutable Vector<WeakPointer<Element>> cached;
+
+            Vector<WeakPointer<Element>> &getCached();
         };
 
-        class FilteredByTagName {
+        class FilteredByTagName : public observable::Invalidatable {
+        private:
+            DOMString tagName;
         };
 
-        class FilteredByTagNameNS {
+        class FilteredByTagNameNS : public observable::Invalidatable {
+        private:
+            DOMString name;
         };
 
         class Element : public Node, public Slotable {

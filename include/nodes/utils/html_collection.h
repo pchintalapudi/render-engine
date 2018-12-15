@@ -16,7 +16,9 @@ namespace feather {
         class HTMLCollection : public observable::Invalidatable {
         public:
             explicit HTMLCollection(StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes)
-                    : childNodes(childNodes) {}
+                    : childNodes(childNodes) {
+                childNodes->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+            }
 
             inline UInt size() const { return getVector().size(); }
 
