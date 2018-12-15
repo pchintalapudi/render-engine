@@ -106,7 +106,10 @@ namespace feather {
 
             inline StrongPointer<ShadowRoot> getShadowRoot() { return shadowRoot; }
 
-            inline DOMString getSlot() const { return slot; }
+            inline DOMString getSlot() const {
+                auto val = getAttribute("slot");
+                return val ? *val : "";
+            }
 
             inline DOMString getTagName() const { return getNodeName(); }
 
@@ -271,7 +274,6 @@ namespace feather {
             DOMString ns, prefix, localName;
             double scrollDim[4];
             StrongPointer<ShadowRoot> shadowRoot;
-            DOMString slot;
             StrongPointer<HTMLCollection> children;
 
             //Caches

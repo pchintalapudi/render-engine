@@ -16,6 +16,7 @@ namespace feather {
         class ShadowRoot;
     }
     namespace css {
+
         class PseudoclassManager : observable::Invalidatable {
         public:
             inline void setActive(StrongPointer <Vector<feather::StrongPointer<dom::Element>>> active) {
@@ -51,6 +52,92 @@ namespace feather {
             inline bool containsFocus(StrongPointer <dom::Element> e) {
                 return focused && std::find(focused->rbegin(), focused->rend(), e) != focused->rend();
             }
+
+            //document-stateless pseudoclasses
+            static bool isAnyLink(StrongPointer <dom::Element> e);
+
+            static bool isBlank(StrongPointer <dom::Element> e);
+
+            static bool isChecked(StrongPointer <dom::Element> e);
+
+            static bool isDefault(StrongPointer <dom::Element> e);
+
+            static bool isDir(StrongPointer <dom::Element> e, bool ltr);
+
+            static bool isDisabled(StrongPointer <dom::Element> e);
+
+            static bool isEmpty(StrongPointer <dom::Element> e);
+
+            static bool isEnabled(StrongPointer <dom::Element> e);
+
+            static bool isFirstChild(StrongPointer <dom::Element> e);
+
+            static bool isFirstOfType(StrongPointer <dom::Element> e, DOMString type);
+
+            static bool isFullscreen(StrongPointer <dom::Element> e);
+
+            static bool has(StrongPointer <dom::Element> e,
+                            Vector <Function<feather::StrongPointer<dom::Element>>> funcs);
+
+            static bool isHost(StrongPointer <dom::Node> n);
+
+            static bool isHost(StrongPointer <dom::Node> n, Function <StrongPointer<dom::Element>> sel);
+
+            static bool isHostContext(StrongPointer <dom::Node> n, Function <StrongPointer<dom::Element>> sel);
+
+            static bool isIndeterminate(StrongPointer <dom::Element> e);
+
+            static bool isInRange(StrongPointer <dom::Element> e);
+
+            static bool isInvalid(StrongPointer <dom::Element> e);
+
+            static bool is(StrongPointer <dom::Element> e,
+                           Vector <Function<feather::StrongPointer<dom::Element>>> funcs);
+
+            static bool isLang(StrongPointer <dom::Element> e, DOMString lang);
+
+            static bool isLastChild(StrongPointer <dom::Element> e);
+
+            static bool isLastOfType(StrongPointer <dom::Element> e, DOMString type);
+
+            static bool isLink(StrongPointer <dom::Element> e);
+
+            static bool isNot(Function <StrongPointer<dom::Element>> func);
+
+            static bool isNthChild(StrongPointer <dom::Element> e, Long a, Long b);
+
+            static bool isNthLastChild(StrongPointer <dom::Element> e, Long a, Long b);
+
+            static bool isNthOfType(StrongPointer <dom::Element> e, Long a, Long b, DOMString type);
+
+            static bool isNthLastOfType(StrongPointer <dom::Element> e, Long a, Long b, DOMString type);
+
+            static bool isOnlyChild(StrongPointer <dom::Element> e);
+
+            static bool isOnlyOfType(StrongPointer <dom::Element> e, DOMString type);
+
+            static bool isOptional(StrongPointer <dom::Element> e);
+
+            static bool isPlaceholderShown(StrongPointer <dom::Element> e);
+
+            static bool isReadOnly(StrongPointer <dom::Element> e);
+
+            static bool isReadWrite(StrongPointer <dom::Element> e);
+
+            static bool isRequired(StrongPointer <dom::Element> e);
+
+            static bool isRoot(StrongPointer <dom::Element> e);
+
+            static bool isScope(StrongPointer <dom::Element> e, StrongPointer <dom::Element> scope);
+
+            static bool isTarget(StrongPointer <dom::Element> e);
+
+            static bool isValid(StrongPointer <dom::Element> e);
+
+            static bool isVisited(StrongPointer <dom::Element> e);
+
+            static bool isWhere(StrongPointer <dom::Element> e,
+                                Vector <Function<feather::StrongPointer<dom::Element>>> funcs);
 
         private:
             StrongPointer <Vector<feather::StrongPointer<dom::Element>>> moused;
