@@ -33,6 +33,11 @@ bool PseudoclassManager::isDefault(feather::StrongPointer<feather::dom::Element>
 }
 
 //TODO: Implement me
+bool PseudoclassManager::isDefined(feather::StrongPointer<feather::dom::Element>) {
+    return true;
+}
+
+//TODO: Implement me
 bool PseudoclassManager::isDir(feather::StrongPointer<feather::dom::Element>, bool ltr) {
     //Lmao we don't support the other way yet so this is likely to yield good results
     return ltr;
@@ -84,18 +89,8 @@ bool PseudoclassManager::isFullscreen(feather::StrongPointer<feather::dom::Eleme
     return false;
 }
 
-bool PseudoclassManager::isHost(feather::StrongPointer<feather::dom::Node> n) {
-    return n && n->getNodeTypeInternal() == dom::NodeType::SHADOW_ROOT;
-}
-
-bool PseudoclassManager::isHost(feather::StrongPointer<feather::dom::Node> n,
-                                feather::Function<bool(std::shared_ptr<feather::dom::Element>)> sel) {
-    return isHost(n) && sel(std::static_pointer_cast<dom::ShadowRoot>(n)->getHost());
-}
-
-bool PseudoclassManager::isHostContext(feather::StrongPointer<feather::dom::Node> n,
-                                       feather::Function<bool(std::shared_ptr<feather::dom::Element>)> sel) {
-    return isHost(n, sel);//TODO: Unsure how this is different; will need to read docs more
+bool PseudoclassManager::isHost(feather::StrongPointer<feather::dom::Element> e) {
+    return e && e->getNodeTypeInternal() == dom::NodeType::SHADOW_ROOT;
 }
 
 //TODO: Implement me
@@ -162,7 +157,7 @@ bool PseudoclassManager::isNthChild(feather::StrongPointer<feather::dom::Element
     //We're trying to invert An + b = idx into n = (idx - b) / A,
     //where n is some arbitrary integer
     auto dif = static_cast<Long>(idx) - b;
-    return a != 0 ? (static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
+    return a != 0 ? static_cast<Long>(static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
 }
 
 bool PseudoclassManager::isNthOfType(feather::StrongPointer<feather::dom::Element> e, feather::Long a, feather::Long b,
@@ -181,7 +176,7 @@ bool PseudoclassManager::isNthOfType(feather::StrongPointer<feather::dom::Elemen
     //We're trying to invert An + b = idx into n = (idx - b) / A,
     //where n is some arbitrary integer
     auto dif = static_cast<Long>(idx) - b;
-    return a != 0 ? (static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
+    return a != 0 ? static_cast<Long>(static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
 }
 
 bool PseudoclassManager::isNthLastChild(feather::StrongPointer<feather::dom::Element> e, feather::Long a,
@@ -198,7 +193,7 @@ bool PseudoclassManager::isNthLastChild(feather::StrongPointer<feather::dom::Ele
     //We're trying to invert An + b = idx into n = (idx - b) / A,
     //where n is some arbitrary integer
     auto dif = static_cast<Long>(idx) - b;
-    return a != 0 ? (static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
+    return a != 0 ? static_cast<Long>(static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
 }
 
 bool PseudoclassManager::isNthLastOfType(feather::StrongPointer<feather::dom::Element> e, feather::Long a,
@@ -217,7 +212,7 @@ bool PseudoclassManager::isNthLastOfType(feather::StrongPointer<feather::dom::El
     //We're trying to invert An + b = idx into n = (idx - b) / A,
     //where n is some arbitrary integer
     auto dif = static_cast<Long>(idx) - b;
-    return a != 0 ? (static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
+    return a != 0 ? static_cast<Long>(static_cast<ULong>(dif) ^ static_cast<ULong>(a)) >= 0 && !(dif % a) : !dif;
 }
 
 bool PseudoclassManager::isOnlyChild(feather::StrongPointer<feather::dom::Element> e) {
@@ -246,6 +241,11 @@ bool PseudoclassManager::isOnlyOfType(feather::StrongPointer<feather::dom::Eleme
 
 //TODO: Implement me
 bool PseudoclassManager::isOptional(feather::StrongPointer<feather::dom::Element>) {
+    return false;
+}
+
+//TODO: Implement me
+bool PseudoclassManager::isOutOfRange(feather::StrongPointer<feather::dom::Element>) {
     return false;
 }
 

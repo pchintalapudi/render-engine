@@ -29,8 +29,12 @@ namespace feather {
 
             bool replace(DOMString old, DOMString replace);
 
-            bool supports(DOMString feature) const {
+            inline bool supports(DOMString feature) const {
                 return features.get() && features->find(feature) != features->end();
+            }
+
+            inline bool contains(DOMString str) const {
+                return std::find(source.begin(), source.end(), str) != source.end();
             }
 
         private:

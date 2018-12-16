@@ -49,6 +49,8 @@ namespace feather {
 
             inline bool isFocused(StrongPointer<dom::Element> e) { return focused && focused->back() == e; }
 
+            inline bool isFocusVisible(StrongPointer<dom::Element> e) { return isFocused(e) && false; }
+
             inline bool containsFocus(StrongPointer<dom::Element> e) {
                 return focused && std::find(focused->rbegin(), focused->rend(), e) != focused->rend();
             }
@@ -61,6 +63,8 @@ namespace feather {
             static bool isChecked(StrongPointer<dom::Element> e);
 
             static bool isDefault(StrongPointer<dom::Element> e);
+
+            static bool isDefined(StrongPointer<dom::Element> e);
 
             static bool isDir(StrongPointer<dom::Element> e, bool ltr);
 
@@ -76,24 +80,13 @@ namespace feather {
 
             static bool isFullscreen(StrongPointer<dom::Element> e);
 
-            static bool has(StrongPointer<dom::Element> e,
-                            Vector<Function<bool(feather::StrongPointer<dom::Element>)>> funcs);
-
-            static bool isHost(StrongPointer<dom::Node> n);
-
-            static bool isHost(StrongPointer<dom::Node> n, Function<bool(feather::StrongPointer<dom::Element>)> sel);
-
-            static bool isHostContext(StrongPointer<dom::Node> n,
-                                      Function<bool(feather::StrongPointer<dom::Element>)> sel);
+            static bool isHost(StrongPointer<dom::Element> e);
 
             static bool isIndeterminate(StrongPointer<dom::Element> e);
 
             static bool isInRange(StrongPointer<dom::Element> e);
 
             static bool isInvalid(StrongPointer<dom::Element> e);
-
-            static bool is(StrongPointer<dom::Element> e,
-                           Vector<Function<bool(feather::StrongPointer<dom::Element>)>> funcs);
 
             static bool isLang(StrongPointer<dom::Element> e, DOMString lang);
 
@@ -102,9 +95,6 @@ namespace feather {
             static bool isLastOfType(StrongPointer<dom::Element> e, DOMString type);
 
             static bool isLink(StrongPointer<dom::Element> e);
-
-            inline static bool isNot(StrongPointer<dom::Element> e,
-                                     Function<bool(StrongPointer<dom::Element>)> func) { return !func(e); }
 
             static bool isNthChild(StrongPointer<dom::Element> e, Long a, Long b);
 
@@ -119,6 +109,8 @@ namespace feather {
             static bool isOnlyOfType(StrongPointer<dom::Element> e, DOMString type);
 
             static bool isOptional(StrongPointer<dom::Element> e);
+
+            static bool isOutOfRange(StrongPointer<dom::Element> e);
 
             static bool isPlaceholderShown(StrongPointer<dom::Element> e);
 
@@ -139,11 +131,6 @@ namespace feather {
             static bool isValid(StrongPointer<dom::Element> e);
 
             static bool isVisited(StrongPointer<dom::Element> e);
-
-            inline static bool isWhere(StrongPointer<dom::Element> e,
-                                       Vector<Function<bool(feather::StrongPointer<dom::Element>)>> funcs) {
-                return is(e, funcs);
-            }
 
         private:
             StrongPointer<Vector<feather::StrongPointer<dom::Element>>> moused = nullptr;

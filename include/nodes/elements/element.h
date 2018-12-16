@@ -7,14 +7,16 @@
 
 #include "../node.h"
 #include "../slotable.h"
-#include "../documents/shadow_root.h"
 #include "../utils/dom_token_list.h"
 #include "../utils/named_node_map.h"
 #include "../utils/html_collection.h"
+#include "selectors/css_selector.h"
 #include "geom/dom_rect.h"
 
 namespace feather {
     namespace dom {
+
+        class ShadowRoot;
 
         enum class Dimensions {
             HEIGHT, LEFT, TOP, WIDTH
@@ -185,6 +187,10 @@ namespace feather {
 
             //TODO: Implement me
             Vector<StrongPointer<Element>> querySelectorAll(DOMString selector) const;
+
+            bool querySelectorInternal(selector::CSSSelector selector) const;
+
+            Vector<StrongPointer<Element>> querySelectorAllInternal(selector::CSSSelector selector) const;
 
             //TODO: Implement me
             void releasePointerCapture(ULong id);

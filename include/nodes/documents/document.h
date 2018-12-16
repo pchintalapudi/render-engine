@@ -11,15 +11,17 @@
 namespace feather {
     namespace dom {
 
-        class DocumentOrShadowRoot : public Node {
+        class DocumentOrShadowRoot {
+        public:
             css::PseudoclassManager getPseudoclassManager() { return pseudoclassManager; }
 
         private:
             css::PseudoclassManager pseudoclassManager;
         };
 
-        class Document : public DocumentOrShadowRoot {
-            StrongPointer <Element> getDocumentElement();
+        class Document : public Node, public DocumentOrShadowRoot {
+        public:
+            StrongPointer<Element> getDocumentElement();
         };
     }
 }
