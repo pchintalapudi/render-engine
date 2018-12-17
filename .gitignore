@@ -40,3 +40,5 @@ lib/
 
 # Ignore dependencies for user to download
 packages/
+
+cmake-build-debug
