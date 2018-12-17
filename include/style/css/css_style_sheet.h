@@ -8,7 +8,6 @@
 #include "include/style/style_sheet.h"
 
 namespace feather {
-    namespace style {
         namespace css {
             class CssStyleSheet : public StyleSheet {
             public:
@@ -16,7 +15,6 @@ namespace feather {
 
             };
         }
-    }
 }
 
 #endif //FEATHER_CSS_STYLE_SHEET_H
