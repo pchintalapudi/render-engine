@@ -5,4 +5,3 @@
 #include "parser/Trie.h"
 #include <unordered_map>
 
-using namespace feather::parser;

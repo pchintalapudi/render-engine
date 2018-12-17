@@ -73,7 +73,5 @@ T Trie<T>::get() {
     return this->t;
 }
 
-template <class T>
-
 
 #endif
