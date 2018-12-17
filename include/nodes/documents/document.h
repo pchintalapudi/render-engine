@@ -6,7 +6,7 @@
 #define FEATHER_DOCUMENT_H
 
 #include "../node.h"
-#include "css/pseudoclass_manager.h"
+#include "style/css/pseudoclass_manager.h"
 
 namespace feather {
     namespace dom {
