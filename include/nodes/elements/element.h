@@ -7,14 +7,16 @@
 
 #include "../node.h"
 #include "../slotable.h"
-#include "../documents/shadow_root.h"
 #include "../utils/dom_token_list.h"
 #include "../utils/named_node_map.h"
 #include "../utils/html_collection.h"
+#include "selectors/css_selector.h"
 #include "geom/dom_rect.h"
 
 namespace feather {
     namespace dom {
+
+        class ShadowRoot;
 
         enum class Dimensions {
             HEIGHT, LEFT, TOP, WIDTH
@@ -65,10 +67,7 @@ namespace feather {
 
             inline double getClientWidth() const { return clientDim[static_cast<int>(Dimensions::WIDTH)]; }
 
-            inline DOMString getId() const {
-                StrongPointer<DOMString> attr = getAttribute("id");
-                return attr ? *attr : "";
-            }
+            inline DOMString getId() const { return getAttributeSafe("id"); }
 
             inline void setId(DOMString id) { setAttribute("id", id); }
 
@@ -106,7 +105,7 @@ namespace feather {
 
             inline StrongPointer<ShadowRoot> getShadowRoot() { return shadowRoot; }
 
-            inline DOMString getSlot() const { return slot; }
+            inline DOMString getSlot() const { return getAttributeSafe("slot"); }
 
             inline DOMString getTagName() const { return getNodeName(); }
 
@@ -134,6 +133,11 @@ namespace feather {
 
             //TODO: Implement me
             StrongPointer<DOMString> getAttribute(DOMString name) const;
+
+            inline DOMString getAttributeSafe(DOMString name) const {
+                auto ptr = getAttribute(name);
+                return ptr ? *ptr : "";
+            }
 
             inline Vector<DOMString> getAttributeNames() const { return attributes->getKeys(); }
 
@@ -183,6 +187,10 @@ namespace feather {
 
             //TODO: Implement me
             Vector<StrongPointer<Element>> querySelectorAll(DOMString selector) const;
+
+            bool querySelectorInternal(selector::CSSSelector selector) const;
+
+            Vector<StrongPointer<Element>> querySelectorAllInternal(selector::CSSSelector selector) const;
 
             //TODO: Implement me
             void releasePointerCapture(ULong id);
@@ -271,7 +279,6 @@ namespace feather {
             DOMString ns, prefix, localName;
             double scrollDim[4];
             StrongPointer<ShadowRoot> shadowRoot;
-            DOMString slot;
             StrongPointer<HTMLCollection> children;
 
             //Caches

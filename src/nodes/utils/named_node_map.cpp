@@ -6,13 +6,13 @@
 
 using namespace feather::dom;
 
-feather::StrongPointer<feather::dom::Attr<void>> NamedNodeMap::getItem(feather::UInt idx) const {
+feather::StrongPointer<feather::dom::Attr> NamedNodeMap::getItem(feather::UInt idx) const {
     auto it = insertionOrder.begin();
     while (idx-- > 0) it++;
     return backing.at(*it);
 }
 
-void NamedNodeMap::setNamedItem(feather::StrongPointer<feather::dom::Attr<void>> attr) {
+void NamedNodeMap::setNamedItem(feather::StrongPointer<feather::dom::Attr> attr) {
     if (attr) {
         auto name = attr->getName();
         backing[name] = attr;
@@ -21,7 +21,7 @@ void NamedNodeMap::setNamedItem(feather::StrongPointer<feather::dom::Attr<void>>
     }
 }
 
-feather::StrongPointer<feather::dom::Attr<void>> NamedNodeMap::removeNamedItem(feather::DOMString name) {
+feather::StrongPointer<feather::dom::Attr> NamedNodeMap::removeNamedItem(feather::DOMString name) {
     if (backing.find(name) != backing.end()) {
         auto ptr = getNamedItem(name);
         backing.erase(name);

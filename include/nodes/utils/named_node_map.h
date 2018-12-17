@@ -12,21 +12,21 @@ namespace feather {
     namespace dom {
         class NamedNodeMap : observable::Invalidatable {
         public:
-            StrongPointer<Attr<void>> getItem(UInt idx) const;
+            StrongPointer<Attr> getItem(UInt idx) const;
 
-            inline StrongPointer<Attr<void>> getNamedItem(DOMString name) const { return backing.at(name); }
+            inline StrongPointer<Attr> getNamedItem(DOMString name) const { return backing.at(name); }
 
-            inline StrongPointer<Attr<void>> getNamedItemNS(DOMString ns, DOMString local) const {
+            inline StrongPointer<Attr> getNamedItemNS(DOMString ns, DOMString local) const {
                 return backing.at(ns + ":" + local);
             }
 
-            void setNamedItem(StrongPointer<Attr<void>> attr);
+            void setNamedItem(StrongPointer<Attr> attr);
 
-            inline void setNamedItemNS(StrongPointer<Attr<void>> attr) { setNamedItem(attr); }
+            inline void setNamedItemNS(StrongPointer<Attr> attr) { setNamedItem(attr); }
 
-            StrongPointer<Attr<void>> removeNamedItem(DOMString name);
+            StrongPointer<Attr> removeNamedItem(DOMString name);
 
-            inline StrongPointer<Attr<void>> removeNamedItemNS(DOMString ns, DOMString local) {
+            inline StrongPointer<Attr> removeNamedItemNS(DOMString ns, DOMString local) {
                 return removeNamedItem(ns + ":" + local);
             }
 
@@ -44,7 +44,7 @@ namespace feather {
             }
 
         private:
-            Map<DOMString, StrongPointer<Attr<void>>> backing = Map<DOMString, StrongPointer<Attr<void>>>();
+            Map<DOMString, StrongPointer<Attr>> backing = Map<DOMString, StrongPointer<Attr>>();
             List<DOMString> insertionOrder = List<DOMString>();
 
             void invalidate() {
