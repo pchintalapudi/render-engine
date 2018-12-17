@@ -142,7 +142,7 @@ namespace feather {
             inline Vector<DOMString> getAttributeNames() const { return attributes->getKeys(); }
 
             //TODO: Implement me
-            StrongPointer<DOMString> getAttributeNS(DOMString name) const;
+            StrongPointer<DOMString> getAttributeNS(DOMString ns, DOMString name) const;
 
             //TODO: Implement me
             DOMRect getBoundingClientRect() const;
@@ -177,10 +177,13 @@ namespace feather {
             void insertAdjacentHTML(DOMString position, DOMString html);
 
             //TODO: Implement me
-            void insertAdjacentText(DOMString position, DOMString html);
+            void insertAdjacentText(DOMString position, DOMString text);
 
-            //TODO: Implement me
-            bool matches(DOMString selector) const;
+            inline bool matches(DOMString selector) const {
+                return selector::CSSSelector::parse(selector,
+                                                    std::static_pointer_cast<const Element>(shared_from_this()))
+                        .matches(std::static_pointer_cast<const Element>(shared_from_this()));
+            }
 
             //TODO: Implement me
             bool querySelector(DOMString selector) const;

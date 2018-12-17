@@ -19,123 +19,129 @@ namespace feather {
 
         class PseudoclassManager : observable::Invalidatable {
         public:
-            inline void setActive(StrongPointer<Vector<feather::StrongPointer<dom::Element>>> active) {
+            inline void setActive(Vector<feather::StrongPointer<const dom::Element>> active) {
                 moused = active;
                 this->active = true;
                 invalidate();
             }
 
-            inline bool isActive(StrongPointer<dom::Element> e) {
+            inline bool isActive(StrongPointer<const dom::Element> e) {
                 //Have reason to believe most people look for the active element
                 //closest to the end, rather than the beginning
-                return moused && active && std::find(moused->rbegin(), moused->rend(), e) != moused->rend();
+                return moused.size() && active && std::find(moused.rbegin(), moused.rend(), e) != moused.rend();
             }
 
-            inline void setHover(StrongPointer<Vector<feather::StrongPointer<dom::Element>>> hover) {
+            inline void clearActive() { moused.clear(); }
+
+            inline void setHover(Vector<feather::StrongPointer<const dom::Element>> hover) {
                 moused = hover;
                 active = false;
                 invalidate();
             }
 
-            inline bool isHover(StrongPointer<dom::Element> e) {
+            inline bool isHover(StrongPointer<const dom::Element> e) {
                 //See reasoning for isActive above
-                return moused && !active && std::find(moused->rbegin(), moused->rend(), e) != moused->rend();
+                return moused.size() && !active && std::find(moused.rbegin(), moused.rend(), e) != moused.rend();
             }
 
-            inline void setFocused(StrongPointer<Vector<feather::StrongPointer<dom::Element>>> focused) {
+            inline void clearHover() { moused.clear(); }
+
+            inline void setFocused(Vector<feather::StrongPointer<const dom::Element>> focused) {
                 this->focused = focused;
                 invalidate();
             }
 
-            inline bool isFocused(StrongPointer<dom::Element> e) { return focused && focused->back() == e; }
+            inline bool isFocused(StrongPointer<const dom::Element> e) { return focused.size() && focused.back() == e; }
 
-            inline bool isFocusVisible(StrongPointer<dom::Element> e) { return isFocused(e) && false; }
+            inline bool isFocusVisible(StrongPointer<const dom::Element> e) { return isFocused(e) && false; }
 
-            inline bool containsFocus(StrongPointer<dom::Element> e) {
-                return focused && std::find(focused->rbegin(), focused->rend(), e) != focused->rend();
+            inline bool containsFocus(StrongPointer<const dom::Element> e) {
+                return focused.size() && std::find(focused.rbegin(), focused.rend(), e) != focused.rend();
             }
 
+            inline void clearFocused() { focused.clear(); }
+
             //document-stateless pseudoclasses
-            static bool isAnyLink(StrongPointer<dom::Element> e);
+            static bool isAnyLink(StrongPointer<const dom::Element> e);
 
-            static bool isBlank(StrongPointer<dom::Element> e);
+            static bool isBlank(StrongPointer<const dom::Element> e);
 
-            static bool isChecked(StrongPointer<dom::Element> e);
+            static bool isChecked(StrongPointer<const dom::Element> e);
 
-            static bool isDefault(StrongPointer<dom::Element> e);
+            static bool isDefault(StrongPointer<const dom::Element> e);
 
-            static bool isDefined(StrongPointer<dom::Element> e);
+            static bool isDefined(StrongPointer<const dom::Element> e);
 
-            static bool isDir(StrongPointer<dom::Element> e, bool ltr);
+            static bool isDir(StrongPointer<const dom::Element> e, bool ltr);
 
-            static bool isDisabled(StrongPointer<dom::Element> e);
+            static bool isDisabled(StrongPointer<const dom::Element> e);
 
-            static bool isEmpty(StrongPointer<dom::Element> e);
+            static bool isEmpty(StrongPointer<const dom::Element> e);
 
-            static bool isEnabled(StrongPointer<dom::Element> e);
+            static bool isEnabled(StrongPointer<const dom::Element> e);
 
-            static bool isFirstChild(StrongPointer<dom::Element> e);
+            static bool isFirstChild(StrongPointer<const dom::Element> e);
 
-            static bool isFirstOfType(StrongPointer<dom::Element> e, DOMString type);
+            static bool isFirstOfType(StrongPointer<const dom::Element> e, DOMString type);
 
-            static bool isFullscreen(StrongPointer<dom::Element> e);
+            static bool isFullscreen(StrongPointer<const dom::Element> e);
 
-            static bool isHost(StrongPointer<dom::Element> e);
+            static bool isHost(StrongPointer<const dom::Element> e);
 
-            static bool isIndeterminate(StrongPointer<dom::Element> e);
+            static bool isIndeterminate(StrongPointer<const dom::Element> e);
 
-            static bool isInRange(StrongPointer<dom::Element> e);
+            static bool isInRange(StrongPointer<const dom::Element> e);
 
-            static bool isInvalid(StrongPointer<dom::Element> e);
+            static bool isInvalid(StrongPointer<const dom::Element> e);
 
-            static bool isLang(StrongPointer<dom::Element> e, DOMString lang);
+            static bool isLang(StrongPointer<const dom::Element> e, DOMString lang);
 
-            static bool isLastChild(StrongPointer<dom::Element> e);
+            static bool isLastChild(StrongPointer<const dom::Element> e);
 
-            static bool isLastOfType(StrongPointer<dom::Element> e, DOMString type);
+            static bool isLastOfType(StrongPointer<const dom::Element> e, DOMString type);
 
-            static bool isLink(StrongPointer<dom::Element> e);
+            static bool isLink(StrongPointer<const dom::Element> e);
 
-            static bool isNthChild(StrongPointer<dom::Element> e, Long a, Long b);
+            static bool isNthChild(StrongPointer<const dom::Element> e, Long a, Long b);
 
-            static bool isNthLastChild(StrongPointer<dom::Element> e, Long a, Long b);
+            static bool isNthLastChild(StrongPointer<const dom::Element> e, Long a, Long b);
 
-            static bool isNthOfType(StrongPointer<dom::Element> e, Long a, Long b, DOMString type);
+            static bool isNthOfType(StrongPointer<const dom::Element> e, Long a, Long b, DOMString type);
 
-            static bool isNthLastOfType(StrongPointer<dom::Element> e, Long a, Long b, DOMString type);
+            static bool isNthLastOfType(StrongPointer<const dom::Element> e, Long a, Long b, DOMString type);
 
-            static bool isOnlyChild(StrongPointer<dom::Element> e);
+            static bool isOnlyChild(StrongPointer<const dom::Element> e);
 
-            static bool isOnlyOfType(StrongPointer<dom::Element> e, DOMString type);
+            static bool isOnlyOfType(StrongPointer<const dom::Element> e, DOMString type);
 
-            static bool isOptional(StrongPointer<dom::Element> e);
+            static bool isOptional(StrongPointer<const dom::Element> e);
 
-            static bool isOutOfRange(StrongPointer<dom::Element> e);
+            static bool isOutOfRange(StrongPointer<const dom::Element> e);
 
-            static bool isPlaceholderShown(StrongPointer<dom::Element> e);
+            static bool isPlaceholderShown(StrongPointer<const dom::Element> e);
 
-            static bool isReadOnly(StrongPointer<dom::Element> e);
+            static bool isReadOnly(StrongPointer<const dom::Element> e);
 
-            static bool isReadWrite(StrongPointer<dom::Element> e);
+            static bool isReadWrite(StrongPointer<const dom::Element> e);
 
-            static bool isRequired(StrongPointer<dom::Element> e);
+            static bool isRequired(StrongPointer<const dom::Element> e);
 
-            static bool isRoot(StrongPointer<dom::Element> e);
+            static bool isRoot(StrongPointer<const dom::Element> e);
 
-            inline static bool isScope(StrongPointer<dom::Element> e, StrongPointer<dom::Element> scope) {
+            inline static bool isScope(StrongPointer<const dom::Element> e, StrongPointer<const dom::Element> scope) {
                 return e == scope;
             }
 
-            static bool isTarget(StrongPointer<dom::Element> e);
+            static bool isTarget(StrongPointer<const dom::Element> e);
 
-            static bool isValid(StrongPointer<dom::Element> e);
+            static bool isValid(StrongPointer<const dom::Element> e);
 
-            static bool isVisited(StrongPointer<dom::Element> e);
+            static bool isVisited(StrongPointer<const dom::Element> e);
 
         private:
-            StrongPointer<Vector<feather::StrongPointer<dom::Element>>> moused = nullptr;
+            Vector<feather::StrongPointer<const dom::Element>> moused = Vector<StrongPointer<const dom::Element>>();
             bool active = false;
-            StrongPointer<Vector<feather::StrongPointer<dom::Element>>> focused = nullptr;
+            Vector<feather::StrongPointer<const dom::Element>> focused = Vector<StrongPointer<const dom::Element>>();
 
             inline void invalidate() const {
                 observable::Invalidatable::invalidate(
