@@ -7,7 +7,7 @@
 using namespace feather::dom;
 
 feather::StrongPointer<feather::DOMString> Element::getAttribute(feather::DOMString name) const {
-    auto attr = attributes->getNamedItem(name);
+    auto attr = attributes->getNamedItem(std::move(name));
     return attr ? std::make_shared<DOMString>(attr->getValue()) : std::make_shared<DOMString>();
 }
 

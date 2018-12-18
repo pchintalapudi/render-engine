@@ -31,11 +31,11 @@ namespace feather {
         public:
 
             Event(bool bubbles, bool cancelable, bool composed, bool trusted,
-                  WeakPointer<EventTarget> originalTarget, Vector<StrongPointer<EventTarget>> realPath,
+                  WeakPointer<EventTarget> &&originalTarget, Vector<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
-            Event(bool bubbles, bool cancelable, bool composed, DOMString name,
-                  WeakPointer<EventTarget> originalTarget, Vector<StrongPointer<EventTarget>> realPath,
+            Event(bool bubbles, bool cancelable, bool composed, DOMString &&name,
+                  WeakPointer<EventTarget> &&originalTarget, Vector<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
             inline bool getBubbles() const { return properties.contains(EventProperties::BUBBLES); }

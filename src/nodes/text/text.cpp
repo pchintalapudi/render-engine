@@ -35,7 +35,7 @@ feather::StrongPointer<Text> Text::splitText(feather::ULong offset) {
     auto length = getLength();
     auto substr = substringData(offset, length - offset);
     deleteData(offset, length - offset);
-    StrongPointer <Text> ptr = std::make_shared<Text>(getBaseURI(), getParentNode(), substr);
+    StrongPointer <Text> ptr = std::make_shared<Text>(DOMString(getBaseURI()), getParentNode(), std::move(substr));
     if (getParentNode().get()) getParentNode()->insertAfter(ptr, std::static_pointer_cast<Node>(shared_from_this()));
     return ptr;
 }

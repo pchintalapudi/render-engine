@@ -21,8 +21,8 @@ namespace {
     }
 }
 
-Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::NodeType type,
-           feather::StrongPointer<feather::DOMString> value, feather::StrongPointer<feather::dom::Node> parent)
+Node::Node(feather::DOMString &&baseURI, feather::DOMString &&name, feather::dom::NodeType type,
+           feather::StrongPointer<feather::DOMString> value, const feather::StrongPointer<feather::dom::Node> &parent)
         : baseURI(baseURI), childNodes(caster<Node, Invalidatable>()),
           nextSiblingPtr(
                   std::make_shared<feather::observable::WatchedObservableItem<feather::WeakPointer<feather::dom::Node>>>(
@@ -34,7 +34,8 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
           ownerPtr(
                   std::make_shared<feather::observable::WatchedObservableItem<
                           feather::WeakPointer<feather::dom::Document>>>()) {
-    parent->bind(ownerPtr);
+    this->parent.bind(ownerPtr);
+    this->parent.set(parent);
     childNodes.bind(nextSiblingPtr);
     childNodes.bind(prevSiblingPtr);
 }
@@ -125,9 +126,9 @@ void Node::setTextContent(feather::DOMString textContent) {
         case NodeType::DOCUMENT_FRAGMENT_NODE:
             getChildNodes().clear();
             getChildNodes().add(std::make_shared<Text>(
-                    getBaseURI(),
+                    DOMString(getBaseURI()),
                     std::static_pointer_cast<Node>(shared_from_this()),
-                    textContent)
+                    DOMString(textContent))
             );
             break;
         case NodeType::TEXT_NODE:
@@ -168,7 +169,9 @@ namespace {
             if (it != deque.end()) {
                 feather::Int idx = it - deque.begin() + 1;
                 auto children = parent->getChildNodes();
-                for (feather::Int i = 0; i < idx; i++) if (children.get(i) == p2) return false;
+                for (feather::UInt i = 0; i < static_cast<feather::UInt>(idx); i++)
+                    if (children.get(i) == p2)
+                        return false;
                 return true;
             }
             p2 = parent;
@@ -298,7 +301,8 @@ void Node::normalize() {
                 if (child->hasChildNodes()) child->normalize();
                 if (!isTrivial(str))
                     normalized.push_back(std::make_shared<Text>(
-                            getBaseURI(), std::static_pointer_cast<Node>(shared_from_this()), str));
+                            DOMString(getBaseURI()), std::static_pointer_cast<Node>(shared_from_this()),
+                            DOMString(str)));
                 normalized.push_back(child);
                 str.clear();
                 break;

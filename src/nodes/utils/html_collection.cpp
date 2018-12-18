@@ -26,7 +26,7 @@ std::vector<feather::WeakPointer<feather::dom::Element>> &HTMLCollection::getVec
 feather::StrongPointer<Element> HTMLCollection::getNamedItem(feather::DOMString name) const {
     auto vec = getVector();
     StrongPointer <Element> matchedName = nullptr;
-    for (auto el : vec) {
+    for (const auto &el : vec) {
         if (el.lock()->getId() == name) return el.lock();
         else if (!matchedName && el.lock()->getNodeName() == name) matchedName = el.lock();
     }

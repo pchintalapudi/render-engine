@@ -13,11 +13,12 @@ namespace feather {
         class Text : public CharacterData, public Slotable {
         public:
 
-            Text(DOMString baseURI, StrongPointer<Node> parent)
-                    : CharacterData(baseURI, "#text", NodeType::TEXT_NODE, parent), Slotable() {}
+            Text(DOMString &&baseURI, StrongPointer<Node> &&parent)
+                    : CharacterData(DOMString(baseURI), "#text", NodeType::TEXT_NODE, parent), Slotable() {}
 
-            Text(DOMString baseURI, StrongPointer<Node> parent, DOMString initText)
-                    : CharacterData(baseURI, "#text", NodeType::TEXT_NODE, parent, initText), Slotable() {}
+            Text(DOMString &&baseURI, StrongPointer<Node> &&parent, DOMString &&initText)
+                    : CharacterData(DOMString(baseURI), "#text", NodeType::TEXT_NODE, parent, DOMString(initText)),
+                      Slotable() {}
 
             bool isWhitespace() const;
 
@@ -31,11 +32,12 @@ namespace feather {
 
         protected:
 
-            Text(DOMString baseURI, DOMString name, NodeType nodeType, StrongPointer<Node> parent)
-                    : CharacterData(baseURI, name, nodeType, parent), Slotable() {}
+            Text(DOMString &&baseURI, DOMString &&name, NodeType nodeType, StrongPointer<Node> parent)
+                    : CharacterData(DOMString(baseURI), DOMString(name), nodeType, parent), Slotable() {}
 
-            Text(DOMString baseURI, DOMString name, NodeType nodeType, StrongPointer<Node> parent, DOMString init)
-                    : CharacterData(baseURI, name, nodeType, parent, init), Slotable() {}
+            Text(DOMString &&baseURI, DOMString &&name, NodeType nodeType, StrongPointer<Node> parent, DOMString &&init)
+                    : CharacterData(DOMString(baseURI), DOMString(name), nodeType, parent, DOMString(init)),
+                      Slotable() {}
         };
     }
 }

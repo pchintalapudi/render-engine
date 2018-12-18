@@ -35,8 +35,8 @@ namespace feather {
         class Node : public js::EventTarget {
         public:
 
-            Node(DOMString baseURI, DOMString name, NodeType type,
-                 StrongPointer<DOMString> value, StrongPointer<Node> parent);
+            Node(DOMString &&baseURI, DOMString &&name, NodeType type,
+                 StrongPointer<DOMString> value, const StrongPointer<Node> &parent);
 
             inline DOMString getBaseURI() const { return baseURI; }
 
@@ -65,10 +65,10 @@ namespace feather {
             inline NodeType getNodeTypeInternal() const { return type; }
 
             inline StrongPointer<DOMString> getNodeValue() const {
-                return value.get() ? StrongPointer<DOMString>(new DOMString(*value)) : nullptr;
+                return value.get() ? std::make_shared<DOMString>(*value) : nullptr;
             }
 
-            void setNodeValue(DOMString value) { if (this->value) *this->value = value; }
+            void setNodeValue(const DOMString &value) { if (this->value) *this->value = value; }
 
             StrongPointer<Document> getOwnerDocument() const;
 
@@ -141,11 +141,13 @@ namespace feather {
 
             StrongPointer<Element> getElementBeforeChild(StrongPointer<const Node> ref) const;
 
-            inline void bindOwner(StrongPointer<observable::WatchedObservableItem<WeakPointer<Document>>> other) {
+            inline void
+            bindOwner(const StrongPointer<observable::WatchedObservableItem<WeakPointer<Document>>> &other) {
                 ownerPtr->bind(other);
             }
 
-            inline void unbindOwner(StrongPointer<observable::WatchedObservableItem<WeakPointer<Document>>> other) {
+            inline void
+            unbindOwner(const StrongPointer<observable::WatchedObservableItem<WeakPointer<Document>>> &other) {
                 ownerPtr->unbind(other);
             }
 
