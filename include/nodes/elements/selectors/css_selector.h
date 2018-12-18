@@ -22,34 +22,38 @@ namespace feather {
             class CSSAttributeSelector {
             public:
 
-                CSSAttributeSelector(DOMString attr, DOMString val, CSSAttributeType type, TriValue caseSensitive);
+                CSSAttributeSelector(DOMString &&attr, DOMString &&val, CSSAttributeType type, TriValue caseSensitive);
 
                 DOMString toString() const;
 
                 bool matches(StrongPointer<const Element> element) const;
 
             private:
-                const DOMString attr;
-                const CSSAttributeType type;
-                const TriValue caseSensitive;
-                const DOMString val;
+                DOMString attr;
+                CSSAttributeType type;
+                TriValue caseSensitive;
+                DOMString val;
             };
 
             class CSSPseudoclassSelector {
             public:
 
+                CSSPseudoclassSelector() = default;
+
                 virtual DOMString toString() const = 0;
 
                 virtual bool matches(StrongPointer<const Element> element) const = 0;
+
+                virtual CSSPseudoclassSelector *clone() const = 0;
 
                 virtual ~CSSPseudoclassSelector() = default;
             };
 
             class CSSToken {
             public:
-                CSSToken(DOMString tagName, DOMString id, Vector<DOMString> classes,
-                         Vector<CSSAttributeSelector> attributes,
-                         Vector<CSSPseudoclassSelector *> pseudoclasses)
+                CSSToken(DOMString &&tagName, DOMString &&id, Vector<DOMString> &&classes,
+                         Vector<CSSAttributeSelector> &&attributes,
+                         Vector<CSSPseudoclassSelector *> &&pseudoclasses)
                         : tagName(tagName), id(id), classes(classes), attributes(attributes),
                           pseudoclasses(pseudoclasses) {}
 
@@ -70,10 +74,14 @@ namespace feather {
             class CSSSelector {
             public:
 
-                CSSSelector(CSSToken end, Vector<Pair<CSSRelation, CSSToken>> extra)
+                CSSSelector(CSSToken &&end, Vector<Pair<CSSRelation, CSSToken>> &&extra)
                         : end(end), extra(extra) {}
 
                 bool matches(StrongPointer<const Element> element) const;
+
+                StrongPointer<Element> querySelector(StrongPointer<const Element> scope);
+
+                Vector<StrongPointer<Element>> querySelectorAll(StrongPointer<const Element> scope);
 
                 DOMString toString() const;
 
@@ -89,6 +97,15 @@ namespace feather {
             private:
                 CSSToken end;
                 Vector<Pair<CSSRelation, CSSToken>> extra;
+
+                Vector<Pair<CSSRelation, CSSToken>>::iterator preprocess(StrongPointer<Element> scope);
+
+                StrongPointer<Element> querySelectorInternal(Vector<Pair<CSSRelation, CSSToken>>::iterator start,
+                                                             StrongPointer<Element> element);
+
+                Vector<StrongPointer<Element>>
+                querySelectorAllInternal(Vector<Pair<CSSRelation, CSSToken>>::iterator start,
+                                         StrongPointer<Element> element);
 
                 static CSSSelector parseDelegate(DOMString::iterator begin,
                                                  DOMString::iterator end,
