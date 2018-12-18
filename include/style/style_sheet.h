@@ -10,7 +10,7 @@
 #include <memory>
 
 namespace feather {
-    namespace style {
+    namespace css {
         typedef MediaList Vector<DOMString>;
         class StyleSheet {
         public:

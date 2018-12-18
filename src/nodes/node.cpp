@@ -374,29 +374,15 @@ void Node::replaceChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
 
 feather::StrongPointer<Element>
 Node::getElementBeforeChild(feather::StrongPointer<const feather::dom::Node> ref) const {
-    auto children = getChildNodes();
-    bool valid = false;
-    for (UInt i = children.size() - 1; i-- > 0;) {
-        auto child = children.get(i);
-        if (valid && child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) {
-            return std::static_pointer_cast<Element>(child);
-        }
-        valid = valid || child == ref;
-    }
-    return nullptr;
+    StrongPointer <Node> prev = ref->getPrevSibling();
+    while (prev && prev->getNodeTypeInternal() != NodeType::ELEMENT_NODE) prev = prev->getPrevSibling();
+    return prev ? std::static_pointer_cast<Element>(prev) : nullptr;
 }
 
 feather::StrongPointer<Element> Node::getElementAfterChild(feather::StrongPointer<const feather::dom::Node> ref) const {
-    auto children = getChildNodes();
-    bool valid = false;
-    for (UInt i = 0; i < children.size(); i++) {
-        auto child = children.get(i);
-        if (valid && child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) {
-            return std::static_pointer_cast<Element>(child);
-        }
-        valid = valid || child == ref;
-    }
-    return nullptr;
+    StrongPointer <Node> next = ref->getNextSibling();
+    while (next && next->getNodeTypeInternal() != NodeType::ELEMENT_NODE) next = next->getNextSibling();
+    return next ? std::static_pointer_cast<Element>(next) : nullptr;
 }
 
 void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
