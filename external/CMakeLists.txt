@@ -1,2 +1,11 @@
 # You will need to download curl from their site and place the files in curl/
-find_package(curl)
+project(CURL C CXX)
+if (WIN32)
+    add_library(CURL INTERFACE)
+    target_link_libraries(CURL INTERFACE ${PROJECT_SOURCE_DIR}/external/curl/lib/libcurl.dll.a)
+    target_include_directories(CURL INTERFACE external/curl/include)
+else (WIN32)
+    add_library(CURL INTERFACE)
+    target_link_libraries(CURL INTERFACE ${PROJECT_SOURCE_DIR}/external/curl/lib/libcurl.a)
+    target_include_directories(CURL INTERFACE external/curl/include)
+endif (WIN32)
