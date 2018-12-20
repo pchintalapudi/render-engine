@@ -7,6 +7,7 @@
 
 #include "css_rule.h"
 #include "typedefs.h"
+#include "css_style_declaration.h"
 
 namespace feather {
     namespace css {
