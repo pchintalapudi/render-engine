@@ -5,10 +5,31 @@
 #ifndef FEATHER_CSS_RULE_H
 #define FEATHER_CSS_RULE_H
 
+#include "typedefs.h"
+#include "style/css/css_style_sheet.h"
+#include <memory>
+
 namespace feather {
     namespace css {
         namespace rules {
+            enum CssRuleType {
+                STYLE_RULE,
+                IMPORT_RULE,
+                MEDIA_RULE,
+                FONT_FACE_RULE,
+                PAGE_RULE,
+                KEYFRAMES_RULE
+            };
 
+            class CSSRule {
+                virtual DOMString getCssText();
+
+                virtual std::shared_ptr<DOMString> getParentRule();
+
+                virtual CSSStyleSheet getParentStyleSheet();
+
+                virtual CSSRuleType getType();
+            };
         }
     }
 }

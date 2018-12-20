@@ -6,15 +6,17 @@
 #define FEATHER_CSS_STYLE_RULE_H
 
 #include "css_rule.h"
-#include "include/typedefs.h"
+#include "typedefs.h"
 
 namespace feather {
     namespace css {
-        class CSSStyleRule : public CSSRule {
-        private:
-            DOMString selectorText;
-            CSSStyleDeclaration styleDeclaration;
-        };
+        namespace rules {
+            class CSSStyleRule : public CSSRule {
+            private:
+                DOMString selectorText;
+                CSSStyleDeclaration styleDeclaration;
+            };
+        }
     }
 }
 #endif //FEATHER_CSS_STYLE_RULE_H
