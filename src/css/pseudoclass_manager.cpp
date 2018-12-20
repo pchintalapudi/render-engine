@@ -140,7 +140,7 @@ bool PseudoclassManager::isLastOfType(feather::StrongPointer<const feather::dom:
 
 //TODO: Track visited links
 bool PseudoclassManager::isLink(feather::StrongPointer<const feather::dom::Element> e) {
-    return isAnyLink(e) && true;
+    return isAnyLink(std::move(e)) && true;
 }
 
 bool PseudoclassManager::isNthChild(feather::StrongPointer<const feather::dom::Element> e, feather::Long a,
@@ -288,5 +288,5 @@ bool PseudoclassManager::isValid(feather::StrongPointer<const feather::dom::Elem
 
 //TODO: Track visited links
 bool PseudoclassManager::isVisited(feather::StrongPointer<const feather::dom::Element> e) {
-    return isAnyLink(e) && false;
+    return isAnyLink(std::move(e)) && false;
 }

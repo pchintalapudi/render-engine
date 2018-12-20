@@ -19,13 +19,13 @@ void EventTarget::registerHandler(feather::DOMString s,
 void EventTarget::registerEndHandler(feather::DOMString s,
                                      feather::StrongPointer<std::function<void(feather::js::Event &)>> p) {
     //There are no custom on-event attributes; we don't have to deal with that edge case :)
-    getEndHandlers().emplace(fromString(s), p);
+    getEndHandlers().emplace(fromString(std::move(s)), p);
 }
 
 void EventTarget::unregisterEndHandler(feather::DOMString s,
                                        feather::StrongPointer<std::function<void(feather::js::Event &)>> p) {
     if (endHandlers) {
-        auto type = fromString(s);
+        auto type = fromString(std::move(s));
         if ((*endHandlers)[type] == p) endHandlers->erase(type);
     }
 }

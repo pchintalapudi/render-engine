@@ -6,8 +6,8 @@
 
 using namespace feather::js;
 
-Event::Event(bool bubbles, bool cancelable, bool composed, feather::DOMString name,
-             WeakPointer <EventTarget> originalTarget,
+Event::Event(bool bubbles, bool cancelable, bool composed, feather::DOMString &&name,
+             WeakPointer <EventTarget> &&originalTarget,
              feather::Vector<std::shared_ptr<feather::js::EventTarget>> realPath,
              EventType type)
         : realPath(realPath), current(realPath.begin()), originalTarget(originalTarget), name(name), type(type) {
@@ -16,7 +16,7 @@ Event::Event(bool bubbles, bool cancelable, bool composed, feather::DOMString na
     if (composed) properties.add(EventProperties::COMPOSED);
 }
 
-Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, WeakPointer <EventTarget> originalTarget,
+Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, WeakPointer <EventTarget> &&originalTarget,
              feather::Vector<std::shared_ptr<feather::js::EventTarget>> realPath, feather::js::EventType type)
         : realPath(realPath), current(realPath.begin()), originalTarget(originalTarget), name(""), type(type) {
     if (bubbles) properties.add(EventProperties::BUBBLES);

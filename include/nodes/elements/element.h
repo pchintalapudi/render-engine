@@ -191,10 +191,6 @@ namespace feather {
             //TODO: Implement me
             Vector<StrongPointer<Element>> querySelectorAll(DOMString selector) const;
 
-            bool querySelectorInternal(selector::CSSSelector selector) const;
-
-            Vector<StrongPointer<Element>> querySelectorAllInternal(selector::CSSSelector selector) const;
-
             //TODO: Implement me
             void releasePointerCapture(ULong id);
 

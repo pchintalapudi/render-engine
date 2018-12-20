@@ -32,7 +32,7 @@ feather::StrongPointer<feather::dom::Attr> NamedNodeMap::removeNamedItem(feather
 
 feather::Vector<feather::DOMString> NamedNodeMap::getKeys() const {
     Vector <DOMString> v;
-    for (auto pair : backing) v.push_back(pair.first);
+    for (const auto &pair : backing) v.push_back(pair.first);
     return v;
 }
 
@@ -40,8 +40,8 @@ feather::Vector<feather::DOMString> NamedNodeMap::getKeys() const {
 feather::DOMString NamedNodeMap::toHTML() const {
     DOMString html;
     UInt reserve = 0;
-    for (auto pair : backing) reserve += pair.first.length() + 3 + pair.second->getValue().length();
+    for (const auto &pair : backing) reserve += pair.first.length() + 3 + pair.second->getValue().length();
     html.reserve(reserve);
-    for (auto pair : backing) ((((html += " ") += pair.first) += "='") += pair.second->getValue()) += "'";
+    for (const auto &pair : backing) ((((html += " ") += pair.first) += "='") += pair.second->getValue()) += "'";
     return html;
 }
