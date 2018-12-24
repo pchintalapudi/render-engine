@@ -57,7 +57,7 @@ namespace feather {
 
             inline DOMString getClassName() const { return classList->getValue(); }
 
-            inline void setClassName(DOMString name) { classList->setValue(name); }
+            inline void setClassName(DOMString name) { classList->setValue(std::move(name)); }
 
             inline double getClientHeight() const { return clientDim[static_cast<int>(Dimensions::HEIGHT)]; }
 
@@ -69,7 +69,7 @@ namespace feather {
 
             inline DOMString getId() const { return getAttributeSafe("id"); }
 
-            inline void setId(DOMString id) { setAttribute("id", id); }
+            inline void setId(DOMString id) { setAttribute("id", std::move(id)); }
 
             inline DOMString getInnerHtml() const { return innerHTMLValid ? innerHTML : cacheInnerHTML(); }
 
@@ -114,7 +114,7 @@ namespace feather {
             }
 
             inline void setOnFullScreenChange(StrongPointer<Function<void(js::Event &)>> func) {
-                this->registerEndHandler("onfullscreenchange", func);
+                this->registerEndHandler("onfullscreenchange", std::move(func));
             }
 
             inline StrongPointer<Function<void(js::Event &)>> getOnFullScreenError() const {
@@ -122,7 +122,7 @@ namespace feather {
             }
 
             inline void setOnFullScreenError(StrongPointer<Function<void(js::Event &)>> func) {
-                this->registerEndHandler("onfullscreenerror", func);
+                this->registerEndHandler("onfullscreenerror", std::move(func));
             }
 
             //TODO: Implement me
@@ -135,7 +135,7 @@ namespace feather {
             StrongPointer<DOMString> getAttribute(DOMString name) const;
 
             inline DOMString getAttributeSafe(DOMString name) const {
-                auto ptr = getAttribute(name);
+                auto ptr = getAttribute(std::move(name));
                 return ptr ? *ptr : "";
             }
 
@@ -159,9 +159,9 @@ namespace feather {
             //TODO: Implement me
             StrongPointer<FilteredByTagNameNS> getElementsByTagNameNS() const;
 
-            inline bool hasAttribute(DOMString attr) const { return attributes->contains(attr); }
+            inline bool hasAttribute(DOMString attr) const { return attributes->contains(std::move(attr)); }
 
-            inline bool hasAttributeNS(DOMString ns, DOMString name) const {
+            inline bool hasAttributeNS(const DOMString &ns, const DOMString &name) const {
                 return attributes->contains(ns + ":" + name);
             }
 
@@ -180,23 +180,31 @@ namespace feather {
             void insertAdjacentText(DOMString position, DOMString text);
 
             inline bool matches(DOMString selector) const {
-                return selector::CSSSelector::parse(selector,
+                return selector::CSSSelector::parse(std::move(selector),
                                                     std::static_pointer_cast<const Element>(shared_from_this()))
                         .matches(std::static_pointer_cast<const Element>(shared_from_this()));
             }
 
-            //TODO: Implement me
-            bool querySelector(DOMString selector) const;
+            inline StrongPointer<Element> querySelector(DOMString selector) const {
+                return selector::CSSSelector::parse(std::move(selector),
+                                                    std::static_pointer_cast<const Element>(shared_from_this()))
+                        .querySelector(std::static_pointer_cast<const Element>(shared_from_this()));
+            }
 
-            //TODO: Implement me
-            Vector<StrongPointer<Element>> querySelectorAll(DOMString selector) const;
+            inline Vector<StrongPointer<Element>> querySelectorAll(DOMString selector) const {
+                return selector::CSSSelector::parse(std::move(selector),
+                                                    std::static_pointer_cast<const Element>(shared_from_this()))
+                        .querySelectorAll(std::static_pointer_cast<const Element>(shared_from_this()));
+            }
 
             //TODO: Implement me
             void releasePointerCapture(ULong id);
 
-            inline void removeAttribute(DOMString attr) { attributes->removeNamedItem(attr); }
+            inline void removeAttribute(DOMString attr) { attributes->removeNamedItem(std::move(attr)); }
 
-            inline void removeAttributes(DOMString ns, DOMString name) { attributes->removeNamedItemNS(ns, name); }
+            inline void removeAttributes(DOMString ns, DOMString name) {
+                attributes->removeNamedItemNS(std::move(ns), std::move(name));
+            }
 
             //TODO: Implement me
             void requestFullscreen(Function<void(bool)> onFinish);
@@ -217,8 +225,8 @@ namespace feather {
             //TODO: Implement me
             void setAttribute(DOMString name, DOMString value);
 
-            inline void setAttribute(DOMString ns, DOMString local, DOMString value) {
-                setAttribute(ns + ":" + local, value);
+            inline void setAttribute(const DOMString &ns, const DOMString &local, DOMString value) {
+                setAttribute(ns + ":" + local, std::move(value));
             }
 
             //TODO: Implement me
@@ -238,18 +246,19 @@ namespace feather {
 
             inline void before(Vector<StrongPointer<Node>> insertBefore) {
                 if (getParentNode())
-                    getParentNode()->insertBeforeChild(insertBefore,
+                    getParentNode()->insertBeforeChild(std::move(insertBefore),
                                                        std::static_pointer_cast<Node>(shared_from_this()));
             }
 
             inline void after(Vector<StrongPointer<Node>> insertAfter) {
                 if (getParentNode())
-                    getParentNode()->insertAfterChild(insertAfter, std::static_pointer_cast<Node>(shared_from_this()));
+                    getParentNode()->insertAfterChild(std::move(insertAfter),
+                                                      std::static_pointer_cast<Node>(shared_from_this()));
             }
 
             inline void replaceWith(Vector<StrongPointer<Node>> repl) {
                 if (getParentNode())
-                    getParentNode()->replaceChild(repl, std::static_pointer_cast<Node>(shared_from_this()));
+                    getParentNode()->replaceChild(std::move(repl), std::static_pointer_cast<Node>(shared_from_this()));
             }
 
             //ParentNode impl
@@ -265,6 +274,8 @@ namespace feather {
             inline StrongPointer<Element> getLastElementChild() {
                 return children->size() ? children->getItem(children->size() - 1) : nullptr;
             }
+
+            inline StrongPointer<Element> getThisRef() const { return thisRef; }
 
         protected:
 
@@ -290,6 +301,8 @@ namespace feather {
             mutable bool outerHTMLValid;
 
             DOMString cacheOuterHTML() const;
+
+            StrongPointer<Element> thisRef;
         };
     }
 }

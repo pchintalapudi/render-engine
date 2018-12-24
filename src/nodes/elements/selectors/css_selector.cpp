@@ -2,6 +2,7 @@
 // Created by prem on 12/15/2018.
 //
 
+#include <iostream>
 #include "nodes/elements/selectors/css_selector.h"
 #include "nodes/elements/element.h"
 #include "nodes/documents/document.h"
@@ -358,7 +359,7 @@ namespace {
         }
 
         bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
-            if (element) for (auto selector : selectors) if (selector.querySelector(element)) return true;
+            if (element) for (const auto &selector : selectors) if (selector.querySelector(element)) return true;
             return false;
         }
 
@@ -909,12 +910,20 @@ namespace {
     };
 }
 
+CSSToken::CSSToken(const feather::dom::selector::CSSToken &other) : tagName(other.tagName), id(other.id),
+                                                                    classes(other.classes),
+                                                                    attributes(other.attributes),
+                                                                    pseudoclasses(), relation(other.relation) {
+    pseudoclasses.reserve(other.pseudoclasses.size());
+    for (auto pclass : other.pseudoclasses) pseudoclasses.push_back(pclass->clone());
+}
+
 feather::DOMString CSSToken::toString() const {
     UInt reserve = 0;
-    for (const auto &cls : classes) reserve += cls.length();
+    for (const auto &cls : classes) reserve += cls.length() + 1;
     DOMString clazzes;
     clazzes.reserve(reserve);
-    for (const auto &cls : classes) clazzes += cls;
+    for (const auto &cls : classes) clazzes += '.' + cls;
     reserve = 0;
     Vector <DOMString> temp;
     temp.reserve(attributes.size());
@@ -936,7 +945,7 @@ feather::DOMString CSSToken::toString() const {
     DOMString pseudoclasses;
     pseudoclasses.reserve(reserve);
     for (const auto &str : temp) pseudoclasses += str;
-    return (tagName.empty() ? "*" : tagName) + (id.empty() ? "" : ("#" + id)) + attrs + pseudoclasses;
+    return (tagName.empty() ? "*" : tagName) + (id.empty() ? "" : ("#" + id)) + clazzes + attrs + pseudoclasses;
 }
 
 bool CSSToken::matches(feather::StrongPointer<const feather::dom::Element> element) const {
@@ -966,52 +975,125 @@ namespace {
     }
 }
 
-bool CSSSelector::matches(feather::StrongPointer<const feather::dom::Element> element) const {
-    if (!end.matches(element)) return false;
-    feather::StrongPointer<const feather::dom::Element> next = element;
-    for (const auto &pair : extra) {
-        if (!next) return false;
-        switch (pair.first) {
-            case CSSRelation::DESCENDANT:
-                next = next->getParentElement();
-                while (next && !pair.second.matches(next)) next = next->getParentElement();
-                if (!next) return false;
-                break;
-            case CSSRelation::SIBLING:
-                next = next->getPreviousElementSibling();
-                while (next && !pair.second.matches(next)) next = next->getPreviousElementSibling();
-                if (!next) return false;
+CSSDescendantToken::CSSDescendantToken(
+        feather::Vector<feather::dom::selector::CSSToken> &&group)
+        : group(group) {
+    length = 0;
+    for (auto it = this->group.begin() + 1; it < this->group.end(); it++)
+        if (it->getRelation() == CSSRelation::IMMEDIATE_DESCENDANT) length++;
+}
+
+feather::DOMString CSSDescendantToken::toString() const {
+    if (group.empty()) return "";
+    UInt reserve = 0;
+    Vector <DOMString> strings;
+    strings.reserve(group.size());
+    for (auto begin = group.begin(); begin < group.end(); begin++) {
+        auto rel = ::toString(begin->getRelation());
+        auto str = begin->toString();
+        reserve += str.length() + rel.length();
+        strings.push_back(std::move(str));
+        strings.push_back(std::move(rel));
+    }
+    DOMString string;
+    string.reserve(reserve);
+    for (const auto &str : strings) string += str;
+    return string;
+}
+
+bool CSSDescendantToken::matches(feather::StrongPointer<const feather::dom::Element> element) const {
+    if (!group.back().matches(element)) return false;
+    auto focus = element;
+    for (auto begin = group.rbegin() + 1; begin < group.rend(); begin++) {
+        switch (begin->getRelation()) {
+            case CSSRelation::IMMEDIATE_DESCENDANT:
+                focus = focus->getParentElement();
+                if (!focus || !begin->matches(focus)) return false;
                 break;
             case CSSRelation::IMMEDIATE_SIBLING:
-                if (!pair.second.matches(element->getPreviousElementSibling())) return false;
+                focus = focus->getPreviousElementSibling();
+                if (!focus || !begin->matches(focus)) return false;
                 break;
-            case CSSRelation::IMMEDIATE_DESCENDANT:
-                if (!pair.second.matches(element->getParentElement())) return false;
+            case CSSRelation::SIBLING:
+                while ((focus = focus->getPreviousElementSibling())) if (begin->matches(focus)) break;
+                if (!focus) return false;
+                break;
+            default:
                 break;
         }
     }
     return true;
 }
 
-
 feather::DOMString CSSSelector::toString() const {
     Vector <DOMString> temp;
     UInt reserve = 0;
-    temp.reserve(extra.size() * 2 + 1);
-    for (const auto &pair : extra) {
-        auto token = pair.second.toString();
-        auto rel = ::toString(pair.first);
+    temp.reserve(descendants.size() * 2 + 1);
+    for (const auto &pair : descendants) {
+        auto token = pair.toString();
         temp.push_back(token);
-        temp.push_back(rel);
-        reserve += token.length() + rel.length();
+        reserve += token.length() + 1;
     }
-    auto token = end.toString();
-    reserve += token.length();
-    temp.push_back(token);
     DOMString selector;
     selector.reserve(reserve);
     for (const auto &str : temp) selector += str;
+    selector.erase(selector.end() - 1);
     return selector;
+}
+
+feather::Vector<CSSDescendantToken>::const_iterator CSSSelector::preprocess(
+        feather::StrongPointer<const feather::dom::Element> scope) const {
+    Deque <StrongPointer<Element>> parents;
+    for (auto parent = scope->getThisRef(); (parent = parent->getParentElement()); parents.push_back(parent));
+    auto it = descendants.begin();
+    for (auto low = parents.begin(); it < descendants.end() - 1 && low < parents.end(); low++)
+        if (it->matches(*low)) low += it->size() - 1;
+    return it;
+}
+
+bool CSSSelector::matches(const feather::StrongPointer<const feather::dom::Element> &element) const {
+    auto scope = element->getThisRef();
+    auto it = descendants.rbegin();
+    while (scope && it < descendants.rend())
+        if (it->matches(scope)) for (auto i = it++->size(); scope && i--; scope = scope->getParentElement());
+        else scope = scope->getParentElement();
+    return it == descendants.rend();
+}
+
+feather::StrongPointer<feather::dom::Element> CSSSelector::querySelectorInternal(
+        feather::Vector<feather::dom::selector::CSSDescendantToken>::const_iterator begin,
+        feather::StrongPointer<const feather::dom::Element> scope) const {
+    if (begin->matches(scope)) {
+        if (begin == descendants.end() - 1) return scope->getThisRef();
+        auto children = scope->getChildren();
+        for (UInt i = 0; i < children->size(); i++) {
+            auto ptr = querySelectorInternal(begin + 1, children->getItem(i));
+            if (ptr) return ptr;
+        }
+    } else {
+        auto children = scope->getChildren();
+        for (UInt i = 0; i < children->size(); i++) {
+            auto ptr = querySelectorInternal(begin, children->getItem(i));
+            if (ptr) return ptr;
+        }
+    }
+    return nullptr;
+}
+
+void CSSSelector::querySelectorAllInternal(
+        feather::Vector<feather::dom::selector::CSSDescendantToken>::const_iterator begin,
+        feather::StrongPointer<const feather::dom::Element> scope,
+        feather::Vector<feather::StrongPointer<feather::dom::Element>> &ref) const {
+    if (begin->matches(scope)) {
+        if (begin == descendants.end() - 1) { ref.push_back(scope->getThisRef()); }
+        else {
+            auto children = scope->getChildren();
+            for (UInt i = 0; i < children->size(); querySelectorAllInternal(begin + 1, children->getItem(i++), ref));
+        }
+    } else {
+        auto children = scope->getChildren();
+        for (UInt i = 0; i < children->size(); querySelectorAllInternal(begin, children->getItem(i++), ref));
+    }
 }
 
 namespace {
@@ -1019,6 +1101,180 @@ namespace {
     //Taken from stackoverflow: https://stackoverflow.com/a/2112111
     constexpr unsigned int hasher(const char *input) {
         return *input ? static_cast<unsigned int>(*input) + 33 * hasher(input + 1) : 5381;
+    }
+
+    void parseAttrSelector(feather::DOMString::const_iterator &it,
+                           feather::Vector<feather::dom::selector::CSSAttributeSelector> &attributes) {
+        feather::DOMString attr;
+        while (isspace(*++it));
+        it--;
+        while (*++it != '=' && *it != ']') if (!isspace(*it)) attr += *it;
+        if (*it == '=') {
+            CSSAttributeType type;
+            switch (*(it - 1)) {
+                default:
+                    type = CSSAttributeType::EQUALS;
+                    break;
+                case '~':
+                    type = CSSAttributeType::LIST;
+                    break;
+                case '^':
+                    type = CSSAttributeType::PREFIX;
+                    break;
+                case '|':
+                    type = CSSAttributeType::HYPHEN;
+                    break;
+                case '$':
+                    type = CSSAttributeType::SUFFIX;
+                    break;
+                case '*':
+                    type = CSSAttributeType::CONTAINS;
+                    break;
+            }
+            if (type != CSSAttributeType::EQUALS) attr.erase(attr.end() - 1);
+            while (isspace(*++it));
+            bool quoted = *it == '"' || *it == '\'';
+            if (!quoted) it--;
+            feather::DOMString val;
+            while (quoted ? *++it != '"' && *it != '\'' : ((!isspace(*++it) && *it != ']'))) val += *it;
+            feather::TriValue caseSensitive = feather::TriValue::AUTO;
+            if (*it != ']') {
+                while (isspace(*++it) || *it == '\'' || *it == '"');
+                switch (tolower(*it)) {
+                    case 'i':
+                        caseSensitive = feather::TriValue::NO;
+                        break;
+                    case 's':
+                        caseSensitive = feather::TriValue::YES;
+                        break;
+                    default:
+                        break;
+                }
+                while (*it++ != ']');
+            } else it++;
+            attributes.push_back(CSSAttributeSelector(std::move(attr), std::move(val), type, caseSensitive));
+        } else {
+            feather::TriValue caseSensitive = feather::TriValue::AUTO;
+            //Rarely do people actually stick these in css; im willing to take the cost
+            if (tolower(attr.back()) == 'i' || tolower(attr.back()) == 's') {
+                auto offset = 0;
+                while (isspace(*(it - ++offset)));
+                if (isspace(*(it - offset - 1)))
+                    caseSensitive = tolower(attr.back() == 'i') ? feather::TriValue::NO : feather::TriValue::YES;
+            }
+            it++;
+            attributes.push_back(
+                    CSSAttributeSelector(std::move(attr), "", CSSAttributeType::PRESENT, caseSensitive));
+        }
+    }
+
+    feather::Pair<feather::Long, feather::Long> parseNthSel(feather::DOMString::const_iterator &it) {
+        feather::Long a = 0, b = 0;
+        feather::DOMString str;
+        while (*++it != 'n' && *it != ')') if (!isspace(*it)) str += (*it);
+        if (*it == 'n') {
+            a = str.empty() ? 1 : str == "-" ? -1 : str == "eve" ? 2 : std::stoll(str);
+            str = "";
+            while (*++it != ')') if (!isspace(*it)) str += (*it);
+        }
+        if (str == "odd") {
+            a = 2;
+            b = 1;
+        } else {
+            b = str.empty() ? 0 : std::stoll(str);
+        }
+        return std::make_pair(a, b);
+    }
+
+    void
+    parseSpecialPseudoclass(feather::DOMString::const_iterator &it, const char *temp, const feather::DOMString &tag,
+                            feather::Vector<feather::dom::selector::CSSPseudoclassSelector *> &pseudoclasses,
+                            const feather::DOMString::const_iterator &begin,
+                            const feather::StrongPointer<const feather::dom::Element> &scope) {
+        //Do special pseudoclass parsing
+        switch (hasher(temp)) {
+            case hasher(":dir"): {
+                feather::DOMString val;
+                while (*++it != ')') if (!isspace(*it)) val += *it;
+                it++;
+                if (val == "rtl") pseudoclasses.push_back(new DirPseudoclass(false));
+                else if (val == "ltr") pseudoclasses.push_back(new DirPseudoclass(true));
+                break;
+            }
+            case hasher(":has"): {
+                auto start = it - begin;
+                while (*++it != ')');
+                pseudoclasses.push_back(new HasPseudoclass(CSSSelector::parseDelegateList(begin + start, it, scope)));
+                it++;
+                break;
+            }
+            case hasher(":host"): {
+                auto start = it - begin;
+                while (*++it != ')');
+                pseudoclasses.push_back(
+                        new HostManagedPseudoclass(CSSSelector::parseDelegateList(begin + start, it, scope)));
+                it++;
+                break;
+            }
+            case hasher(":host-context"): {
+                auto start = it - begin;
+                while (*++it != ')');
+                pseudoclasses.push_back(
+                        new HostContextPseudoclass(CSSSelector::parseDelegateList(begin + start, it, scope)));
+                it++;
+                break;
+            }
+                //Special case for :where b/c specificity doesn't matter
+            case hasher(":where"):
+            case hasher(":is"): {
+                auto start = it - begin;
+                while (*++it != ')');
+                pseudoclasses.push_back(new IsPseudoclass(CSSSelector::parseDelegateList(begin + start, it, scope)));
+                it++;
+                break;
+            }
+            case hasher(":lang"): {
+                feather::DOMString str;
+                while (*++it != ')') str += *it;
+                it++;
+                pseudoclasses.push_back(new LangPseudoclass(std::move(str)));
+                it++;
+                break;
+            }
+            case hasher(":not"): {
+                auto start = it - begin;
+                while (*++it != ')');
+                pseudoclasses.push_back(new NotPseudoclass(CSSSelector::parseDelegateList(begin + start, it, scope)));
+                it++;
+                break;
+            }
+            case hasher("nth-child"): {
+                auto pair = parseNthSel(it);
+                pseudoclasses.push_back(new NthChildPseudoclass(pair.first, pair.second));
+                it++;
+                break;
+            }
+            case hasher("nth-of-type"): {
+                auto pair = parseNthSel(it);
+                pseudoclasses.push_back(new NthOfTypePseudoclass(pair.first, pair.second, feather::DOMString(tag)));
+                it++;
+                break;
+            }
+            case hasher("nth-last-child"): {
+                auto pair = parseNthSel(it);
+                pseudoclasses.push_back(new NthLastChildPseudoclass(pair.first, pair.second));
+                it++;
+                break;
+            }
+            case hasher("nth-last-of-type"): {
+                auto pair = parseNthSel(it);
+                pseudoclasses.push_back(new NthLastOfTypePseudoclass(pair.first, pair.second, feather::DOMString(tag)));
+                it++;
+                break;
+            }
+            default:
+                break;
+        }
     }
 
     feather::dom::selector::CSSPseudoclassSelector *
@@ -1169,10 +1425,36 @@ namespace {
         }
         temp = "";
     }
+
+    void spaceFound(feather::DOMString &temp, feather::DOMString &tag, feather::DOMString &id,
+                    feather::Vector<feather::DOMString> &classes,
+                    feather::Vector<feather::dom::selector::CSSAttributeSelector> attributes,
+                    feather::Vector<feather::dom::selector::CSSPseudoclassSelector *> &pseudoclasses,
+                    const feather::StrongPointer<const feather::dom::Element> &scope, CSSRelation &relation,
+                    feather::Vector<CSSToken> &rels, feather::Vector<CSSDescendantToken> &descendants, bool &begun) {
+        if (!temp.empty()) {
+            handleTemp(std::move(temp), tag, id, classes, pseudoclasses, scope);
+            temp = "";
+        }
+        if (begun || !(begun = true)) {
+            if (!static_cast<int>(relation)) {
+                descendants.emplace_back(std::move(rels));
+                rels = feather::Vector<CSSToken>();
+            }
+        }
+        rels.emplace_back(std::move(tag), std::move(id), std::move(classes), std::move(attributes),
+                          std::move(pseudoclasses), relation);
+        tag = "";
+        id = "";
+        classes = feather::Vector<feather::DOMString>();
+        attributes = feather::Vector<CSSAttributeSelector>();
+        pseudoclasses = feather::Vector<CSSPseudoclassSelector *>();
+        relation = CSSRelation::DESCENDANT;
+    }
 }
 
 feather::dom::selector::CSSSelector
-CSSSelector::parseDelegate(feather::DOMString::iterator begin, feather::DOMString::iterator end,
+CSSSelector::parseDelegate(feather::DOMString::const_iterator begin, feather::DOMString::const_iterator end,
                            feather::StrongPointer<const feather::dom::Element> scope) {
     DOMString temp;
     temp.reserve(static_cast<ULong>(end - begin));
@@ -1182,32 +1464,23 @@ CSSSelector::parseDelegate(feather::DOMString::iterator begin, feather::DOMStrin
     Vector <CSSAttributeSelector> attributes;
     Vector < CSSPseudoclassSelector * > pseudoclasses;
     CSSToken last = CSSToken("", "", Vector<DOMString>(), Vector<CSSAttributeSelector>(),
-                             Vector<CSSPseudoclassSelector *>());
-    Vector < Pair < CSSRelation, CSSToken >> rels = Vector < Pair < CSSRelation, CSSToken >> ();
+                             Vector<CSSPseudoclassSelector *>(), CSSRelation::DESCENDANT);
+    Vector <CSSToken> rels = Vector<CSSToken>();
+    Vector <CSSDescendantToken> descendants;
     bool spaceFound = false;
     CSSRelation relation = CSSRelation::DESCENDANT;
-    auto it = begin;
-    while (isspace(*++it));
+    DOMString::const_iterator it = begin;
+    bool begun = false;
+    while (isspace(*it++));
     it--;
     while (isspace(*end--));
     end++;
-    bool begun = false;
     while (it != end) {
         switch (*it) {
             default:
-                if (spaceFound) {
-                    if (!temp.empty()) {
-                        handleTemp(std::move(temp), tag, id, classes, pseudoclasses, scope);
-                        temp = "";
-                    }
-                    if (begun) rels.emplace_back(relation, std::move(last)); else begun = true;
-                    last = CSSToken(std::move(tag), std::move(id), std::move(classes), std::move(attributes),
-                                    std::move(pseudoclasses));
-                    tag = "";
-                    id = "";
-                    classes = Vector<DOMString>();
-                    attributes = Vector<CSSAttributeSelector>();
-                    pseudoclasses = Vector<CSSPseudoclassSelector *>();
+                if (spaceFound && !(spaceFound = false)) {
+                    ::spaceFound(temp, tag, id, classes, attributes, pseudoclasses, scope,
+                                 relation, rels, descendants, begun);
                 }
                 temp += *it++;
                 break;
@@ -1218,230 +1491,35 @@ CSSSelector::parseDelegate(feather::DOMString::iterator begin, feather::DOMStrin
                     handleTemp(std::move(temp), tag, id, classes, pseudoclasses, scope);
                     temp = "";
                 }
-                if (spaceFound) {
-                    if (begun) rels.emplace_back(relation, std::move(last)); else begun = true;
-                    last = CSSToken(std::move(tag), std::move(id), std::move(classes), std::move(attributes),
-                                    std::move(pseudoclasses));
-                    tag = "";
-                    id = "";
-                    classes = Vector<DOMString>();
-                    attributes = Vector<CSSAttributeSelector>();
-                    pseudoclasses = Vector<CSSPseudoclassSelector *>();
+                if (spaceFound && !(spaceFound = false)) {
+                    ::spaceFound(temp, tag, id, classes, attributes, pseudoclasses, scope,
+                                 relation, rels, descendants, begun);
                 }
-                DOMString attr;
-                while (isspace(*++it));
-                while (*++it != '=' && *it != ']') if (!isspace(*it)) attr += *it;
-                if (*it == '=') {
-                    CSSAttributeType type;
-                    switch (*(it - 1)) {
-                        default:
-                            type = CSSAttributeType::EQUALS;
-                            break;
-                        case '~':
-                            type = CSSAttributeType::LIST;
-                            break;
-                        case '^':
-                            type = CSSAttributeType::PREFIX;
-                            break;
-                        case '|':
-                            type = CSSAttributeType::HYPHEN;
-                            break;
-                        case '$':
-                            type = CSSAttributeType::SUFFIX;
-                            break;
-                        case '*':
-                            type = CSSAttributeType::CONTAINS;
-                            break;
-                    }
-                    if (type != CSSAttributeType::EQUALS) attr.erase(attr.end() - 1);
-                    while (isspace(*++it));
-                    bool quoted = *it == '"' || *it == '\'';
-                    if (!quoted) it--;
-                    DOMString val;
-                    while (quoted ? *++it != '"' && *it != '\'' : ((!isspace(*++it) && *it != ']'))) val += *it;
-                    TriValue caseSensitive = TriValue::AUTO;
-                    if (*it != ']') {
-                        while (isspace(*++it) || *it == '\'' || *it == '"');
-                        switch (tolower(*it)) {
-                            case 'i':
-                                caseSensitive = TriValue::NO;
-                                break;
-                            case 's':
-                                caseSensitive = TriValue::YES;
-                                break;
-                            default:
-                                break;
-                        }
-                        while (*it++ != ']');
-                    } else it++;
-                    attributes.push_back(CSSAttributeSelector(std::move(attr), std::move(val), type, caseSensitive));
-                } else {
-                    TriValue caseSensitive = TriValue::AUTO;
-                    //Rarely do people actually stick these in css; im willing to take the cost
-                    if (tolower(attr.back()) == 'i' || tolower(attr.back()) == 's') {
-                        auto offset = 0;
-                        while (isspace(*(it - ++offset)));
-                        if (isspace(*(it - offset - 1)))
-                            caseSensitive = tolower(attr.back() == 'i') ? TriValue::NO : TriValue::YES;
-                    }
-                    it++;
-                    attributes.push_back(
-                            CSSAttributeSelector(std::move(attr), "", CSSAttributeType::PRESENT, caseSensitive));
-                }
+                ::parseAttrSelector(it, attributes);
                 break;
             }
             case ']':
                 //Error: fail me silently
                 break;
             case '(':
-                //Do special pseudoclass parsing
-                switch (hasher(temp.c_str())) {
-                    case hasher(":dir"): {
-                        DOMString val;
-                        while (*++it != ')') if (!isspace(*it)) val += *it;
-                        it++;
-                        if (val == "rtl") pseudoclasses.push_back(new DirPseudoclass(false));
-                        else if (val == "ltr") pseudoclasses.push_back(new DirPseudoclass(true));
-                        break;
-                    }
-                    case hasher(":has"): {
-                        auto start = it - begin;
-                        while (*++it != ')');
-                        pseudoclasses.push_back(new HasPseudoclass(parseDelegateList(begin + start, it, scope)));
-                        break;
-                    }
-                    case hasher(":host"): {
-                        auto start = it - begin;
-                        while (*++it != ')');
-                        pseudoclasses.push_back(
-                                new HostManagedPseudoclass(parseDelegateList(begin + start, it, scope)));
-                        break;
-                    }
-                    case hasher(":host-context"): {
-                        auto start = it - begin;
-                        while (*++it != ')');
-                        pseudoclasses.push_back(
-                                new HostContextPseudoclass(parseDelegateList(begin + start, it, scope)));
-                        break;
-                    }
-                        //Special case for :where b/c specificity doesn't matter
-                    case hasher(":where"):
-                    case hasher(":is"): {
-                        auto start = it - begin;
-                        while (*++it != ')');
-                        pseudoclasses.push_back(new IsPseudoclass(parseDelegateList(begin + start, it, scope)));
-                        break;
-                    }
-                    case hasher(":lang"): {
-                        DOMString str;
-                        while (*++it != ')') str += *it;
-                        pseudoclasses.push_back(new LangPseudoclass(std::move(str)));
-                        break;
-                    }
-                    case hasher(":not"): {
-                        auto start = it - begin;
-                        while (*++it != ')');
-                        pseudoclasses.push_back(new NotPseudoclass(parseDelegateList(begin + start, it, scope)));
-                        break;
-                    }
-                    case hasher("nth-child"): {
-                        Long a = 0, b = 0;
-                        DOMString str;
-                        while (*++it != 'n' && *it != ')') if (!isspace(*it)) str += (*it);
-                        if (*it == 'n') {
-                            a = str.empty() ? 1 : str == "-" ? -1 : str == "eve" ? 2 : std::stoll(str);
-                            str = "";
-                            while (*++it != ')') if (!isspace(*it)) str += (*it);
-                        }
-                        if (str == "odd") {
-                            a = 2;
-                            b = 1;
-                        } else {
-                            b = str.empty() ? 0 : std::stoll(str);
-                        }
-                        pseudoclasses.push_back(new NthChildPseudoclass(a, b));
-                        break;
-                    }
-                    case hasher("nth-of-type"): {
-                        Long a = 0, b = 0;
-                        DOMString str;
-                        while (*++it != 'n' && *it != ')') if (!isspace(*it)) str += (*it);
-                        if (*it == 'n') {
-                            a = str.empty() ? 1 : str == "-" ? -1 : str == "eve" ? 2 : std::stoll(str);
-                            str = "";
-                            while (*++it != ')') if (!isspace(*it)) str += (*it);
-                        }
-                        if (str == "odd") {
-                            a = 2;
-                            b = 1;
-                        } else {
-                            b = str.empty() ? 0 : std::stoll(str);
-                        }
-                        pseudoclasses.push_back(new NthOfTypePseudoclass(a, b, DOMString(tag)));
-                        break;
-                    }
-                    case hasher("nth-last-child"): {
-                        Long a = 0, b = 0;
-                        DOMString str;
-                        while (*++it != 'n' && *it != ')') if (!isspace(*it)) str += (*it);
-                        if (*it == 'n') {
-                            a = str.empty() ? 1 : str == "-" ? -1 : str == "eve" ? 2 : std::stoll(str);
-                            str = "";
-                            while (*++it != ')') if (!isspace(*it)) str += (*it);
-                        }
-                        if (str == "odd") {
-                            a = 2;
-                            b = 1;
-                        } else {
-                            b = str.empty() ? 0 : std::stoll(str);
-                        }
-                        pseudoclasses.push_back(new NthLastChildPseudoclass(a, b));
-                        break;
-                    }
-                    case hasher("nth-last-of-type"): {
-                        Long a = 0, b = 0;
-                        DOMString str;
-                        while (*++it != 'n' && *it != ')') if (!isspace(*it)) str += (*it);
-                        if (*it == 'n') {
-                            a = str.empty() ? 1 : str == "-" ? -1 : str == "eve" ? 2 : std::stoll(str);
-                            str = "";
-                            while (*++it != ')') if (!isspace(*it)) str += (*it);
-                        }
-                        if (str == "odd") {
-                            a = 2;
-                            b = 1;
-                        } else {
-                            b = str.empty() ? 0 : std::stoll(str);
-                        }
-                        pseudoclasses.push_back(new NthLastOfTypePseudoclass(a, b, DOMString(tag)));
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                temp = "";
+                ::parseSpecialPseudoclass(it, temp.c_str(), tag, pseudoclasses, begin, scope);
                 break;
             case ')':
                 //Error: fail me silently
                 break;
             case '*':
+            case '.':
             case ':':
             case '#':
-                if (!temp.empty() && *it != ':' && temp != ":") {
+                if (!temp.empty() && !(*it == ':' && temp == ":")) {
                     handleTemp(std::move(temp), tag, id, classes, pseudoclasses, scope);
                     temp = "";
                 }
-                if (spaceFound) {
-                    if (begun) rels.emplace_back(relation, std::move(last)); else begun = true;
-                    last = CSSToken(std::move(tag), std::move(id), std::move(classes), std::move(attributes),
-                                    std::move(pseudoclasses));
-                    tag = "";
-                    id = "";
-                    classes = Vector<DOMString>();
-                    attributes = Vector<CSSAttributeSelector>();
-                    pseudoclasses = Vector<CSSPseudoclassSelector *>();
+                if (spaceFound && !(spaceFound = false)) {
+                    ::spaceFound(temp, tag, id, classes, attributes, pseudoclasses, scope,
+                                 relation, rels, descendants, begun);
                 }
-                temp = *it;
+                temp = *it++;
                 break;
                 //Whitespace
             case ' ':
@@ -1471,12 +1549,22 @@ CSSSelector::parseDelegate(feather::DOMString::iterator begin, feather::DOMStrin
                 break;
         }
     }
-    return CSSSelector(std::move(last), std::move(rels));
+    if (!temp.empty()) handleTemp(std::move(temp), tag, id, classes, pseudoclasses, scope);
+    if (begun) {
+        if (!static_cast<int>(relation)) {
+            descendants.emplace_back(std::move(rels));
+            rels = feather::Vector<CSSToken>();
+        }
+    }
+    rels.emplace_back(std::move(tag), std::move(id), std::move(classes), std::move(attributes),
+                      std::move(pseudoclasses), relation);
+    descendants.emplace_back(std::move(rels));
+    return CSSSelector(std::move(descendants));
 }
 
 feather::Vector<feather::dom::selector::CSSSelector> CSSSelector::parseDelegateList(
-        feather::DOMString::iterator begin,
-        feather::DOMString::iterator end,
+        feather::DOMString::const_iterator begin,
+        feather::DOMString::const_iterator end,
         feather::StrongPointer<const feather::dom::Element> scope) {
     Deque <UInt> commas;
     UInt start = 0;

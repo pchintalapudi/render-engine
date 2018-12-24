@@ -53,13 +53,25 @@ namespace feather {
             public:
                 CSSToken(DOMString &&tagName, DOMString &&id, Vector<DOMString> &&classes,
                          Vector<CSSAttributeSelector> &&attributes,
-                         Vector<CSSPseudoclassSelector *> &&pseudoclasses)
+                         Vector<CSSPseudoclassSelector *> &&pseudoclasses, CSSRelation relation)
                         : tagName(tagName), id(id), classes(classes), attributes(attributes),
-                          pseudoclasses(pseudoclasses) {}
+                          pseudoclasses(pseudoclasses), relation(relation) {}
+
+                CSSToken(const CSSToken &other);
+
+                CSSToken &operator=(const CSSToken &other) = default;
+
+                CSSToken(CSSToken &&other) = default;
+
+                CSSToken &operator=(CSSToken &&other) = default;
 
                 DOMString toString() const;
 
                 bool matches(StrongPointer<const Element> element) const;
+
+                inline CSSRelation getRelation() const { return relation; }
+
+                inline void setRelation(CSSRelation relation) { this->relation = relation; }
 
                 ~CSSToken() { for (auto pclass : pseudoclasses) delete pclass; }
 
@@ -69,19 +81,42 @@ namespace feather {
                 Vector<DOMString> classes;
                 Vector<CSSAttributeSelector> attributes;
                 Vector<CSSPseudoclassSelector *> pseudoclasses;
+                CSSRelation relation;
+            };
+
+            class CSSDescendantToken {
+            public:
+
+                explicit CSSDescendantToken(Vector<CSSToken> &&group);
+
+                DOMString toString() const;
+
+                bool matches(StrongPointer<const Element> element) const;
+
+                inline UInt size() const { return length; }
+
+            private:
+                Vector<CSSToken> group;
+                UInt length;
             };
 
             class CSSSelector {
             public:
 
-                CSSSelector(CSSToken &&end, Vector<Pair<CSSRelation, CSSToken>> &&extra)
-                        : end(end), extra(extra) {}
+                explicit CSSSelector(Vector<CSSDescendantToken> &&descendants) : descendants(descendants) {}
 
-                bool matches(StrongPointer<const Element> element) const;
+                bool matches(const StrongPointer<const Element> &element) const;
 
-                StrongPointer<Element> querySelector(StrongPointer<const Element> scope);
+                inline StrongPointer<Element> querySelector(const StrongPointer<const Element> &scope) const {
+                    return querySelectorInternal(preprocess(scope), scope);
+                }
 
-                Vector<StrongPointer<Element>> querySelectorAll(StrongPointer<const Element> scope);
+                inline Vector<StrongPointer<Element>>
+                querySelectorAll(const StrongPointer<const Element> &scope) const {
+                    Vector<StrongPointer<Element>> vec;
+                    querySelectorAllInternal(preprocess(scope), scope, vec);
+                    return std::move(vec);
+                }
 
                 DOMString toString() const;
 
@@ -94,26 +129,26 @@ namespace feather {
                     return parseDelegateList(string.begin(), string.end(), scope);
                 }
 
-            private:
-                CSSToken end;
-                Vector<Pair<CSSRelation, CSSToken>> extra;
-
-                Vector<Pair<CSSRelation, CSSToken>>::iterator preprocess(StrongPointer<Element> scope);
-
-                StrongPointer<Element> querySelectorInternal(Vector<Pair<CSSRelation, CSSToken>>::iterator start,
-                                                             StrongPointer<Element> element);
-
-                Vector<StrongPointer<Element>>
-                querySelectorAllInternal(Vector<Pair<CSSRelation, CSSToken>>::iterator start,
-                                         StrongPointer<Element> element);
-
-                static CSSSelector parseDelegate(DOMString::iterator begin,
-                                                 DOMString::iterator end,
+                static CSSSelector parseDelegate(DOMString::const_iterator begin,
+                                                 DOMString::const_iterator end,
                                                  StrongPointer<const Element> scope);
 
-                static Vector<CSSSelector> parseDelegateList(DOMString::iterator begin,
-                                                             DOMString::iterator end,
+                static Vector<CSSSelector> parseDelegateList(DOMString::const_iterator begin,
+                                                             DOMString::const_iterator end,
                                                              StrongPointer<const Element> scope);
+
+            private:
+                Vector<CSSDescendantToken> descendants;
+
+                Vector<CSSDescendantToken>::const_iterator
+                preprocess(StrongPointer<const Element> scope) const;
+
+                StrongPointer<Element> querySelectorInternal(Vector<CSSDescendantToken>::const_iterator begin,
+                                                             StrongPointer<const Element> scope) const;
+
+                void querySelectorAllInternal(Vector<CSSDescendantToken>::const_iterator begin,
+                                              StrongPointer<const Element> scope,
+                                              Vector<StrongPointer<Element>> &ref) const;
             };
         }
     }
