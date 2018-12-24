@@ -5,11 +5,10 @@
 #ifndef FEATHER_CSS_STYLE_DECLARATION_H
 #define FEATHER_CSS_STYLE_DECLARATION_H
 
-#include "include/typedefs.h"
+#include "typedefs.h"
 
 namespace feather {
     namespace css {
-        public
 
         class CSSStyleDeclaration {
         public:

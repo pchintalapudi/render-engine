@@ -5,16 +5,17 @@
 #ifndef FEATHER_CSS_STYLE_SHEET_H
 #define FEATHER_CSS_STYLE_SHEET_H
 
-#include "include/style/style_sheet.h"
+#include "style/style_sheet.h"
+
+#incldue "typedefs.h"
 
 namespace feather {
-        namespace css {
-            class CssStyleSheet : public StyleSheet {
-            public:
-                CssStyleSheet();
-
-            };
-        }
+    namespace css {
+        class CSSStyleSheet : public StyleSheet {
+        public:
+            CSSStyleSheet();
+        };
+    }
 }
 
 #endif //FEATHER_CSS_STYLE_SHEET_H
