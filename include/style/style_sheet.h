@@ -5,20 +5,21 @@
 #ifndef FEATHER_STYLE_SHEET_H
 #define FEATHER_STYLE_SHEET_H
 
-#include "include/typedefs.h"
-#include "include/nodes/node.h"
+#include "typedefs.h"
+#include "nodes/node.h"
 #include <memory>
 
 namespace feather {
     namespace css {
-        typedef MediaList Vector<DOMString>;
+        typedef Vector<DOMString> MediaList;
         class StyleSheet {
         public:
             StyleSheet();
             bool getDisabled();
             DOMString getHref();
             MediaList getMedia();
-            feather::dom::Node getOwnerNode();
+
+            StrongPointer<feather::dom::Node> getOwnerNode();
             StrongPointer<StyleSheet> getParentStyleSheet();
             DOMString getTitle();
             DOMString getType();

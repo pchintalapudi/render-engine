@@ -61,7 +61,7 @@ namespace feather {
 
                 CSSToken &operator=(const CSSToken &other) = default;
 
-                CSSToken(CSSToken &&other) = default;
+                CSSToken(CSSToken &&other) noexcept;
 
                 CSSToken &operator=(CSSToken &&other) = default;
 
@@ -115,18 +115,18 @@ namespace feather {
                 querySelectorAll(const StrongPointer<const Element> &scope) const {
                     Vector<StrongPointer<Element>> vec;
                     querySelectorAllInternal(preprocess(scope), scope, vec);
-                    return std::move(vec);
+                    return vec;
                 }
 
                 DOMString toString() const;
 
                 static inline CSSSelector parse(DOMString string, StrongPointer<const Element> scope) {
-                    return parseDelegate(string.begin(), string.end(), scope);
+                    return parseDelegate(string.begin(), string.end(), std::move(scope));
                 }
 
                 static inline Vector<CSSSelector> parseSelectorList(DOMString string,
                                                                     StrongPointer<const Element> scope) {
-                    return parseDelegateList(string.begin(), string.end(), scope);
+                    return parseDelegateList(string.begin(), string.end(), std::move(scope));
                 }
 
                 static CSSSelector parseDelegate(DOMString::const_iterator begin,
