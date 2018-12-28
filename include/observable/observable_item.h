@@ -15,7 +15,7 @@ namespace feather {
 
             WatchedObservableItem() = default;
 
-            explicit WatchedObservableItem(const RegularEnumSet <InvEvent> required) : required(required) {}
+            explicit WatchedObservableItem(const RegularEnumSet <InvEvent> &required) : required(required) {}
 
             inline I get() const { return i; }
 
@@ -37,6 +37,11 @@ namespace feather {
         template<typename I>
         class SourceObservableItem : public Invalidatable {
         public:
+
+            SourceObservableItem() = default;
+
+            explicit SourceObservableItem(I init) : i(init) {}
+
             inline I get() const { return i; }
 
             inline void set(I i) {

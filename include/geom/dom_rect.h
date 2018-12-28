@@ -34,6 +34,8 @@ namespace feather {
         };
 
         class DOMRect : public DOMRectReadOnly {
+        public:
+
             DOMRect() : DOMRectReadOnly() {}
 
             DOMRect(double x, double y, double width, double height)

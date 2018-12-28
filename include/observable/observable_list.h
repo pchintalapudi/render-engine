@@ -115,10 +115,12 @@ namespace feather {
                 invalidate();
             }
 
-            void remove(UInt idx) {
-                unbindE(source[idx]);
+            E remove(UInt idx) {
+                E val = source[idx];
+                unbindE(val);
                 source.erase(source.begin() + idx);
                 invalidate();
+                return val;
             }
 
             inline void removeAll(UInt start, UInt end) {

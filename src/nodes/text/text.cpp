@@ -12,23 +12,13 @@ bool Text::isWhitespace() const {
 }
 
 feather::DOMString Text::getWholeText() const {
-    if (!getParentNode().get()) return getData();
-    auto children = getParentNode()->getChildNodes();
-    auto me = std::static_pointer_cast<const Node>(shared_from_this());
-    bool real = false;
-    DOMString concat = "";
-    concat.reserve(getLength());
-    for (UInt i = 0; i < children.size(); i++) {
-        auto child = children.get(i);
-        if (child->getNodeTypeInternal() == NodeType::TEXT_NODE) {
-            concat += std::static_pointer_cast<Text>(child)->getData();
-            real = real || (child == me);
-        } else if (!concat.empty()) {
-            if (!real) concat.clear();
-            else break;
-        }
-    }
-    return concat;
+    if (getParentNode()) {
+        auto children = getChildNodes();
+        DOMString ret = getData();
+        auto next = getNextSibling();
+        while (next && next->getNodeTypeInternal() == NodeType::TEXT_NODE) ret += *next->getNodeValue();
+        return ret;
+    } else return getData();
 }
 
 feather::StrongPointer<Text> Text::splitText(feather::ULong offset) {
@@ -40,8 +30,8 @@ feather::StrongPointer<Text> Text::splitText(feather::ULong offset) {
     return ptr;
 }
 
-feather::StrongPointer<Node> Text::cloneNode(bool deep) const {
-    return std::static_pointer_cast<Node>(std::make_shared<Text>(getBaseURI(), nullptr, getData()));
+feather::StrongPointer<Node> Text::cloneNode(bool) const {
+    return Text::create(getBaseURI(), StrongPointer<Node>(), getData());
 }
 
 bool Text::isEqualNode(const feather::dom::Node &other) const {

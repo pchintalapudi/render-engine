@@ -13,11 +13,11 @@ namespace feather {
         class Text : public CharacterData, public Slotable {
         public:
 
-            Text(DOMString &&baseURI, StrongPointer<Node> &&parent)
-                    : CharacterData(DOMString(baseURI), "#text", NodeType::TEXT_NODE, parent), Slotable() {}
+            Text(DOMString baseURI, const StrongPointer<Node> &parent)
+                    : CharacterData(std::move(baseURI), "#text", NodeType::TEXT_NODE, parent), Slotable() {}
 
-            Text(DOMString &&baseURI, StrongPointer<Node> &&parent, DOMString &&initText)
-                    : CharacterData(DOMString(baseURI), "#text", NodeType::TEXT_NODE, parent, DOMString(initText)),
+            Text(DOMString baseURI, const StrongPointer<Node> &parent, DOMString initText)
+                    : CharacterData(std::move(baseURI), "#text", NodeType::TEXT_NODE, parent, std::move(initText)),
                       Slotable() {}
 
             bool isWhitespace() const;
@@ -30,13 +30,23 @@ namespace feather {
 
             bool isEqualNode(const Node &other) const override;
 
+            static inline StrongPointer<Text> create(DOMString baseURI, const StrongPointer<Node> &parent) {
+                return std::make_shared<Text>(std::move(baseURI), parent);
+            }
+
+            static inline StrongPointer<Text>
+            create(DOMString baseURI, const StrongPointer<Node> &parent, DOMString initText) {
+                return std::make_shared<Text>(std::move(baseURI), parent, std::move(initText));
+            }
+
         protected:
 
-            Text(DOMString &&baseURI, DOMString &&name, NodeType nodeType, StrongPointer<Node> parent)
-                    : CharacterData(DOMString(baseURI), DOMString(name), nodeType, parent), Slotable() {}
+            Text(DOMString baseURI, DOMString name, NodeType nodeType, const StrongPointer<Node> &parent)
+                    : CharacterData(std::move(baseURI), std::move(name), nodeType, parent), Slotable() {}
 
-            Text(DOMString &&baseURI, DOMString &&name, NodeType nodeType, StrongPointer<Node> parent, DOMString &&init)
-                    : CharacterData(DOMString(baseURI), DOMString(name), nodeType, parent, DOMString(init)),
+            Text(DOMString baseURI, DOMString name, NodeType nodeType, const StrongPointer<Node> &parent,
+                 DOMString init)
+                    : CharacterData(std::move(baseURI), std::move(name), nodeType, parent, std::move(init)),
                       Slotable() {}
         };
     }

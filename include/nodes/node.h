@@ -35,7 +35,7 @@ namespace feather {
         class Node : public js::EventTarget {
         public:
 
-            Node(DOMString &&baseURI, DOMString &&name, NodeType type,
+            Node(DOMString baseURI, DOMString name, NodeType type,
                  StrongPointer<DOMString> value, const StrongPointer<Node> &parent);
 
             inline DOMString getBaseURI() const { return baseURI; }
@@ -45,13 +45,13 @@ namespace feather {
             inline const observable::ObservableList<StrongPointer<Node>> &getChildNodes() const { return childNodes; }
 
             inline StrongPointer<Node> getFirstChild() const {
-                return childNodes.empty() ? StrongPointer<Node>(nullptr) : childNodes.get(0);
+                return childNodes.empty() ? StrongPointer<Node>() : childNodes.get(0);
             }
 
             inline bool isConnected() const { return getOwnerDocument().get() != nullptr; }
 
             inline StrongPointer<Node> getLastChild() const {
-                return childNodes.empty() ? StrongPointer<Node>(nullptr) : childNodes.get(childNodes.size() - 1);
+                return childNodes.empty() ? StrongPointer<Node>() : childNodes.get(childNodes.size() - 1);
             }
 
             StrongPointer<Node> getNextSibling() const;
@@ -65,7 +65,7 @@ namespace feather {
             inline NodeType getNodeTypeInternal() const { return type; }
 
             inline StrongPointer<DOMString> getNodeValue() const {
-                return value.get() ? std::make_shared<DOMString>(*value) : nullptr;
+                return value.get() ? std::make_shared<DOMString>(*value) : StrongPointer<DOMString>();
             }
 
             void setNodeValue(const DOMString &value) { if (this->value) *this->value = value; }
@@ -73,10 +73,12 @@ namespace feather {
             StrongPointer<Document> getOwnerDocument() const;
 
             inline StrongPointer<Node> getParentNode() const {
-                return parent.get().expired() ? StrongPointer<Node>(nullptr) : parent.get().lock();
+                return parent.get().expired() ? StrongPointer<Node>() : parent.get().lock();
             }
 
-            void setParentNode(StrongPointer<Node> parentNode);
+            inline void setParentNode(const StrongPointer<Node> &parentNode) { parent.set(parentNode); }
+
+            inline void clearParentNode() { setParentNode(StrongPointer<Node>()); }
 
             StrongPointer<Element> getParentElement() const;
 
@@ -92,9 +94,9 @@ namespace feather {
 
             virtual StrongPointer<Node> cloneNode(bool deep) const = 0;
 
-            UByte compareDocumentPosition(StrongPointer<const Node>) const;
+            UByte compareDocumentPosition(const StrongPointer<const Node> &other) const;
 
-            bool contains(StrongPointer<const Node>) const;
+            bool contains(const StrongPointer<const Node> &other) const;
 
             inline StrongPointer<Node> getRootNode() const { return getRootNode(false); }
 
@@ -125,22 +127,6 @@ namespace feather {
 
             StrongPointer<Node> replaceChild(StrongPointer<Node> newChild, StrongPointer<Node> oldChild);
 
-            //Internal speedier methods for various interfaces
-
-            //From ChildNode
-
-            void insertBeforeChild(Vector<StrongPointer<Node>>, StrongPointer<const Node> ref);
-
-            void insertAfterChild(Vector<StrongPointer<Node>>, StrongPointer<const Node> ref);
-
-            void replaceChild(Vector<StrongPointer<Node>>, StrongPointer<const Node> replace);
-
-            //From NonDocumentTypeChildNode
-
-            StrongPointer<Element> getElementAfterChild(StrongPointer<const Node> ref) const;
-
-            StrongPointer<Element> getElementBeforeChild(StrongPointer<const Node> ref) const;
-
             inline void
             bindOwner(const StrongPointer<observable::WatchedObservableItem<WeakPointer<Document>>> &other) {
                 ownerPtr->bind(other);
@@ -155,21 +141,38 @@ namespace feather {
                 return ownerPtr;
             };
 
+            UInt getIndex() const;
+
+            void updateChildIndeces() const;
+
+            StrongPointer<Node> getSharedFromThis() { return std::static_pointer_cast<Node>(shared_from_this()); }
+
+            StrongPointer<const Node> getSharedFromThis() const {
+                return std::static_pointer_cast<const Node>(shared_from_this());
+            }
+
+            void insertBeforeChildNDTCN(StrongPointer<const Node> ref, Vector<StrongPointer<Node>> add);
+
+            void insertAfterChildNDTCN(StrongPointer<const Node> ref, Vector<StrongPointer<Node>> add);
+
+            void replaceChildNDTCN(StrongPointer<const Node> ref, Vector<StrongPointer<Node>> add);
+
         protected:
             inline StrongPointer<DOMString> getValuePointer() const { return value; }
 
-            void modify(RegularEnumSet<observable::InvEvent> &, const Invalidatable *) const override;
+            void modify(RegularEnumSet<observable::InvEvent> &types, const Invalidatable *source) const override;
 
         private:
             DOMString baseURI;
             observable::ObservableList<StrongPointer<Node>> childNodes;
-            StrongPointer<observable::WatchedObservableItem<WeakPointer<Node>>> nextSiblingPtr, prevSiblingPtr;
             DOMString name;
             NodeType type;
             StrongPointer<DOMString> value;
-            observable::SourceObservableItem<WeakPointer<Node>> parent
-                    = observable::SourceObservableItem<WeakPointer<Node>>();
+            observable::SourceObservableItem<WeakPointer<Node>> parent{};
+            StrongPointer<observable::WatchedObservableItem<UInt>> nodeIndex;
             StrongPointer<observable::WatchedObservableItem<WeakPointer<Document>>> ownerPtr;
+
+            DOMString getTextContentInternal() const;
         };
     }
 }

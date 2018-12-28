@@ -10,11 +10,11 @@
 namespace feather {
     namespace dom {
         class Comment : public CharacterData {
-            Comment(DOMString baseURI, StrongPointer<Node> parent)
-                    : CharacterData(baseURI, "#comment", NodeType::COMMENT_NODE, parent, text) {}
+            Comment(DOMString baseURI, const StrongPointer<Node> &parent)
+                    : CharacterData(std::move(baseURI), "#comment", NodeType::COMMENT_NODE, parent) {}
 
-            Comment(DOMString baseURI, StrongPointer<Node> parent, DOMString text)
-                    : CharacterData(baseURI, "#comment", NodeType::COMMENT_NODE, parent, text) {}
+            Comment(DOMString baseURI, const StrongPointer<Node> &parent, DOMString text)
+                    : CharacterData(std::move(baseURI), "#comment", NodeType::COMMENT_NODE, parent, std::move(text)) {}
         };
     }
 }

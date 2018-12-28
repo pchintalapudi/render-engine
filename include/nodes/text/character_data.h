@@ -6,33 +6,40 @@
 #define FEATHER_CHARACTER_DATA_H
 
 #include "../node.h"
+#include "../elements/element.h"
 
 namespace feather {
     namespace dom {
         class CharacterData : public Node {
         public:
 
-            CharacterData(DOMString &&baseURI, DOMString &&name, NodeType type, const StrongPointer <Node> &parent)
-                    : Node(DOMString(baseURI), DOMString(name), type, std::make_shared<DOMString>(), parent) {}
+            CharacterData(DOMString baseURI, DOMString name, NodeType type, const StrongPointer<Node> &parent)
+                    : Node(std::move(baseURI), std::move(name), type, std::make_shared<DOMString>(), parent) {}
 
-            CharacterData(DOMString &&baseURI, DOMString &&name, NodeType type, const StrongPointer <Node> &parent,
-                          DOMString &&initText)
-                    : Node(DOMString(baseURI), DOMString(name), type, std::make_shared<DOMString>(), parent) {
-                setData(DOMString(initText));
+            CharacterData(DOMString baseURI, DOMString name, NodeType type, const StrongPointer<Node> &parent,
+                          DOMString initText)
+                    : Node(std::move(baseURI), std::move(name), type, std::make_shared<DOMString>(), parent) {
+                setData(std::move(initText));
             }
 
             DOMString getData() const { return *getValuePointer(); }
 
-            inline void setData(DOMString &&data) { *getValuePointer() = data; }
+            inline void setData(DOMString data) { *getValuePointer() = std::move(data); }
 
             inline ULong getLength() const { return getData().length(); }
 
-            inline StrongPointer <Element> getNextElementSibling() const {
-                return getElementAfterChild(std::static_pointer_cast<const Node>(shared_from_this()));
+            StrongPointer<Element> getNextElementSibling() const {
+                auto element = getNextSibling();
+                while (element && element->getNodeTypeInternal() != NodeType::ELEMENT_NODE)
+                    element = element->getNextSibling();
+                return std::static_pointer_cast<Element>(element);
             }
 
-            inline StrongPointer <Element> getPreviousElementSibling() const {
-                return getElementBeforeChild(std::static_pointer_cast<const Node>(shared_from_this()));
+            StrongPointer<Element> getPreviousElementSibling() const {
+                auto element = getPrevSibling();
+                while (element && element->getNodeTypeInternal() != NodeType::ELEMENT_NODE)
+                    element = element->getPrevSibling();
+                return std::static_pointer_cast<Element>(element);
             }
 
             inline void appendData(const DOMString &toAppend) { *getValuePointer() += toAppend; }
@@ -52,15 +59,15 @@ namespace feather {
             }
 
             inline void before(const Vector <StrongPointer<Node>> &nodes) {
-                this->getParentNode()->insertBeforeChild(nodes, std::static_pointer_cast<Node>(shared_from_this()));
+                getParentNode()->insertBeforeChildNDTCN(getSharedFromThis(), nodes);
             }
 
             inline void after(const Vector <StrongPointer<Node>> &nodes) {
-                this->getParentNode()->insertAfterChild(nodes, std::static_pointer_cast<Node>(shared_from_this()));
+                getParentNode()->insertAfterChildNDTCN(getSharedFromThis(), nodes);
             }
 
             inline void replaceWith(const Vector <StrongPointer<Node>> &nodes) {
-                this->getParentNode()->replaceChild(nodes, std::static_pointer_cast<Node>(shared_from_this()));
+                getParentNode()->replaceChildNDTCN(getSharedFromThis(), nodes);
             }
 
             inline void remove() {

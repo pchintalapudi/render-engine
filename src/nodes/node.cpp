@@ -3,395 +3,321 @@
 //
 
 #include "nodes/node.h"
-#include "nodes/elements/element.h"
 #include "nodes/text/text.h"
 
 using namespace feather::dom;
 
-namespace {
-    const feather::RegularEnumSet<feather::observable::InvEvent> listWatcherSet
-            = feather::RegularEnumSet<feather::observable::InvEvent>(
-                    1u << static_cast<int>(feather::observable::InvEvent::LIST_CHANGE));
-
-    template<typename I, typename O>
-    feather::StrongPointer<feather::Function<feather::StrongPointer<O>(feather::StrongPointer<I>)>> caster() {
-        return feather::StrongPointer<feather::Function<feather::StrongPointer<O>(feather::StrongPointer<I>)>>(
-                new feather::Function<feather::StrongPointer<O>(feather::StrongPointer<I>)>(
-                        [](feather::StrongPointer<I> i) { return std::static_pointer_cast<O>(i); }));
+feather::UInt Node::getIndex() const {
+    if (nodeIndex->isValid()) return nodeIndex->get();
+    if (getParentNode()) {
+        getParentNode()->updateChildIndeces();
+        return nodeIndex->get();
+    } else {
+        nodeIndex->set(0);
+        return 0;
     }
 }
 
-Node::Node(feather::DOMString &&baseURI, feather::DOMString &&name, feather::dom::NodeType type,
-           feather::StrongPointer<feather::DOMString> value, const feather::StrongPointer<feather::dom::Node> &parent)
-        : baseURI(baseURI), childNodes(caster<Node, Invalidatable>()),
-          nextSiblingPtr(
-                  std::make_shared<feather::observable::WatchedObservableItem<feather::WeakPointer<feather::dom::Node>>>(
-                          listWatcherSet)),
-          prevSiblingPtr(
-                  std::make_shared<feather::observable::WatchedObservableItem<feather::WeakPointer<feather::dom::Node>>>(
-                          listWatcherSet)),
-          name(name), type(type), value(value),
-          ownerPtr(
-                  std::make_shared<feather::observable::WatchedObservableItem<
-                          feather::WeakPointer<feather::dom::Document>>>()) {
-    this->parent.bind(ownerPtr);
-    this->parent.set(parent);
-    childNodes.bind(nextSiblingPtr);
-    childNodes.bind(prevSiblingPtr);
-}
-
-feather::StrongPointer<Node> Node::getNextSibling() const {
-    if (nextSiblingPtr->isValid()) {
-        return nextSiblingPtr->get().lock();
-    }
-    if (getParentNode().get()) {
-        auto me = std::static_pointer_cast<const Node>(shared_from_this());
-        auto children = getParentNode()->getChildNodes();
-        for (UInt i = 0; i < children.size() - 1; i++) {
-            if (children.get(i) == me) {
-                auto child = children.get(i + 1);
-                nextSiblingPtr->set(child);
-                return child;
-            }
-        }
-    }
-    nextSiblingPtr->set(WeakPointer<Node>());
-    return nullptr;
-}
-
-feather::StrongPointer<Document> Node::getOwnerDocument() const {
-    if (ownerPtr->isValid() && !ownerPtr->get().expired()) return ownerPtr->get().lock();
-    if (getParentNode().get()) {
-        auto ptr = getParentNode()->getOwnerDocument();
-        ownerPtr->set(ptr);
-        return ptr;
-    }
-    ownerPtr->set(WeakPointer<Document>());
-    return nullptr;
-}
-
-void Node::setParentNode(feather::StrongPointer<feather::dom::Node> parentNode) {
-    auto old = getParentNode();
-    if (old.get()) {
-        old->removeChild(std::static_pointer_cast<Node>(shared_from_this()));
-        old->unbindOwner(getOwnerItem());
-    }
-    parent.set(parentNode);
-    if (parentNode.get()) parentNode->bindOwner(getOwnerItem());
-}
-
-feather::StrongPointer<Element> Node::getParentElement() const {
-    auto ptr = getParentNode();
-    return ptr->getNodeTypeInternal() == NodeType::ELEMENT_NODE ? std::static_pointer_cast<Element>(ptr) : nullptr;
-}
-
-feather::StrongPointer<Node> Node::getPrevSibling() const {
-    if (prevSiblingPtr->isValid()) return prevSiblingPtr->get().lock();
-    if (getParentNode().get()) {
-        auto me = std::static_pointer_cast<const Node>(shared_from_this());
-        auto children = getParentNode()->getChildNodes();
-        for (UInt i = children.size(); i-- > 1;) {
-            if (children.get(i) == me) {
-                auto child = children.get(i - 1);
-                prevSiblingPtr->set(child);
-                return child;
-            }
-        }
-    }
-    prevSiblingPtr->set(WeakPointer<Node>());
-    return nullptr;
-}
-
-feather::StrongPointer<feather::DOMString> Node::getTextContent() const {
-    if (getNodeTypeInternal() != NodeType::ELEMENT_NODE) return getNodeValue();
-    DOMString builder;
+void Node::updateChildIndeces() const {
     auto children = getChildNodes();
-    for (UInt i = 0; i < children.size(); i++) {
-        auto child = children.get(i);
+    for (UInt i = 0; i < children.size(); i++) children.get(i)->nodeIndex->set(i);
+}
+
+feather::StrongPointer<Node> Node::replaceChild(feather::StrongPointer<feather::dom::Node> newChild,
+                                                feather::StrongPointer<feather::dom::Node> oldChild) {
+    if (newChild->getParentNode()) newChild->getParentNode()->removeChild(newChild);
+    newChild->setParentNode(getSharedFromThis());
+    auto idx = oldChild->getIndex();
+    oldChild->clearParentNode();
+    getChildNodes().set(idx, newChild);
+    return oldChild;
+}
+
+feather::StrongPointer<Node> Node::removeChild(feather::StrongPointer<feather::dom::Node> child) {
+    if (child->getParentNode().get() == this) {
+        child->clearParentNode();
+        getChildNodes().remove(child->getIndex());
+        return child;
+    }
+    return StrongPointer<Node>();
+}
+
+void Node::normalize() {
+    auto children = getChildNodes();
+    UInt lastIndex = ~0u;
+    DOMString temp;
+    for (UInt i = children.size(); i-- > 0;) {
+        const auto &child = children.get(i);
         switch (child->getNodeTypeInternal()) {
-            case NodeType::CDATA_SECTION_NODE:
-            case NodeType::TEXT_NODE:
-                builder += *child->getNodeValue();
-                [[fallthrough]];
+            case NodeType::ELEMENT_NODE:
+            case NodeType::SHADOW_ROOT:
+            case NodeType::DOCUMENT_NODE:
+            case NodeType::DOCUMENT_FRAGMENT_NODE: {
+                if (~lastIndex && lastIndex > i + 1) {
+                    auto reserve = temp.length();
+                    auto text = Text::create(getBaseURI(), getSharedFromThis(), std::move(temp));
+                    children.get(lastIndex)->clearParentNode();
+                    children.removeAll(i + 1, lastIndex);
+                    children.insert(i + 1, std::move(text));
+                    temp = "";
+                    temp.reserve(reserve);
+                    lastIndex = ~0u;
+                }
+                break;
+            }
+            case NodeType::TEXT_NODE: {
+                auto val = *child->getNodeValue();
+                temp.insert(temp.begin(), val.begin(), val.end());
+                if (~lastIndex) {
+                    child->clearParentNode();
+                } else lastIndex = i;
+                break;
+            }
             default:
                 break;
         }
     }
-    return std::make_shared<DOMString>(builder);
-}
-
-void Node::setTextContent(feather::DOMString textContent) {
-    switch (getNodeTypeInternal()) {
-        case NodeType::ELEMENT_NODE:
-        case NodeType::DOCUMENT_FRAGMENT_NODE:
-            getChildNodes().clear();
-            getChildNodes().add(std::make_shared<Text>(
-                    DOMString(getBaseURI()),
-                    std::static_pointer_cast<Node>(shared_from_this()),
-                    DOMString(textContent))
-            );
-            break;
-        case NodeType::TEXT_NODE:
-            setTextContent(textContent);
-            break;
-        default:
-            break;
-    }
-}
-
-feather::StrongPointer<Node> Node::appendChild(feather::StrongPointer<feather::dom::Node> child) {
-    auto type = child->getNodeTypeInternal();
-    if (type != NodeType::DOCUMENT_FRAGMENT_NODE && type != NodeType::SHADOW_ROOT) {
-        child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
-        getChildNodes().add(child);
-    } else {
-        auto children = child->getChildNodes();
-
-    }
-    return child;
-}
-
-namespace {
-    enum class DocumentPosition {
-        DISCONNECTED, PRECEDING, FOLLOWING, CONTAINS, CONTAINED_BY, IMPLEMENTATION_SPECIFIC
-    };
-}
-
-namespace {
-    bool precedes(const Node &node1, const Node &node2) {
-        feather::Deque<Node *> deque;
-        auto parent = node1.getParentNode();
-        while (parent.get()) deque.push_back(parent.get());
-        parent = node2.getParentNode();
-        auto p2 = parent;
-        while (parent.get()) {
-            auto it = std::find(deque.begin(), deque.end(), parent.get());
-            if (it != deque.end()) {
-                feather::Int idx = it - deque.begin() + 1;
-                auto children = parent->getChildNodes();
-                for (feather::UInt i = 0; i < static_cast<feather::UInt>(idx); i++)
-                    if (children.get(i) == p2)
-                        return false;
-                return true;
-            }
-            p2 = parent;
-            parent = parent->getParentNode();
-        }
-        return false;
-    }
-}
-
-feather::UByte Node::compareDocumentPosition(feather::StrongPointer<const feather::dom::Node> node1) const {
-    if (node1.get() == this) return 0u;
-    const Node &node2 = *this;
-    if (node1.get() == nullptr || (node1->getRootNode(true) != getRootNode(true)))
-        return 1u << static_cast<UInt>(DocumentPosition::DISCONNECTED) |
-               1u << static_cast<UInt>(DocumentPosition::PRECEDING) |
-               1u << static_cast<UInt>(DocumentPosition::IMPLEMENTATION_SPECIFIC);
-    if (node1->contains(std::static_pointer_cast<const Node>(shared_from_this())))
-        return 1u << static_cast<UInt>(DocumentPosition::CONTAINS) |
-               1u << static_cast<UInt>(DocumentPosition::PRECEDING);
-    if (node2.contains(node1))
-        return 1u << static_cast<UInt>(DocumentPosition::CONTAINED_BY) |
-               1u << static_cast<UInt>(DocumentPosition::FOLLOWING);
-    if (precedes(*node1.get(), node2)) return 1u << static_cast<UInt>(DocumentPosition::PRECEDING);
-    return 1u << static_cast<UInt>(DocumentPosition::FOLLOWING);
-}
-
-bool Node::contains(feather::StrongPointer<const feather::dom::Node> other) const {
-    StrongPointer<const Node> ptr = other;
-    while (other.get() && other.get() != this) ptr = ptr->getParentNode();
-    return ptr.get() != nullptr;
-}
-
-feather::StrongPointer<Node> Node::getRootNode(bool composed) const {
-    switch (getNodeTypeInternal()) {
-        case NodeType::SHADOW_ROOT:
-            if (!composed) return nullptr;
-            [[fallthrough]];
-        default:
-            if (getParentNode().get()) {
-                auto type = getParentNode()->getNodeTypeInternal();
-                switch (type) {
-                    case NodeType::DOCUMENT_NODE:
-                    case NodeType::DOCUMENT_FRAGMENT_NODE:
-                        return getParentNode();
-                    case NodeType::SHADOW_ROOT:
-                        if (!composed) return getParentNode();
-                        [[fallthrough]];
-                    default:
-                        return getParentNode()->getRootNode(composed);
-                }
-            }
-            [[fallthrough]];
-        case NodeType::DOCUMENT_FRAGMENT_NODE:
-        case NodeType::DOCUMENT_NODE:
-            return nullptr;
-    }
-}
-
-feather::StrongPointer<Node>
-Node::insertBefore(feather::StrongPointer<Node> add, feather::StrongPointer<const Node> ref) {
-    auto children = getChildNodes();
-    auto type = add->getNodeTypeInternal();
-    if (type == NodeType::DOCUMENT_FRAGMENT_NODE || type == NodeType::SHADOW_ROOT) {
-        for (UInt i = 0; i < children.size(); i++) {
-            if (children.get(i) == ref) {
-                children.insert(i, add);
-                return add;
-            }
-        }
-        children.add(add);
-        return add;
-    } else {
-        for (UInt i = 0; i < children.size(); i++) {
-            if (children.get(i) == ref) {
-                children.insertAll(i, add->getChildNodes());
-                return add;
-            }
-        }
-        return add;
+    if (~lastIndex && lastIndex > 0) {
+        auto text = Text::create(getBaseURI(), getSharedFromThis(), std::move(temp));
+        children.get(lastIndex)->clearParentNode();
+        children.removeAll(0, lastIndex);
+        children.insert(0, std::move(text));
     }
 }
 
 feather::StrongPointer<Node> Node::insertAfter(feather::StrongPointer<feather::dom::Node> add,
                                                feather::StrongPointer<const feather::dom::Node> ref) {
-    auto type = add->getNodeTypeInternal();
-    if (type == NodeType::DOCUMENT_FRAGMENT_NODE || type == NodeType::SHADOW_ROOT) {
-        auto children = getChildNodes();
-        for (UInt i = 0; i < children.size(); i++) {
-            if (children.get(i) == ref) {
-                children.insertAll(i + 1, add->getChildNodes());
-                return add;
-            }
-        }
-        children.insertAll(0, add->getChildNodes());
-        return add;
-    } else {
-        auto children = getChildNodes();
-        for (UInt i = 0; i < children.size(); i++) {
-            if (children.get(i) == ref) {
-                children.insert(i + 1, add);
-                return add;
-            }
-        }
-        children.insert(0, add);
+    if (ref->getParentNode().get() == this) {
+        if (add->getParentNode()) add->getParentNode()->removeChild(add);
+        add->setParentNode(getSharedFromThis());
+        getChildNodes().insert(ref->getIndex() + 1, add);
         return add;
     }
+    return StrongPointer<Node>();
+}
+
+feather::StrongPointer<Node> Node::insertBefore(feather::StrongPointer<feather::dom::Node> add,
+                                                feather::StrongPointer<const feather::dom::Node> ref) {
+    if (ref->getParentNode().get() == this) {
+        if (add->getParentNode()) add->getParentNode()->removeChild(add);
+        add->setParentNode(getSharedFromThis());
+        getChildNodes().insert(ref->getIndex(), add);
+        return add;
+    }
+    return StrongPointer<Node>();
+}
+
+feather::StrongPointer<Node> Node::getRootNode(bool composed) const {
+    StrongPointer <Node> parent = getParentNode();
+    //TODO: Make this better
+    if (!parent) return std::const_pointer_cast<Node>(getSharedFromThis());
+    while (parent->getParentNode() && (composed || parent->getNodeTypeInternal() != NodeType::SHADOW_ROOT))
+        parent = parent->getParentNode();
+    return parent;
+}
+
+bool Node::contains(const feather::StrongPointer<const feather::dom::Node> &other) const {
+    if (other.get() == this) return true;
+    auto parent = other->getParentNode();
+    while (parent && parent.get() != this) parent = parent->getParentNode();
+    return parent != nullptr;
 }
 
 namespace {
-    bool isTrivial(feather::DOMString str) {
-        for (auto c : str) if (!isspace(c))return false;
-        return true;
+    enum DocumentPosition {
+        DISCONNECTED = 1u,
+        PRECEDING = 1u << 1u,
+        FOLLOWING = 1u << 2u,
+        CONTAINS = 1u << 3u,
+        CONTAINED_BY = 1u << 4u,
+        IMPLEMENTATION_SPECIFIC = 1u << 5u
+    };
+
+    const feather::dom::Node *
+    getPrecedence(const feather::dom::Node *const &root, const feather::dom::Node *const &node1,
+                  const feather::dom::Node *const &node2) {
+        const auto &children = root->getChildNodes();
+        for (feather::UInt i = 0; i < children.size(); i++) {
+            const auto &child = children.get(i);
+            if (child.get() == node1) return node1;
+            if (child.get() == node2) return node2;
+            if (child->hasChildNodes()) {
+                auto precedence = getPrecedence(child.get(), node1, node2);
+                if (precedence) return precedence;
+            }
+        }
+        return nullptr;
+    }
+
+    bool precedes(const feather::StrongPointer<const feather::dom::Node> &node1,
+                  const feather::StrongPointer<const feather::dom::Node> &node2) {
+        return getPrecedence(node1->getRootNode().get(), node1.get(), node2.get()) == node1.get();
     }
 }
 
-void Node::normalize() {
-    auto children = getChildNodes();
-    Vector <StrongPointer<Node>> normalized;
-    DOMString str;
-    for (UInt i = 0; i < children.size(); i++) {
-        auto child = children.get(i);
-        switch (child->getNodeTypeInternal()) {
-            case NodeType::TEXT_NODE:
-                str += std::static_pointer_cast<Text>(child)->getData();
-                break;
-            default:
-                if (child->hasChildNodes()) child->normalize();
-                if (!isTrivial(str))
-                    normalized.push_back(std::make_shared<Text>(
-                            DOMString(getBaseURI()), std::static_pointer_cast<Node>(shared_from_this()),
-                            DOMString(str)));
-                normalized.push_back(child);
-                str.clear();
-                break;
-        }
-    }
-    children.swap(normalized);
+feather::UByte Node::compareDocumentPosition(const feather::StrongPointer<const feather::dom::Node> &other) const {
+    if (other.get() == this) return 0u;
+    if (!other || other->getRootNode(true) != getRootNode(true))
+        return DocumentPosition::DISCONNECTED | DocumentPosition::PRECEDING | DocumentPosition::IMPLEMENTATION_SPECIFIC;
+    if (other->contains(getSharedFromThis())) return DocumentPosition::CONTAINS | DocumentPosition::PRECEDING;
+    if (contains(other)) return DocumentPosition::CONTAINED_BY | DocumentPosition::FOLLOWING;
+    if (precedes(other, getSharedFromThis())) return DocumentPosition::PRECEDING;
+    return DocumentPosition::FOLLOWING;
 }
 
-feather::StrongPointer<Node> Node::removeChild(feather::StrongPointer<feather::dom::Node> child) {
-    auto children = getChildNodes();
-    for (UInt i = 0; i < children.size(); i++) {
-        if (children.get(i) == child) {
-            children.get(i)->setParentNode(nullptr);
-            children.remove(i);
-        }
-    }
+feather::StrongPointer<Node> Node::appendChild(feather::StrongPointer<feather::dom::Node> child) {
+    if (child->getParentNode()) child->getParentNode()->removeChild(child);
+    child->setParentNode(getSharedFromThis());
+    getChildNodes().add(child);
     return child;
 }
 
-feather::StrongPointer<Node> Node::replaceChild(feather::StrongPointer<feather::dom::Node> newChild,
-                                                feather::StrongPointer<feather::dom::Node> oldChild) {
-    auto children = getChildNodes();
-    for (UInt i = 0; i < children.size(); i++) {
-        if (children.get(i) == oldChild) {
-            children.set(i, newChild);
-            return oldChild;
-        }
+void Node::setTextContent(feather::DOMString textContent) {
+    switch (getNodeTypeInternal()) {
+        case NodeType::SHADOW_ROOT:
+        case NodeType::DOCUMENT_FRAGMENT_NODE:
+        case NodeType::ELEMENT_NODE:
+            getChildNodes().clear();
+            getChildNodes().add(Text::create(getBaseURI(), getSharedFromThis(), std::move(textContent)));
+            break;
+        case NodeType::TEXT_NODE:
+        case NodeType::COMMENT_NODE:
+        case NodeType::PROCESSING_INSTRUCTION_NODE:
+            *this->value = std::move(textContent);
+            break;
+        default:
+            break;
     }
-    children.add(newChild);
-    return oldChild;
 }
 
-void Node::insertBeforeChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
-                             feather::StrongPointer<const feather::dom::Node> ref) {
-    auto children = getChildNodes();
-    for (const auto &child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
-    for (UInt i = 0; i < children.size(); i++) {
-        if (children.get(i) == ref) {
-            children.insertAll(i, v);
-            return;
-        }
+feather::StrongPointer<feather::DOMString> Node::getTextContent() const {
+    switch (getNodeTypeInternal()) {
+        case NodeType::TEXT_NODE:
+            return getNodeValue();
+        case NodeType::ELEMENT_NODE:
+        case NodeType::DOCUMENT_FRAGMENT_NODE:
+        case NodeType::DOCUMENT_NODE:
+            return std::make_shared<DOMString>(getTextContentInternal());
+        default:
+            return StrongPointer<DOMString>();
     }
-    children.addAll(v);
 }
 
-void Node::insertAfterChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
-                            feather::StrongPointer<const feather::dom::Node> ref) {
-    auto children = getChildNodes();
-    for (const auto &child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
-    for (UInt i = 0; i < children.size(); i++) {
-        if (children.get(i) == ref) {
-            children.insertAll(i + 1, v);
-            return;
+feather::DOMString Node::getTextContentInternal() const {
+    switch (getNodeTypeInternal()) {
+        case NodeType::TEXT_NODE:
+            return *value;
+        case NodeType::ELEMENT_NODE:
+        case NodeType::DOCUMENT_NODE:
+        case NodeType::DOCUMENT_FRAGMENT_NODE:
+        case NodeType::SHADOW_ROOT: {
+            auto children = getChildNodes();
+            DOMString temp;
+            for (UInt i = 0; i < children.size(); i++) temp += children.get(i)->getTextContentInternal();
+            return temp;
         }
+        default:
+            return "";
     }
-    children.insertAll(0, v);
 }
 
-void Node::replaceChild(feather::Vector<std::shared_ptr<feather::dom::Node>> v,
-                        feather::StrongPointer<const feather::dom::Node> replace) {
-    auto children = getChildNodes();
-    for (const auto &child : v) child->setParentNode(std::static_pointer_cast<Node>(shared_from_this()));
-    for (UInt i = 0; i < children.size(); i++) {
-        if (children.get(i) == replace) {
-            children.get(i)->setParentNode(nullptr);
-            children.remove(i);
-            children.insertAll(i, v);
-            return;
+feather::StrongPointer<feather::dom::Node> Node::getPrevSibling() const {
+    auto idx = getIndex();
+    return idx ? getChildNodes().get(idx - 1) : StrongPointer<Node>();
+}
+
+feather::StrongPointer<Element> Node::getParentElement() const {
+    auto parent = getParentNode();
+    return parent->getNodeTypeInternal() == NodeType::ELEMENT_NODE ||
+           parent->getNodeTypeInternal() == NodeType::SHADOW_ROOT
+           ? std::static_pointer_cast<Element>(parent)
+           : StrongPointer<Element>();
+}
+
+feather::StrongPointer<feather::dom::Document> Node::getOwnerDocument() const {
+    if (ownerPtr->isValid()) return ownerPtr->get().lock();
+    auto owner = getParentNode() ? getParentNode()->getOwnerDocument() : StrongPointer<Document>();
+    ownerPtr->set(owner);
+    return owner;
+}
+
+feather::StrongPointer<feather::dom::Node> Node::getNextSibling() const {
+    auto idx = getIndex();
+    return idx < getChildNodes().size() ? getChildNodes().get(idx) : StrongPointer<Node>();
+}
+
+void Node::insertBeforeChildNDTCN(feather::StrongPointer<const feather::dom::Node> ref,
+                                  feather::Vector<std::shared_ptr<feather::dom::Node>> add) {
+    if (ref->getParentNode().get() == this) {
+        UInt idx;
+        if (ref->nodeIndex->isValid()) idx = ref->nodeIndex->get();
+        else {
+            auto children = getChildNodes();
+            idx = ~0u;
+            while (++idx < children.size() && children.get(idx) != ref) children.get(idx)->nodeIndex->set(idx);
         }
+        for (UInt i = 0; i < add.size(); i++) {
+            auto child = add[i];
+            if (child->getParentNode()) child->getParentNode()->removeChild(child);
+            child->setParentNode(getSharedFromThis());
+            child->nodeIndex->set(idx + i);
+        }
+        getChildNodes().insertAll(idx, std::move(add));
     }
-    children.addAll(getChildNodes());
 }
 
-feather::StrongPointer<Element>
-Node::getElementBeforeChild(feather::StrongPointer<const feather::dom::Node> ref) const {
-    StrongPointer <Node> prev = ref->getPrevSibling();
-    while (prev && prev->getNodeTypeInternal() != NodeType::ELEMENT_NODE) prev = prev->getPrevSibling();
-    return prev ? std::static_pointer_cast<Element>(prev) : nullptr;
+void Node::insertAfterChildNDTCN(feather::StrongPointer<const feather::dom::Node> ref,
+                                 feather::Vector<std::shared_ptr<feather::dom::Node>> add) {
+    if (ref->getParentNode().get() == this) {
+        UInt idx;
+        if (ref->nodeIndex->isValid()) idx = ref->nodeIndex->get() + 1;
+        else {
+            auto children = getChildNodes();
+            idx = 0;
+            while (idx < children.size() && children.get(idx++) != ref);
+        }
+        for (UInt i = 0; i < add.size(); i++) {
+            auto child = add[i];
+            if (child->getParentNode()) child->getParentNode()->removeChild(child);
+            child->setParentNode(getSharedFromThis());
+            child->nodeIndex->set(idx + i);
+        }
+        getChildNodes().insertAll(idx, std::move(add));
+    }
 }
 
-feather::StrongPointer<Element> Node::getElementAfterChild(feather::StrongPointer<const feather::dom::Node> ref) const {
-    StrongPointer <Node> next = ref->getNextSibling();
-    while (next && next->getNodeTypeInternal() != NodeType::ELEMENT_NODE) next = next->getNextSibling();
-    return next ? std::static_pointer_cast<Element>(next) : nullptr;
+void Node::replaceChildNDTCN(feather::StrongPointer<const feather::dom::Node> ref,
+                             feather::Vector<std::shared_ptr<feather::dom::Node>> add) {
+    if (ref->getParentNode().get() == this) {
+        UInt idx;
+        if (ref->nodeIndex->isValid()) idx = ref->nodeIndex->get();
+        else {
+            auto children = getChildNodes();
+            idx = 0;
+            while (idx < children.size() && children.get(idx++) != ref);
+        }
+        for (UInt i = 0; i < add.size(); i++) {
+            auto child = add[i];
+            if (child->getParentNode()) child->getParentNode()->removeChild(child);
+            child->setParentNode(getSharedFromThis());
+            child->nodeIndex->set(idx + i);
+        }
+        getChildNodes().insertAll(idx, std::move(add));
+        getChildNodes().remove(idx - 1)->clearParentNode();
+    }
 }
 
-void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
-                  const feather::observable::Invalidatable *ptr) const {
-    if (s.contains(observable::InvEvent::LIST_CHANGE) && ptr == &childNodes) s.add(observable::InvEvent::RELAYOUT);
-    s.add(observable::InvEvent::REPAINT);
-    Invalidatable::modify(s, ptr);
+Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::NodeType type,
+           feather::StrongPointer<feather::DOMString> value,
+           const feather::StrongPointer<feather::dom::Node> &parent) : baseURI(std::move(baseURI)),
+                                                                       name(std::move(name)), type(type),
+                                                                       value(std::move(value)), parent(parent) {
+    parent->bind(ownerPtr);
+    parent->bind(nodeIndex);
+}
+
+void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
+                  const feather::observable::Invalidatable *source) const {
+    //TODO: Actually implement me
+    types.add(observable::InvEvent::INVALIDATED);
 }

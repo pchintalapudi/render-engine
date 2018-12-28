@@ -80,9 +80,7 @@ namespace feather {
 
             inline DOMString getNamespaceURI() const { return ns; }
 
-            inline StrongPointer<Element> getNextElementSibling() const {
-                return getElementAfterChild(std::static_pointer_cast<const Node>(shared_from_this()));
-            }
+            inline StrongPointer<Element> getNextElementSibling() const;
 
             inline DOMString getOuterHtml() const { return outerHTMLValid ? outerHTML : cacheOuterHTML(); }
 
@@ -91,9 +89,7 @@ namespace feather {
 
             inline DOMString getPrefix() const { return prefix; }
 
-            inline StrongPointer<Element> getPreviousElementSibling() const {
-                return getElementBeforeChild(std::static_pointer_cast<const Node>(shared_from_this()));
-            }
+            StrongPointer<Element> getPreviousElementSibling() const;
 
             inline double getScrollHeight() const { return scrollDim[static_cast<int>(Dimensions::HEIGHT)]; }
 
@@ -128,7 +124,6 @@ namespace feather {
             //TODO: Implement me
             StrongPointer<ShadowRoot> attachShadow(bool open);
 
-            //TODO: Implement me
             StrongPointer<Element> getClosest(DOMString selector) const;
 
             //TODO: Implement me
@@ -144,11 +139,9 @@ namespace feather {
             //TODO: Implement me
             StrongPointer<DOMString> getAttributeNS(DOMString ns, DOMString name) const;
 
-            //TODO: Implement me
             DOMRect getBoundingClientRect() const;
 
-            //TODO: Implement me
-            virtual Vector<DOMRect> getClientRects() const;
+            virtual Vector<DOMRect> getClientRects() const = 0;
 
             //TODO: Implement me
             StrongPointer<FilteredByClassName> getElementsByClassName() const;
@@ -246,19 +239,17 @@ namespace feather {
 
             inline void before(Vector<StrongPointer<Node>> insertBefore) {
                 if (getParentNode())
-                    getParentNode()->insertBeforeChild(std::move(insertBefore),
-                                                       std::static_pointer_cast<Node>(shared_from_this()));
+                    getParentNode()->insertBeforeChildNDTCN(getSharedFromThis(), std::move(insertBefore));
             }
 
             inline void after(Vector<StrongPointer<Node>> insertAfter) {
                 if (getParentNode())
-                    getParentNode()->insertAfterChild(std::move(insertAfter),
-                                                      std::static_pointer_cast<Node>(shared_from_this()));
+                    getParentNode()->insertAfterChildNDTCN(getSharedFromThis(), std::move(insertAfter));
             }
 
             inline void replaceWith(Vector<StrongPointer<Node>> repl) {
                 if (getParentNode())
-                    getParentNode()->replaceChild(std::move(repl), std::static_pointer_cast<Node>(shared_from_this()));
+                    getParentNode()->replaceChildNDTCN(getSharedFromThis(), std::move(repl));
             }
 
             //ParentNode impl
@@ -303,6 +294,10 @@ namespace feather {
             DOMString cacheOuterHTML() const;
 
             StrongPointer<Element> thisRef;
+
+            StrongPointer<observable::WatchedObservableItem<WeakPointer<Element>>> prevSibling, nextSibling;
+
+            void updateLinkedList() const;
         };
     }
 }
