@@ -24,7 +24,7 @@ public:
 
     void unbind(WeakPointer<Invalidatable>) const;
 
-    void gc(UByte) override;
+    void gc(unsigned char) override;
 
     virtual ~Invalidatable() = default;
 

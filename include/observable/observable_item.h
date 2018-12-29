@@ -40,7 +40,7 @@ namespace feather {
 
             SourceObservableItem() = default;
 
-            explicit SourceObservableItem(I init) : i(init) {}
+            explicit SourceObservableItem(I init) : i(std::move(init)) {}
 
             inline I get() const { return i; }
 

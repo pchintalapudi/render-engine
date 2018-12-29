@@ -40,18 +40,19 @@ namespace feather {
 
             inline DOMString getBaseURI() const { return baseURI; }
 
-            inline observable::ObservableList<StrongPointer<Node>> &getChildNodes() { return childNodes; }
+            inline StrongPointer<observable::ObservableList<StrongPointer<Node>>> getChildNodes() { return childNodes; }
 
-            inline const observable::ObservableList<StrongPointer<Node>> &getChildNodes() const { return childNodes; }
+            inline StrongPointer<observable::ObservableList<StrongPointer<Node>>>
+            getChildNodes() const { return childNodes; }
 
             inline StrongPointer<Node> getFirstChild() const {
-                return childNodes.empty() ? StrongPointer<Node>() : childNodes.get(0);
+                return childNodes->empty() ? StrongPointer<Node>() : childNodes->get(0);
             }
 
             inline bool isConnected() const { return getOwnerDocument().get() != nullptr; }
 
             inline StrongPointer<Node> getLastChild() const {
-                return childNodes.empty() ? StrongPointer<Node>() : childNodes.get(childNodes.size() - 1);
+                return childNodes->empty() ? StrongPointer<Node>() : childNodes->get(childNodes->size() - 1);
             }
 
             StrongPointer<Node> getNextSibling() const;
@@ -76,7 +77,7 @@ namespace feather {
                 return parent.get().expired() ? StrongPointer<Node>() : parent.get().lock();
             }
 
-            inline void setParentNode(const StrongPointer<Node> &parentNode) { parent.set(parentNode); }
+            void setParentNode(const StrongPointer<Node> &parentNode);
 
             inline void clearParentNode() { setParentNode(StrongPointer<Node>()); }
 
@@ -94,7 +95,7 @@ namespace feather {
 
             virtual StrongPointer<Node> cloneNode(bool deep) const = 0;
 
-            UByte compareDocumentPosition(const StrongPointer<const Node> &other) const;
+            unsigned char compareDocumentPosition(const StrongPointer<const Node> &other) const;
 
             bool contains(const StrongPointer<const Node> &other) const;
 
@@ -102,7 +103,7 @@ namespace feather {
 
             StrongPointer<Node> getRootNode(bool composed) const;
 
-            inline bool hasChildNodes() const { return !childNodes.empty(); }
+            inline bool hasChildNodes() const { return !childNodes->empty(); }
 
             StrongPointer<Node> insertBefore(StrongPointer<Node> add, StrongPointer<const Node> ref);
 
@@ -164,7 +165,7 @@ namespace feather {
 
         private:
             DOMString baseURI;
-            observable::ObservableList<StrongPointer<Node>> childNodes;
+            StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes;
             DOMString name;
             NodeType type;
             StrongPointer<DOMString> value;

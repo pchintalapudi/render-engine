@@ -20,7 +20,7 @@ void Invalidatable::invalidate(RegularEnumSet <InvEvent> s, const Invalidatable 
 void Invalidatable::bind(feather::WeakPointer<feather::observable::Invalidatable> dependent) const {
     if (!dependent.expired()) {
         auto ptr = dependent.lock();
-        ptr->invalidate(RegularEnumSet<InvEvent>(1u << static_cast<UByte>(InvEvent::REFRESH)), this);
+        ptr->invalidate(RegularEnumSet<InvEvent>(1u << static_cast<unsigned char>(InvEvent::REFRESH)), this);
         dependents.insert(dependent);
     }
 }
@@ -38,7 +38,7 @@ void Invalidatable::unbind(feather::WeakPointer<feather::observable::Invalidatab
     }
 }
 
-void Invalidatable::gc(feather::UByte) {
+void Invalidatable::gc(unsigned char) {
     for (auto it = dependents.begin(); it != dependents.end();) {
         if (it->expired()) it = dependents.erase(it);
         else it++;

@@ -15,11 +15,11 @@ namespace feather {
             ObservableList() : extractor(nullptr) {}
 
             explicit ObservableList(StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor)
-                    : extractor(extractor) {}
+                    : extractor(std::move(extractor)) {}
 
             inline E get(UInt index) const { return source[index]; }
 
-            bool contains(E val) const {
+            bool contains(const E &val) const {
                 for (E e : source) if (e == val) return true;
                 return false;
             }
@@ -39,7 +39,7 @@ namespace feather {
                 invalidate();
             }
 
-            void addAll(std::vector<E> vals) {
+            void addAll(const std::vector<E> &vals) {
                 source.reserve(size() + vals.size());
                 for (E e : vals) {
                     bindE(e);
@@ -49,7 +49,7 @@ namespace feather {
             }
 
             template<typename L>
-            void addAll(L vals) {
+            void addAll(const L &vals) {
                 source.reserve(size() + vals.size());
                 for (UInt i = 0; i < vals.size(); i++) {
                     E e = vals.get(i);
@@ -65,7 +65,7 @@ namespace feather {
                 invalidate();
             }
 
-            void insertAll(UInt index, std::vector<E> vec) {
+            void insertAll(UInt index, const std::vector<E> &vec) {
                 std::vector<E> temp;
                 temp.reserve(vec.size() + size());
                 UInt count = 0;
@@ -83,7 +83,7 @@ namespace feather {
             }
 
             template<typename L>
-            void insertAll(UInt index, L list) {
+            void insertAll(UInt index, const L &list) {
                 std::vector<E> temp;
                 temp.reserve(list.size() + size());
                 UInt count = 0;
@@ -110,7 +110,8 @@ namespace feather {
 
             inline void reserve(UInt size) { source.reserve(size); }
 
-            inline void swap(Vector <E> v) {
+            inline void swap(const Vector <E> &v) {
+                if (extractor) for (auto e : source) unbindE(e);
                 source.swap(v);
                 invalidate();
             }
@@ -145,13 +146,11 @@ namespace feather {
             StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor;
 
             inline void bindE(E e) {
-                if (extractor.get())
-                    (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                if (extractor) (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
             }
 
             inline void unbindE(E e) {
-                if (extractor.get())
-                    (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                if (extractor) (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
             }
 
             inline void invalidate() {

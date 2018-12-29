@@ -43,10 +43,10 @@ void Element::insertAdjacentElement(feather::DOMString position, feather::Strong
             this->insertBefore(e, std::static_pointer_cast<Node>(shared_from_this()));
             break;
         case hasher("afterbegin"):
-            getChildNodes().insert(0, e);
+            getChildNodes()->insert(0, e);
             break;
         case hasher("beforeend"):
-            getChildNodes().add(e);
+            getChildNodes()->add(e);
             break;
         case hasher("afterend"):
             this->insertAfter(e, std::static_pointer_cast<Node>(shared_from_this()));
@@ -97,8 +97,8 @@ namespace {
 feather::DOMString Element::cacheInnerHTML() const {
     DOMString html;
     UInt reserve = 0;
-    for (UInt i = 0; i < getChildNodes().size(); i++) {
-        auto child = getChildNodes().get(i);
+    for (UInt i = 0; i < getChildNodes()->size(); i++) {
+        auto child = getChildNodes()->get(i);
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
                 //It's computed here, but the repeated call shouldn't matter since the value is cached.
@@ -116,8 +116,8 @@ feather::DOMString Element::cacheInnerHTML() const {
         }
     }
     html.reserve(reserve);
-    for (UInt i = 0; i < getChildNodes().size(); i++) {
-        auto child = getChildNodes().get(i);
+    for (UInt i = 0; i < getChildNodes()->size(); i++) {
+        auto child = getChildNodes()->get(i);
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
                 //It's been computed before, so this is actually a very cheap call
@@ -157,77 +157,111 @@ feather::DOMString Element::cacheOuterHTML() const {
 }
 
 feather::StrongPointer<Element> Element::getNextElementSibling() const {
-    if (nextSibling->isValid()) return nextSibling->get().lock();
+    auto idx = getElementIndex();
     if (getParentElement()) {
-        updateLinkedList();
-        return nextSibling->get().lock();
+        auto children = getParentElement()->getChildren();
+        return idx < children->size() - 1 ? children->getItem(idx + 1) : StrongPointer<Element>();
     } else if (getParentNode()) {
-        auto idx = getIndex();
         auto children = getParentNode()->getChildNodes();
-        for (idx++; idx < children.size(); idx++) {
-            auto child = children.get(idx);
-            if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) {
-                auto eChild = std::static_pointer_cast<Element>(child);
-                nextSibling->set(eChild);
-                eChild->prevSibling->set(getThisRef());
-                return eChild;
-            }
-        }
-    }
-    nextSibling->set(StrongPointer<Element>());
-    return StrongPointer<Element>();
+        while (++idx < children->size() && children->get(idx)->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
+        return idx < children->size() ? std::static_pointer_cast<Element>(children->get(idx))
+                                      : StrongPointer<Element>();
+    } else return StrongPointer<Element>();
 }
 
 feather::StrongPointer<Element> Element::getPreviousElementSibling() const {
-    if (prevSibling->isValid()) return prevSibling->get().lock();
+    auto idx = getElementIndex();
     if (getParentElement()) {
-        updateLinkedList();
-        return prevSibling->get().lock();
+        auto children = getParentElement()->getChildren();
+        return idx > 0 ? children->getItem(idx - 1) : StrongPointer<Element>();
     } else if (getParentNode()) {
-        auto idx = getIndex();
         auto children = getParentNode()->getChildNodes();
-        while (idx-- > 0) {
-            auto child = children.get(idx);
-            if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) {
-                auto eChild = std::static_pointer_cast<Element>(child);
-                prevSibling->set(eChild);
-                eChild->nextSibling->set(getThisRef());
-                return eChild;
-            }
-        }
-    }
-    prevSibling->set(StrongPointer<Element>());
-    return StrongPointer<Element>();
+        while (idx-- > 0 && children->get(idx)->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
+        return idx ? std::static_pointer_cast<Element>(children->get(idx)) : StrongPointer<Element>();
+    } else return StrongPointer<Element>();
 }
 
-void Element::updateLinkedList() const {
-    auto children = getChildren();
-    switch (children->size()) {
-        default: {
-            for (UInt i = 1; i < children->size() - 1; i++) {
-                auto child = children->getItem(i);
-                child->prevSibling->set(children->getItem(i - 1));
-                child->nextSibling->set(children->getItem(i + 1));
+void Element::updateElementIndeces() const {
+    if (getParentElement()) {
+        auto children = getParentElement()->getChildren();
+        for (UInt i = 0, ri = children->size(); ri--; i++) children->getItem(i)->indeces->set(std::make_pair(i, ri));
+    } else if (getParentNode()) {
+        Vector <StrongPointer<Element>> v;
+        auto children = getParentNode()->getChildNodes();
+        for (UInt i = 0; i < children->size(); i++) {
+            auto child = children->get(i);
+            if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE)
+                v.push_back(std::static_pointer_cast<Element>(child));
+        }
+        for (UInt i = 0, ri = children->size(); ri--; i++) v[i]->indeces->set(std::make_pair(i, ri));
+    } else {
+        indeces->set(std::make_pair(0, 0));
+    }
+}
+
+void Element::updatedTypedIndeces() const {
+    if (getParentElement()) {
+        auto children = getParentElement()->getChildren();
+        Multimap <DOMString, StrongPointer<Element>> m;
+        for (UInt i = 0, ri = children->size(); ri--; i++) {
+            auto child = children->getItem(i);
+            child->indeces->set(std::make_pair(i, ri));
+            m.emplace(child->getTagName(), child);
+        }
+        Vector <StrongPointer<Element>> v;
+        DOMString s;
+        for (const auto &pair : m) {
+            if (s != pair.first) {
+                for (UInt i = 0, ri = v.size(); ri--; i++) v[i]->typedIndeces->set(std::make_pair(i, ri));
+                v.clear();
+                s = pair.first;
+            }
+            v.push_back(pair.second);
+        }
+    } else if (getParentNode()) {
+        auto children = getParentNode()->getChildNodes();
+        Multimap < DOMString, Pair < UInt, StrongPointer < Element >> > m;
+        auto size = 0;
+        for (UInt i = 0; i < children->size(); i++) {
+            auto child = children->get(i);
+            if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) {
+                auto eChild = std::static_pointer_cast<Element>(child);
+                m.emplace(eChild->getTagName(), std::make_pair(size++, eChild));
             }
         }
-            [[fallthrough]];
-        case 2: {
-            children->getItem(0)->nextSibling->set(children->getItem(1));
-            children->getItem(children->size() - 1)->prevSibling->set(children->getItem(children->size() - 2));
+        Vector < Pair < UInt, StrongPointer < Element >> > v;
+        DOMString s;
+        for (const auto &pair : m) {
+            if (s != pair.first) {
+                for (UInt i = 0, ri = v.size(); ri--; i++) {
+                    Pair <UInt, StrongPointer<Element>> p = v[i];
+                    p.second->typedIndeces->set(std::make_pair(i, ri));
+                    p.second->indeces->set(std::make_pair(p.first, size - p.first));
+                }
+            }
         }
-            [[fallthrough]];
-        case 1: {
-            children->getItem(0)->prevSibling->set(StrongPointer<Element>());
-            children->getItem(children->size() - 1)->nextSibling->set(StrongPointer<Element>());
-            break;
-        }
-        case 0:
-            break;
-    }
-    if (children->size() > 2) {
-    } else if (children->size() > 1) {
-
     } else {
-
+        indeces->set(std::make_pair(0, 0));
+        typedIndeces->set(std::make_pair(0, 0));
     }
+}
+
+feather::UInt Element::getElementIndex() const {
+    if (!indeces->isValid()) updateElementIndeces();
+    return indeces->get().first;
+}
+
+feather::UInt Element::getLastElementIndex() const {
+    if (!indeces->isValid()) updateElementIndeces();
+    return indeces->get().second;
+}
+
+feather::UInt Element::getTypedElementIndex() const {
+    if (!typedIndeces->isValid()) updatedTypedIndeces();
+    return typedIndeces->get().first;
+}
+
+feather::UInt Element::getLastTypedElementIndex() const {
+    if (!typedIndeces->isValid()) updatedTypedIndeces();
+    return typedIndeces->get().second;
 }

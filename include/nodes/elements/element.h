@@ -268,6 +268,14 @@ namespace feather {
 
             inline StrongPointer<Element> getThisRef() const { return thisRef; }
 
+            UInt getElementIndex() const;
+
+            UInt getLastElementIndex() const;
+
+            UInt getTypedElementIndex() const;
+
+            UInt getLastTypedElementIndex() const;
+
         protected:
 
             //TODO: Implement me
@@ -295,9 +303,11 @@ namespace feather {
 
             StrongPointer<Element> thisRef;
 
-            StrongPointer<observable::WatchedObservableItem<WeakPointer<Element>>> prevSibling, nextSibling;
+            StrongPointer<observable::WatchedObservableItem<Pair<UInt, UInt>>> indeces, typedIndeces;
 
-            void updateLinkedList() const;
+            void updateElementIndeces() const;
+
+            void updatedTypedIndeces() const;
         };
     }
 }

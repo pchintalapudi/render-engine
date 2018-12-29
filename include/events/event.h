@@ -108,7 +108,7 @@ namespace feather {
             const TimePoint timestamp = currentTime();
             DOMString name;
             EventPhase phase = EventPhase::CAPTURING;
-            EnumSet<EventProperties, UByte> properties;
+            EnumSet<EventProperties, unsigned char> properties;
             EventType type;
         };
     }
