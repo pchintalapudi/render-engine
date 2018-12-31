@@ -13,7 +13,7 @@ namespace feather {
 
         class DocumentOrShadowRoot {
         public:
-            css::PseudoclassManager getPseudoclassManager() { return pseudoclassManager; }
+            css::PseudoclassManager &getPseudoclassManager() { return pseudoclassManager; }
 
         private:
             css::PseudoclassManager pseudoclassManager;

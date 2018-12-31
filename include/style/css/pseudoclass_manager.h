@@ -20,45 +20,47 @@ namespace feather {
         class PseudoclassManager : observable::Invalidatable {
         public:
             inline void setActive(Vector<feather::StrongPointer<const dom::Element>> active) {
-                moused = active;
+                moused = std::move(active);
                 this->active = true;
                 invalidate();
             }
 
-            inline bool isActive(const StrongPointer<const dom::Element> &e) {
+            inline bool isActive(const StrongPointer<const dom::Element> &e) const {
                 //Have reason to believe most people look for the active element
                 //closest to the end, rather than the beginning
-                return moused.size() && active && std::find(moused.rbegin(), moused.rend(), e) != moused.rend();
+                return !moused.empty() && active && std::find(moused.rbegin(), moused.rend(), e) != moused.rend();
             }
 
             inline void clearActive() { moused.clear(); }
 
             inline void setHover(Vector<feather::StrongPointer<const dom::Element>> hover) {
-                moused = hover;
+                moused = std::move(hover);
                 active = false;
                 invalidate();
             }
 
-            inline bool isHover(const StrongPointer<const dom::Element> &e) {
+            inline bool isHover(const StrongPointer<const dom::Element> &e) const {
                 //See reasoning for isActive above
-                return moused.size() && !active && std::find(moused.rbegin(), moused.rend(), e) != moused.rend();
+                return !moused.empty() && !active && std::find(moused.rbegin(), moused.rend(), e) != moused.rend();
             }
 
             inline void clearHover() { moused.clear(); }
 
             inline void setFocused(Vector<feather::StrongPointer<const dom::Element>> focused) {
-                this->focused = focused;
+                this->focused = std::move(focused);
                 invalidate();
             }
 
-            inline bool isFocused(const StrongPointer<const dom::Element> &e) {
-                return focused.size() && focused.back() == e;
+            inline bool isFocused(const StrongPointer<const dom::Element> &e) const {
+                return !focused.empty() && focused.front() == e;
             }
 
-            inline bool isFocusVisible(const StrongPointer<const dom::Element> &e) { return isFocused(e) && false; }
+            inline bool isFocusVisible(const StrongPointer<const dom::Element> &e) const {
+                return isFocused(e) && false;
+            }
 
-            inline bool containsFocus(const StrongPointer<const dom::Element> &e) {
-                return focused.size() && std::find(focused.rbegin(), focused.rend(), e) != focused.rend();
+            inline bool containsFocus(const StrongPointer<const dom::Element> &e) const {
+                return !focused.empty() && std::find(focused.begin(), focused.end(), e) != focused.end();
             }
 
             inline void clearFocused() { focused.clear(); }

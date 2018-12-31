@@ -40,7 +40,7 @@ namespace {
 void Element::insertAdjacentElement(feather::DOMString position, feather::StrongPointer<feather::dom::Element> e) {
     switch (hasher(position.c_str())) {
         case hasher("beforebegin"):
-            this->insertBefore(e, std::static_pointer_cast<Node>(shared_from_this()));
+            this->insertBefore(e, getSharedFromThis());
             break;
         case hasher("afterbegin"):
             getChildNodes()->insert(0, e);
@@ -49,7 +49,7 @@ void Element::insertAdjacentElement(feather::DOMString position, feather::Strong
             getChildNodes()->add(e);
             break;
         case hasher("afterend"):
-            this->insertAfter(e, std::static_pointer_cast<Node>(shared_from_this()));
+            this->insertAfter(e, getSharedFromThis());
             break;
         default:
             break;

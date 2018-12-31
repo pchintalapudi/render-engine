@@ -15,13 +15,25 @@ namespace feather {
 
         explicit EnumSet(size_type field) : field(field) {}
 
-        inline void add(E e) { field |= static_cast<size_type>(1) << static_cast<size_type>(e); }
+        inline EnumSet<E, size_type> &add(E e) {
+            field |= static_cast<size_type>(1) << static_cast<size_type>(e);
+            return *this;
+        }
 
-        inline void remove(E e) { field &= ~(static_cast<size_type>(1) << static_cast<size_type>(e)); }
+        inline EnumSet<E, size_type> &remove(E e) {
+            field &= ~(static_cast<size_type>(1) << static_cast<size_type>(e));
+            return *this;
+        }
 
-        inline void addAll(const EnumSet<E, size_type> other) { field |= other.field; }
+        inline EnumSet<E, size_type> &addAll(const EnumSet<E, size_type> other) {
+            field |= other.field;
+            return *this;
+        }
 
-        inline void removeAll(const EnumSet<E, size_type> other) { field &= ~other.field; }
+        inline EnumSet<E, size_type> removeAll(const EnumSet<E, size_type> other) {
+            field &= ~other.field;
+            return *this;
+        }
 
         inline bool contains(E e) const { return (field & 1 << static_cast<size_type>(e)) != 0; }
 
@@ -35,11 +47,14 @@ namespace feather {
 
         bool operator==(const EnumSet<E, size_type> &other) const { return field == other.field; }
 
-        inline void invert() { field = ~field; }
+        inline EnumSet<E, size_type> invert() {
+            field = ~field;
+            return *this;
+        }
 
         inline EnumSet<E, size_type> clone() const { return EnumSet<E, size_type>(field); }
 
-        inline size_type toSizeType() { return field; }
+        inline size_type toSizeType() const { return field; }
 
     private:
         size_type field;
