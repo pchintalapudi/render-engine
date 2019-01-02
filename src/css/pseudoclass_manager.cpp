@@ -18,22 +18,22 @@ bool PseudoclassManager::isAnyLink(const feather::StrongPointer<const feather::d
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isBlank(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isBlank(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isChecked(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isChecked(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isDefault(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isDefault(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isDefined(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isDefined(const feather::StrongPointer<const feather::dom::Element> &) {
     return true;
 }
 
@@ -44,17 +44,17 @@ bool PseudoclassManager::isDir(const feather::StrongPointer<const feather::dom::
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isDisabled(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isDisabled(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isEmpty(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isEmpty(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isEnabled(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isEnabled(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
@@ -68,7 +68,7 @@ bool PseudoclassManager::isFirstOfType(const feather::StrongPointer<const feathe
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isFullscreen(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isFullscreen(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
@@ -77,17 +77,17 @@ bool PseudoclassManager::isHost(const feather::StrongPointer<const feather::dom:
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isIndeterminate(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isIndeterminate(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isInRange(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isInRange(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isInvalid(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isInvalid(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
@@ -165,32 +165,32 @@ bool PseudoclassManager::isOnlyOfType(const feather::StrongPointer<const feather
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isOptional(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isOptional(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isOutOfRange(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isOutOfRange(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isPlaceholderShown(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isPlaceholderShown(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isReadOnly(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isReadOnly(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isReadWrite(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isReadWrite(const feather::StrongPointer<const feather::dom::Element> &) {
     return true;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isRequired(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isRequired(const feather::StrongPointer<const feather::dom::Element> &) {
     return true;
 }
 
@@ -201,16 +201,16 @@ bool PseudoclassManager::isRoot(const feather::StrongPointer<const feather::dom:
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isTarget(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isTarget(const feather::StrongPointer<const feather::dom::Element> &) {
     return false;
 }
 
 //TODO: Implement me
-bool PseudoclassManager::isValid(const feather::StrongPointer<const feather::dom::Element> &e) {
+bool PseudoclassManager::isValid(const feather::StrongPointer<const feather::dom::Element> &) {
     return true;
 }
 
 //TODO: Track visited links
 bool PseudoclassManager::isVisited(const feather::StrongPointer<const feather::dom::Element> &e) {
-    return isAnyLink(std::move(e)) && false;
+    return isAnyLink(e) && false;
 }

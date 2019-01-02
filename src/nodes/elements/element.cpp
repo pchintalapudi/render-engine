@@ -5,6 +5,71 @@
 #include "nodes/elements/element.h"
 
 using namespace feather::dom;
+namespace {
+
+    class TagNameFilter {
+    public:
+
+        explicit TagNameFilter(feather::DOMString tagName) : tagName(std::move(tagName)) {}
+
+        inline void operator()(const feather::StrongPointer<const Element> &p,
+                               feather::Vector<feather::StrongPointer<Element>> &addTo) {
+            if (p->getTagName() == tagName) addTo.push_back(p->getThisRef());
+            auto children = p->getChildren();
+            for (feather::UInt i = 0; i < children->size(); (*this)(children->get(i++), addTo));
+        }
+
+    private:
+        feather::DOMString tagName;
+    };
+}
+
+class feather::dom::FilteredByTagName
+        : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
+public:
+    FilteredByTagName(StrongPointer<const Element> element, TagNameFilter filter)
+            : RiskyFilteredList(std::move(element), std::move(filter)) {}
+
+protected:
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+};
+
+class feather::dom::FilteredByTagNameNS
+        : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
+public:
+    FilteredByTagNameNS(StrongPointer<const Element> element, TagNameFilter filter)
+            : RiskyFilteredList(std::move(element), std::move(filter)) {}
+
+protected:
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+};
+
+namespace {
+    class ClassNameFilter {
+    public:
+        explicit ClassNameFilter(feather::DOMString className) : className(std::move(className)) {}
+
+        inline void operator()(const feather::StrongPointer<const Element> &p,
+                               feather::Vector<feather::StrongPointer<Element>> &addTo) {
+            if (p->getClassList()->contains(className)) addTo.push_back(p->getThisRef());
+            auto children = p->getChildren();
+            for (feather::UInt i = 0; i < children->size(); (*this)(children->get(i++), addTo));
+        }
+
+    private:
+        feather::DOMString className;
+    };
+}
+
+class feather::dom::FilteredByClassName
+        : observable::RiskyFilteredList<StrongPointer<Element>, Element, ClassNameFilter> {
+public:
+    FilteredByClassName(StrongPointer<const Element> element, ClassNameFilter filter)
+            : RiskyFilteredList(std::move(element), std::move(filter)) {}
+
+protected:
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+};
 
 feather::StrongPointer<feather::DOMString> Element::getAttribute(feather::DOMString name) const {
     auto attr = attributes->getNamedItem(std::move(name));
@@ -160,7 +225,7 @@ feather::StrongPointer<Element> Element::getNextElementSibling() const {
     auto idx = getElementIndex();
     if (getParentElement()) {
         auto children = getParentElement()->getChildren();
-        return idx < children->size() - 1 ? children->getItem(idx + 1) : StrongPointer<Element>();
+        return idx < children->size() - 1 ? children->get(idx + 1) : StrongPointer<Element>();
     } else if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         while (++idx < children->size() && children->get(idx)->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
@@ -173,7 +238,7 @@ feather::StrongPointer<Element> Element::getPreviousElementSibling() const {
     auto idx = getElementIndex();
     if (getParentElement()) {
         auto children = getParentElement()->getChildren();
-        return idx > 0 ? children->getItem(idx - 1) : StrongPointer<Element>();
+        return idx > 0 ? children->get(idx - 1) : StrongPointer<Element>();
     } else if (getParentNode()) {
         auto children = getParentNode()->getChildNodes();
         while (idx-- > 0 && children->get(idx)->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
@@ -184,7 +249,7 @@ feather::StrongPointer<Element> Element::getPreviousElementSibling() const {
 void Element::updateElementIndeces() const {
     if (getParentElement()) {
         auto children = getParentElement()->getChildren();
-        for (UInt i = 0, ri = children->size(); ri--; i++) children->getItem(i)->indeces->set(std::make_pair(i, ri));
+        for (UInt i = 0, ri = children->size(); ri--; i++) children->get(i)->indeces->set(std::make_pair(i, ri));
     } else if (getParentNode()) {
         Vector <StrongPointer<Element>> v;
         auto children = getParentNode()->getChildNodes();
@@ -204,7 +269,7 @@ void Element::updatedTypedIndeces() const {
         auto children = getParentElement()->getChildren();
         Multimap <DOMString, StrongPointer<Element>> m;
         for (UInt i = 0, ri = children->size(); ri--; i++) {
-            auto child = children->getItem(i);
+            auto child = children->get(i);
             child->indeces->set(std::make_pair(i, ri));
             m.emplace(child->getTagName(), child);
         }
@@ -264,4 +329,53 @@ feather::UInt Element::getTypedElementIndex() const {
 feather::UInt Element::getLastTypedElementIndex() const {
     if (!typedIndeces->isValid()) updatedTypedIndeces();
     return typedIndeces->get().second;
+}
+
+feather::StrongPointer<feather::DOMString>
+Element::getAttributeNS(feather::DOMString ns, feather::DOMString name) const {
+    return getAttribute(ns + std::move(name));
+}
+
+feather::StrongPointer<FilteredByClassName> Element::getElementsByClassName(DOMString className) const {
+    return std::make_shared<FilteredByClassName>(std::static_pointer_cast<const Element>(shared_from_this()),
+                                                 ClassNameFilter(std::move(className)));
+}
+
+feather::StrongPointer<FilteredByTagName> Element::getElementsByTagName(feather::DOMString tagName) const {
+    return std::make_shared<FilteredByTagName>(std::static_pointer_cast<const Element>(shared_from_this()),
+                                               TagNameFilter(std::move(tagName)));
+}
+
+feather::StrongPointer<FilteredByTagNameNS> Element::getElementsByTagNameNS(feather::DOMString ns,
+                                                                            feather::DOMString tagName) const {
+    return std::make_shared<FilteredByTagNameNS>(std::static_pointer_cast<const Element>(shared_from_this()),
+                                                 TagNameFilter(ns + std::move(tagName)));
+}
+
+bool Element::toggleAttribute(feather::DOMString attr) {
+    if (getAttributes()->contains(attr)) {
+        removeAttribute(std::move(attr));
+        return false;
+    } else {
+        setAttribute(std::move(attr), "");
+        return true;
+    }
+}
+
+bool Element::toggleAttribute(feather::DOMString attr, bool force) {
+    if (force) { if (getAttributes()->contains(attr)) { removeAttribute(std::move(attr)); }}
+    else if (!getAttributes()->contains(attr)) { setAttribute(std::move(attr), ""); }
+    return force;
+}
+
+void Element::setAttribute(feather::DOMString name, feather::DOMString value) {
+    switch (hasher(name.c_str())) {
+        case hasher("class"): {
+            getAttributes()->setNamedItem(std::make_shared<ClassAttr>(getThisRef(), classList, std::move(value)));
+            break;
+        }
+        default: {
+            auto attr = std::make_shared<StandardAttr>(name, getThisRef());
+        }
+    }
 }

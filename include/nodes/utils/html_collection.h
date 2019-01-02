@@ -13,27 +13,14 @@ namespace feather {
     namespace dom {
         class Element;
 
-        class HTMLCollection : public observable::Invalidatable {
-        public:
-            explicit HTMLCollection(StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes)
-                    : childNodes(childNodes) {
-                childNodes->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
-            }
+        Pair<bool, StrongPointer<Element>> nodeToElement(const StrongPointer<Node> &p);
 
-            inline UInt size() const { return getVector().size(); }
-
-            inline StrongPointer<Element> getItem(UInt idx) const { return getVector()[idx].lock(); }
-
+        class HTMLCollection
+                : public observable::SketchyObservableListWrapper<StrongPointer<Node>, observable::ObservableList,
+                        StrongPointer<Element>, nodeToElement> {
             StrongPointer<Element> getNamedItem(DOMString name) const;
-
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
-
-        private:
-            mutable std::vector<WeakPointer<Element>> cached = Vector<WeakPointer<Element>>();
-            StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes;
-
-            std::vector<WeakPointer<Element>> &getVector() const;
         };
     }
 }
