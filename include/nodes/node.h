@@ -28,6 +28,16 @@ namespace feather {
             NOTATION_NODE
         };
 
+        class Node;
+
+        class NodeList : public observable::ObservableList<StrongPointer<Node>, NodeList> {
+        public:
+            void invalidate() const {}
+
+        protected:
+            void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *p) const override;
+        };
+
         class Document;
 
         class Element;
@@ -40,10 +50,11 @@ namespace feather {
 
             inline DOMString getBaseURI() const { return baseURI; }
 
-            inline StrongPointer<observable::ObservableList<StrongPointer<Node>>> getChildNodes() { return childNodes; }
+            inline StrongPointer<NodeList> getChildNodes() { return childNodes; }
 
-            inline StrongPointer<observable::ObservableList<StrongPointer<Node>>>
-            getChildNodes() const { return childNodes; }
+            inline StrongPointer<NodeList> getChildNodes() const {
+                return childNodes;
+            }
 
             inline StrongPointer<Node> getFirstChild() const {
                 return childNodes->empty() ? StrongPointer<Node>() : childNodes->get(0);
@@ -165,7 +176,7 @@ namespace feather {
 
         private:
             DOMString baseURI;
-            StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes;
+            StrongPointer<NodeList> childNodes;
             DOMString name;
             NodeType type;
             StrongPointer<DOMString> value;

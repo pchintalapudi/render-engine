@@ -11,14 +11,16 @@
 
 namespace feather {
     namespace dom {
+
         class Element;
 
         Pair<bool, StrongPointer<Element>> nodeToElement(const StrongPointer<Node> &p);
 
         class HTMLCollection
-                : public observable::SketchyObservableListWrapper<StrongPointer<Node>, observable::ObservableList,
+                : public observable::SketchyObservableListWrapper<StrongPointer<Node>, NodeList,
                         StrongPointer<Element>, nodeToElement> {
             StrongPointer<Element> getNamedItem(DOMString name) const;
+
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
         };

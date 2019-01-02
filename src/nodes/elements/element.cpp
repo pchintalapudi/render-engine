@@ -31,7 +31,7 @@ public:
             : RiskyFilteredList(std::move(element), std::move(filter)) {}
 
 protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
 };
 
 class feather::dom::FilteredByTagNameNS
@@ -41,7 +41,7 @@ public:
             : RiskyFilteredList(std::move(element), std::move(filter)) {}
 
 protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
 };
 
 namespace {
@@ -68,7 +68,9 @@ public:
             : RiskyFilteredList(std::move(element), std::move(filter)) {}
 
 protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {
+
+    }
 };
 
 feather::StrongPointer<feather::DOMString> Element::getAttribute(feather::DOMString name) const {

@@ -338,7 +338,6 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
 }
 
 void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
-                  const feather::observable::Invalidatable *source) const {
-    //TODO: Actually implement me
-    types.add(observable::InvEvent::INVALIDATED);
+                  const feather::observable::Invalidatable *) const {
+
 }

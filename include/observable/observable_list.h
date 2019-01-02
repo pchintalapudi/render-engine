@@ -9,7 +9,7 @@
 
 namespace feather {
     namespace observable {
-        template<typename E>
+        template<typename E, typename Derived>
         class ObservableList : public Invalidatable {
         public:
             ObservableList() : extractor(StrongPointer < Function < StrongPointer<Invalidatable>(E) >> ()) {}
@@ -125,8 +125,8 @@ namespace feather {
             }
 
             inline void removeAll(UInt start, UInt end) {
-                WeakPointer<ObservableList<E>> weakThis = std::static_pointer_cast<ObservableList<E>>(
-                        shared_from_this());
+                WeakPointer<ObservableList<E, Derived>> weakThis
+                        = std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this());
                 std::for_each(source.begin() + start, source.begin() + end,
                               [weakThis](E e) { if (!weakThis.expired()) weakThis.lock()->unbindE(e); });
                 source.erase(source.begin() + start, source.begin() + end);
@@ -137,7 +137,7 @@ namespace feather {
 
         protected:
             void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
-                s.remove(InvEvent::INVALIDATED);
+                s -= InvEvent::INVALIDATE_THIS;
             }
 
         private:
@@ -146,23 +146,25 @@ namespace feather {
             StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor;
 
             inline void bindE(E e) {
-                if (extractor) (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                if (extractor)
+                    (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this()));
             }
 
             inline void unbindE(E e) {
-                if (extractor) (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                if (extractor)
+                    (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this()));
             }
 
-            inline void invalidate() {
-                Invalidatable::invalidate(RegularEnumSet<InvEvent>().add(InvEvent::LIST_CHANGE), this);
+            void invalidate() const {
+                static_cast<const Derived *>(this)->invalidate();
             }
         };
 
-        template<typename ListElementType, template<typename> class ListType, typename MapType,
+        template<typename ListElementType, class ListType, typename MapType,
                 Pair<bool, MapType>(*Adjuster)(const ListElementType &)>
         class SketchyObservableListWrapper : Invalidatable {
         public:
-            explicit SketchyObservableListWrapper(StrongPointer<const ListType<ListElementType>> watched)
+            explicit SketchyObservableListWrapper(StrongPointer<const ListType> watched)
                     : watched(std::move(watched)) {
                 auto ptr = watched.lock();
                 if (ptr) ptr->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
@@ -179,7 +181,7 @@ namespace feather {
             inline bool empty() const { return getVector().empty(); }
 
         private:
-            WeakPointer<const ListType<ListElementType>> watched;
+            WeakPointer<const ListType> watched;
 
             mutable Vector <MapType> cached;
 

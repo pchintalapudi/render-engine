@@ -150,10 +150,7 @@ namespace feather {
 
             inline void invalidate() const {
                 observable::Invalidatable::invalidate(
-                        RegularEnumSet<observable::InvEvent>(
-                                1u << static_cast<int>(observable::InvEvent::PSEUDOCLASS_CHANGE)
-                                | 1u << static_cast<int>(observable::InvEvent::RESTYLE)
-                        ), this
+                        RegularEnumSet<observable::InvEvent>() += observable::InvEvent::PSEUDOCLASS_CHANGE, this
                 );
             }
         };

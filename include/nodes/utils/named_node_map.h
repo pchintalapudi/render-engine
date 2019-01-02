@@ -14,33 +14,33 @@ namespace feather {
         public:
             StrongPointer<Attr> getItem(UInt idx) const;
 
-            inline StrongPointer<Attr> getNamedItem(DOMString name) const { return backing.at(name); }
+            inline StrongPointer<Attr> getNamedItem(const DOMString &name) const { return backing.at(name); }
 
-            inline StrongPointer<Attr> getNamedItemNS(DOMString ns, DOMString local) const {
+            inline StrongPointer<Attr> getNamedItemNS(const DOMString &ns, const DOMString &local) const {
                 return backing.at(ns + ":" + local);
             }
 
             void setNamedItem(StrongPointer<Attr> attr);
 
-            inline void setNamedItemNS(StrongPointer<Attr> attr) { setNamedItem(attr); }
+            inline void setNamedItemNS(StrongPointer<Attr> attr) { setNamedItem(std::move(attr)); }
 
             StrongPointer<Attr> removeNamedItem(DOMString name);
 
-            inline StrongPointer<Attr> removeNamedItemNS(DOMString ns, DOMString local) {
+            inline StrongPointer<Attr> removeNamedItemNS(const DOMString &ns, const DOMString &local) {
                 return removeNamedItem(ns + ":" + local);
             }
 
             inline UInt getLength() const { return backing.size(); }
 
-            inline bool contains(DOMString key) const { return backing.find(key) != backing.end(); }
+            inline bool contains(const DOMString &key) const { return backing.find(key) != backing.end(); }
 
             Vector<DOMString> getKeys() const;
 
             DOMString toHTML() const;
 
         protected:
-            void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) {
-                s.remove(observable::InvEvent::INVALIDATED);
+            void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
+                s -= observable::InvEvent::INVALIDATE_THIS;
             }
 
         private:
@@ -49,7 +49,7 @@ namespace feather {
 
             void invalidate() {
                 observable::Invalidatable::invalidate(
-                        RegularEnumSet<observable::InvEvent>(1u << static_cast<int>(observable::InvEvent::MAP_CHANGE)),
+                        RegularEnumSet<observable::InvEvent>() += observable::InvEvent::ATTRIBUTE_SIZE_CHANGE,
                         this);
             }
         };

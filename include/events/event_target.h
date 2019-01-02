@@ -25,6 +25,10 @@ namespace feather {
 
             bool dispatchEvent(Event &);
 
+            inline bool isHiddenTarget() const { return hidden; }
+
+            void hide() { hidden = true; }
+
             ~EventTarget() override;
 
         protected:
@@ -33,6 +37,7 @@ namespace feather {
             }
 
         private:
+            bool hidden = false;
             mutable Multimap<EventType, StrongPointer<Function<void(Event &)>>> *handlers = nullptr;
             mutable Map<EventType, StrongPointer<Function<void(Event &)>>> *endHandlers = nullptr;
             mutable Multimap<DOMString, StrongPointer<Function<void(Event &)>>> *customMap = nullptr;
