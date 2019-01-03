@@ -162,12 +162,11 @@ namespace feather {
 
         template<typename ListElementType, class ListType, typename MapType,
                 Pair<bool, MapType>(*Adjuster)(const ListElementType &)>
-        class SketchyObservableListWrapper : Invalidatable {
+        class SketchyObservableListWrapper : public Invalidatable {
         public:
             explicit SketchyObservableListWrapper(StrongPointer<const ListType> watched)
                     : watched(std::move(watched)) {
-                auto ptr = watched.lock();
-                if (ptr) ptr->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+                if (watched) watched->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
             }
 
             inline MapType get(UInt idx) const { return getVector()[idx]; }
@@ -203,7 +202,7 @@ namespace feather {
         };
 
         template<typename ListType, typename MapType, typename AdjusterType>
-        class LessSketchyObservableListWrapper : Invalidatable {
+        class LessSketchyObservableListWrapper : public Invalidatable {
         public:
             explicit LessSketchyObservableListWrapper(StrongPointer<const ListType> watched, AdjusterType adjuster)
                     : watched(std::move(watched)), adjuster(std::move(adjuster)) {}

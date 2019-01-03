@@ -71,8 +71,6 @@ namespace feather {
 
         inline EnumSet<E, size_type> operator~() const { return invert(); }
 
-        inline EnumSet<E, size_type> clone() const { return EnumSet<E, size_type>(field); }
-
         inline size_type toBitfield() const { return field; }
 
         inline bool operator!() const { return !field; }

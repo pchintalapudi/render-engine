@@ -6,6 +6,7 @@
 #define CURL_HREF_ELEMENTS_H
 
 #include "html_element.h"
+#include "style/style_sheet.h"
 
 namespace feather {
     namespace dom {
@@ -160,12 +161,86 @@ namespace feather {
                 inline void setTarget(DOMString target) { setAttribute("target", std::move(target)); }
             };
 
-            class HTMLLinkElement : public HTMLElement {
-                //TODO: write class
+            class LinkStyle {
+            public:
+                inline StrongPointer<css::StyleSheet> getSheet() { return stylesheet; }
+
+                inline void setSheet(StrongPointer<css::StyleSheet> sheet) { stylesheet = std::move(sheet); }
+
+            private:
+                StrongPointer<css::StyleSheet> stylesheet;
+            };
+
+            class HTMLLinkElement : public HTMLElement, public LinkStyle {
+            public:
+                inline DOMString getAs() const { return getAttributeSafe("as"); }
+
+                inline void setAs(DOMString as) { setAttribute("as", std::move(as)); }
+
+                inline DOMString getCrossOrigin() const { return getAttributeSafe("crossorigin"); }
+
+                inline void setCrossOrigin(DOMString crossorigin) {
+                    setAttribute("crossorigin", std::move(crossorigin));
+                }
+
+                inline bool isDisabled() const { return hasAttribute("disabled"); }
+
+                inline void setDisabled(bool disabled) { toggleAttribute("disabled", disabled); }
+
+                inline DOMString getHref() const { return getAttributeSafe("href"); }
+
+                inline void setHref(DOMString href) { setAttribute("href", std::move(href)); }
+
+                inline DOMString getHreflang() const { return getAttributeSafe("hreflang"); }
+
+                inline void setHreflang(DOMString hreflang) { setAttribute("hreflang", std::move(hreflang)); }
+
+                inline DOMString getMedia() const { return getAttributeSafe("media"); }
+
+                inline void setMedia(DOMString media) { setAttribute("media", std::move(media)); }
+
+                inline DOMString getReferrerPolicy() const { return getAttributeSafe("referrer"); }
+
+                inline void setReferrerPolicy(DOMString referrer) { setAttribute("referrer", std::move(referrer)); }
+
+                inline DOMString getRel() const { return getAttributeSafe("rel"); }
+
+                inline void setRel(DOMString rel) { setAttribute("rel", std::move(rel)); }
+
+                inline Vector<DOMString> getRelList() const;
+
+                inline Vector<DOMString> getSizes() const;
+
+                inline DOMString getType() const { return getAttributeSafe("type"); }
+
+                inline void setType(DOMString type) { setAttribute("type", std::move(type)); }
             };
 
             class HTMLSourceElement : public HTMLElement {
-                //TODO: write class
+            public:
+                inline DOMString getKeySystem() const { return getAttributeSafe("keysystem"); }
+
+                inline void setKeySystem(DOMString keySystem) { setAttribute("keysystem", std::move(keySystem)); }
+
+                inline DOMString getMedia() const { return getAttributeSafe("media"); }
+
+                inline void setMedia(DOMString media) { setAttribute("media", std::move(media)); }
+
+                inline DOMString getSizes() const { return getAttributeSafe("sizes"); }
+
+                inline void setSizes(DOMString sizes) { setAttribute("sizes", std::move(sizes)); }
+
+                inline DOMString getSrc() const { return getAttributeSafe("src"); }
+
+                inline void setSrc(DOMString src) { setAttribute("src", std::move(src)); }
+
+                inline DOMString getSrcset() const { return getAttributeSafe("srcset"); }
+
+                inline void setSrcset(DOMString srcset) { setAttribute("srcset", std::move(srcset)); }
+
+                inline DOMString getType() const { return getAttributeSafe("type"); }
+
+                inline void setType(DOMString type) { setAttribute("type", std::move(type)); }
             };
         }
     }

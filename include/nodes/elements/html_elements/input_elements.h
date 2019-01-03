@@ -14,10 +14,7 @@ namespace feather {
             public:
                 inline bool isAutofocus() const { return hasAttribute("autofocus"); }
 
-                inline void setAutofocus(bool autofocus) {
-                    if (autofocus) setAttribute("autofocus", "");
-                    else removeAttribute("autofocus");
-                }
+                inline void setAutofocus(bool autofocus) { toggleAttribute("autofocus", autofocus); }
                 //TODO: Implement the rest
             };
 
@@ -85,21 +82,15 @@ namespace feather {
                 UShort bitField : static_cast<UInt>(InvalidStates::__COUNT__);
             };
 
-            class HTMLFormControlsCollection : public HTMLCollection {
-                //TODO: Implement me
-            };
+            class HTMLFormElement;
 
             class HTMLFieldSetElement : public HTMLElement {
             public:
                 inline bool isDisabled() const { return hasAttribute("disabled"); }
 
-                inline void setDisabled(bool disabled) {
-                    if (disabled) setAttribute("disabled", ""); else removeAttribute("disabled");
-                }
+                inline void setDisabled(bool disabled) { toggleAttribute("disabled", disabled); }
 
-                inline StrongPointer<HTMLCollection> getElements() const { return getChildren(); }
-
-                //TODO: Implement forms
+                inline StrongPointer<HTMLFormControlsCollection> getElements() const { return elements; }
 
                 inline DOMString getName() const { return getAttributeSafe("name"); }
 
@@ -129,6 +120,7 @@ namespace feather {
 
             private:
                 StrongPointer<ValidityState> validityState;
+                StrongPointer<HTMLFormControlsCollection> elements;
                 DOMString validityMessage;
             };
 
@@ -174,12 +166,9 @@ namespace feather {
                     setAttribute("autocomplete", std::move(autocomplete));
                 }
 
-                inline bool getNoValidate() const { return hasAttribute("novalidate") }
+                inline bool getNoValidate() const { return hasAttribute("novalidate"); }
 
-                inline void setNoValidate(bool noValidate) {
-                    if (noValidate) setAttribute("novalidate", "");
-                    else removeAttribute("novalidate");
-                }
+                inline void setNoValidate(bool noValidate) { toggleAttribute("novalidate", noValidate); }
 
                 void submit();
 

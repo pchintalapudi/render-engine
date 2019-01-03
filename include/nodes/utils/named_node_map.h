@@ -10,7 +10,7 @@
 
 namespace feather {
     namespace dom {
-        class NamedNodeMap : observable::Invalidatable {
+        class NamedNodeMap : public observable::Invalidatable {
         public:
             StrongPointer<Attr> getItem(UInt idx) const;
 
@@ -30,13 +30,19 @@ namespace feather {
                 return removeNamedItem(ns + ":" + local);
             }
 
-            inline UInt getLength() const { return backing.size(); }
+            inline UInt size() const { return backing.size(); }
+
+            inline UInt getLength() const { return size(); }
 
             inline bool contains(const DOMString &key) const { return backing.find(key) != backing.end(); }
 
             Vector<DOMString> getKeys() const;
 
             DOMString toHTML() const;
+
+            bool operator==(const NamedNodeMap &other);
+
+            inline bool operator!=(const NamedNodeMap &other) { return !(*this == other); }
 
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {

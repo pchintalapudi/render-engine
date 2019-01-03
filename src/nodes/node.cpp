@@ -7,6 +7,16 @@
 
 using namespace feather::dom;
 
+bool NodeList::deepEquals(const feather::dom::NodeList &other) {
+    if (other.size() == size()) {
+        for (UInt i = 0; i < size(); i++) {
+            if (*other.get(i) != *get(i)) return false;
+        }
+        return true;
+    }
+    return false;
+}
+
 feather::UInt Node::getIndex() const {
     if (nodeIndex->isValid()) return nodeIndex->get();
     if (getParentNode()) {

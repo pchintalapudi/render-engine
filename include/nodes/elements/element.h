@@ -170,8 +170,8 @@ namespace feather {
 
             inline void removeAttribute(DOMString attr) { attributes->removeNamedItem(std::move(attr)); }
 
-            inline void removeAttributes(DOMString ns, DOMString name) {
-                attributes->removeNamedItemNS(std::move(ns), std::move(name));
+            inline void removeAttributes(const DOMString &ns, const DOMString &name) {
+                attributes->removeNamedItemNS(ns, name);
             }
 
             //TODO: Implement me
@@ -247,6 +247,10 @@ namespace feather {
             UInt getTypedElementIndex() const;
 
             UInt getLastTypedElementIndex() const;
+
+            StrongPointer<Node> cloneNode(bool deep) const override;
+
+            bool isEqualNode(const StrongPointer<const Node> &other) const override;
 
         protected:
 

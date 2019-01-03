@@ -34,6 +34,10 @@ namespace feather {
         public:
             void invalidate() const {}
 
+            bool deepEquals(const NodeList &other);
+
+            inline bool operator==(const NodeList &other) { return deepEquals(other); }
+
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *p) const override;
         };
@@ -123,9 +127,13 @@ namespace feather {
             //TODO: Implement me
             bool isDefaultNamespace(DOMString ns) const;
 
-            virtual bool isEqualNode(const Node &other) const = 0;
+            virtual bool isEqualNode(const StrongPointer<const Node> &other) const = 0;
 
-            inline bool isSameNode(const Node &other) { return this == &other; }
+            inline bool operator==(const Node &other) const { return isEqualNode(other.getSharedFromThis()); }
+
+            inline bool operator!=(const Node &other) const { return !(*this == other); }
+
+            inline bool isSameNode(const StrongPointer<Node> &other) { return this == other.get(); }
 
             //TODO: Implement me
             DOMString lookupPrefix(DOMString ns) const;

@@ -22,19 +22,19 @@ namespace feather {
                     : name(prefix + localName), ns(std::move(ns)), prefix(std::move(prefix)),
                       localName(std::move(localName)), owner(owner) {}
 
-            inline DOMString getNamespace() { return ns; }
+            inline DOMString getNamespace() const { return ns; }
 
-            inline DOMString getPrefix() { return prefix; }
+            inline DOMString getPrefix() const { return prefix; }
 
-            inline DOMString getLocalName() { return localName; }
+            inline DOMString getLocalName() const { return localName; }
 
-            inline DOMString getName() { return name; }
+            inline DOMString getName() const { return name; }
 
-            inline StrongPointer <Element> getOwner() { return owner.expired() ? nullptr : owner.lock(); }
+            inline StrongPointer <Element> getOwner() const { return owner.lock(); }
 
-            inline bool getSpecified() { return true; }
+            inline bool getSpecified() const { return true; }
 
-            inline DOMString getValue() { return toString(); }
+            inline DOMString getValue() const { return toString(); }
 
             virtual DOMString toString() const = 0;
 
@@ -43,6 +43,14 @@ namespace feather {
             inline void setValue(DOMString value) {
                 fromString(std::move(value));
                 invalidate();
+            }
+
+            bool operator==(const Attr &other) const {
+                return getName() == other.getName() && getValue() == other.getValue();
+            }
+
+            bool operator!=(const Attr &other) const {
+                return !(*this == other);
             }
 
         private:

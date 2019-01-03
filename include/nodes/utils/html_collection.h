@@ -19,10 +19,34 @@ namespace feather {
         class HTMLCollection
                 : public observable::SketchyObservableListWrapper<StrongPointer<Node>, NodeList,
                         StrongPointer<Element>, nodeToElement> {
+            explicit HTMLCollection(StrongPointer<NodeList> nodeList);
+
             StrongPointer<Element> getNamedItem(DOMString name) const;
 
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+        };
+
+        Pair<bool, StrongPointer<Element>> formFilter(const StrongPointer<Element> &p);
+
+        class HTMLFormControlsCollection
+                : public observable::SketchyObservableListWrapper<StrongPointer<Element>,
+                        HTMLCollection, StrongPointer<Element>, formFilter> {
+            StrongPointer<Element> getNamedItem(DOMString name) const;
+        };
+
+        class RadioNodeListFilter {
+        public:
+            bool operator()(const feather::StrongPointer<const Element> &p,
+                            feather::Vector<feather::StrongPointer<Element>> &addTo);
+
+        private:
+            DOMString filter;
+        };
+
+        class RadioNodeList
+                : public observable::RiskyFilteredList<StrongPointer<Element>, Element, RadioNodeListFilter> {
+            RadioNodeList(DOMString filter);
         };
     }
 }

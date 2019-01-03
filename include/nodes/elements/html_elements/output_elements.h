@@ -47,7 +47,7 @@ namespace feather {
             public:
                 inline bool isOpen() const { return hasAttribute("open"); }
 
-                inline void setOpen(bool isOpen) { if (isOpen) setAttribute("open", ""); else removeAttribute("open"); }
+                inline void setOpen(bool open) { toggleAttribute("open", open); }
 
                 inline DOMString getReturnValue() const { return rValue; }
 
