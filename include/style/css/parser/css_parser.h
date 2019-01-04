@@ -10,6 +10,7 @@
 #include <memory>
 #include <queue>
 #include "style/css/css_style_sheet.h"
+#include "enums/enum_set.h"
 
 namespace feather {
     namespace css {
@@ -54,30 +55,21 @@ namespace feather {
                     SUBSTRING_MATCH,
                     COLUMN,
                     WHITESPACE,
-                    QUOTATION_MARK,
-                    NUMBER_SIGN,
-                    DOLLAR_SIGN,
-                    APOSTROPHE,
-                    LEFT_PARENTHESIS,
-                    RIGHT_PARENTHESIS,
-                    ASTERISK,
-                    PLUS_SIGN,
-                    COMMON,
-                    HYPHEN_MINUS,
-                    FULL_STOP,
-                    SOLIDUS,
+                    CDO,
+                    CDC,
                     COLON,
                     SEMICOLON,
-                    LESS_THAN_SIGN,
-                    COMMERICAL_AT,
-                    LEFT_SQUARE_BRACKET,
-                    REVERSE_SOLIDUS,
-                    RIGHT_SQUARE_BRACKET,
-                    CIRCUMFLEX_ACCENT,
-                    LEFT_CURLY_BRACKET,
-                    LAST_CHARACTER,
+                    COMMA,
+                    LEFT_SQUARE,
+                    RIGHT_SQUARE,
+                    LEFT_PARENTHESIS,
+                    RIGHT_PARENTHESIS,
+                    LEFT_BRACKED,
+                    RIGHT_BRACKET,
                     EOF_TOKEN
                 };
+                typedef feather::EnumSet<Token, size_t> TokenSet;
+
 
                 CSSTokenizer();
 

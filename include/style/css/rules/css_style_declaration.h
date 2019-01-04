@@ -6,24 +6,27 @@
 #define FEATHER_CSS_STYLE_DECLARATION_H
 
 #include "typedefs.h"
+#include <unordered_map>
+#include <tuple>
 
 namespace feather {
     namespace css {
+        namespace rules {
+            class CSSStyleDeclaration {
+            private:
+                std::unordered_map<DOMString, std::tuple<DOMString, DOMString>> properties;
+            public:
+                void setProperty(feather::DOMString property, feather::DOMString value, feather::DOMString priority);
 
-        class CSSStyleDeclaration {
-        public:
-            void setProperty(DOMString property, DOMString value, DOMString priority);
+                feather::DOMString getPropertyPriority(DOMString);
 
-            DOMString getPropertyPriority(DOMString priority);
+                feather::DOMString getPropertyValue(DOMString);
 
-            DOMString getPropertyValue(DOMString property);
+                feather::DOMString removeProperty(DOMString);
 
-            DOMString removeProperty(DOMString property);
-
-            DOMString item(int index);
-
-            void getProperty();
-        };
+                feather::DOMString item(feather::UInt);
+            };
+        }
     }
 }
 
