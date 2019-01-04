@@ -38,6 +38,7 @@ namespace feather {
                     IDENT_TOKEN,
                     FUNCTION,
                     AT_KEYWORD,
+                    ASTERISK,
                     HASH,
                     STRING,
                     BAD_STRING,

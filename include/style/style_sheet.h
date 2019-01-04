@@ -5,9 +5,7 @@
 #ifndef FEATHER_STYLE_SHEET_H
 #define FEATHER_STYLE_SHEET_H
 
-#include "typedefs.h"
 #include "nodes/node.h"
-#include <memory>
 
 namespace feather {
     namespace css {

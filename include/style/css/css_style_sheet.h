@@ -7,7 +7,7 @@
 
 #include "style/style_sheet.h"
 
-#incldue "typedefs.h"
+#include "typedefs.h"
 
 namespace feather {
     namespace css {

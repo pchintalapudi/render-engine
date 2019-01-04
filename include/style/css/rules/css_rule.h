@@ -7,12 +7,11 @@
 
 #include "typedefs.h"
 #include "style/css/css_style_sheet.h"
-#include <memory>
 
 namespace feather {
     namespace css {
         namespace rules {
-            enum CssRuleType {
+            enum CSSRuleType {
                 STYLE_RULE,
                 IMPORT_RULE,
                 MEDIA_RULE,
