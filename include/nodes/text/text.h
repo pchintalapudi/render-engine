@@ -28,8 +28,6 @@ namespace feather {
 
             StrongPointer<Node> cloneNode(bool deep) const override;
 
-            bool isEqualNode(const Node &other) const override;
-
             static inline StrongPointer<Text> create(DOMString baseURI, const StrongPointer<Node> &parent) {
                 return std::make_shared<Text>(std::move(baseURI), parent);
             }

@@ -1036,13 +1036,13 @@ feather::StrongPointer<feather::dom::Element> CSSSelector::querySelectorInternal
         if (begin == descendants.end() - 1) return scope->getThisRef();
         auto children = scope->getChildren();
         for (UInt i = 0; i < children->size(); i++) {
-            auto ptr = querySelectorInternal(begin + 1, children->getItem(i));
+            auto ptr = querySelectorInternal(begin + 1, children->get(i));
             if (ptr) return ptr;
         }
     } else {
         auto children = scope->getChildren();
         for (UInt i = 0; i < children->size(); i++) {
-            auto ptr = querySelectorInternal(begin, children->getItem(i));
+            auto ptr = querySelectorInternal(begin, children->get(i));
             if (ptr) return ptr;
         }
     }
@@ -1057,11 +1057,11 @@ void CSSSelector::querySelectorAllInternal(
         if (begin == descendants.end() - 1) { ref.push_back(scope->getThisRef()); }
         else {
             auto children = scope->getChildren();
-            for (UInt i = 0; i < children->size(); querySelectorAllInternal(begin + 1, children->getItem(i++), ref));
+            for (UInt i = 0; i < children->size(); querySelectorAllInternal(begin + 1, children->get(i++), ref));
         }
     } else {
         auto children = scope->getChildren();
-        for (UInt i = 0; i < children->size(); querySelectorAllInternal(begin, children->getItem(i++), ref));
+        for (UInt i = 0; i < children->size(); querySelectorAllInternal(begin, children->get(i++), ref));
     }
 }
 

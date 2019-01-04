@@ -3,6 +3,7 @@
 //
 
 #include "events/event.h"
+#include "events/event_target.h"
 
 using namespace feather::js;
 
@@ -25,20 +26,18 @@ Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, WeakPoi
     if (trusted) properties.add(EventProperties::TRUSTED);
 }
 
-//TODO: Implement me
 feather::StrongPointer<EventTarget> Event::getEventTarget() {
-    //Preconditions: The first node must not be a shadow root (this is easily satisfied by the condition for a shadow root.)
-    //Algorithm:
-    //1. Assign first node in list to currentNode
-    //2. Check if next node is a shadow root, and if it is closed.
-    //2a. Return the node
-    //2b. If the node is not a shadow root, assign the node to currentNode
-    //3. goto 2.
+    for (auto it = realPath.end() - 1; it != realPath.begin(); it--) {
+        if ((*it)->isHiddenTarget()) return *(it + 1);
+    }
+    return realPath.front()->isHiddenTarget() ? *(realPath.begin() + 1) : realPath.front();
 }
 
-//TODO: Implement me
-feather::List<feather::StrongPointer<feather::js::EventTarget>> Event::getComposedPath() const {
-    //Follow the above algorithm
+feather::Vector<feather::StrongPointer<feather::js::EventTarget>> Event::getComposedPath() const {
+    Vector <StrongPointer<EventTarget>> v;
+    for (auto it = realPath.end() - 1; it != realPath.begin() && !(*it)->isHiddenTarget(); v.push_back(*it--));
+    if (!realPath.front()->isHiddenTarget()) v.push_back(realPath.front());
+    return v;
 }
 
 namespace {

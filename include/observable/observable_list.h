@@ -9,10 +9,10 @@
 
 namespace feather {
     namespace observable {
-        template<typename E>
+        template<typename E, typename Derived>
         class ObservableList : public Invalidatable {
         public:
-            ObservableList() : extractor(nullptr) {}
+            ObservableList() : extractor(StrongPointer < Function < StrongPointer<Invalidatable>(E) >> ()) {}
 
             explicit ObservableList(StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor)
                     : extractor(std::move(extractor)) {}
@@ -125,8 +125,8 @@ namespace feather {
             }
 
             inline void removeAll(UInt start, UInt end) {
-                WeakPointer<ObservableList<E>> weakThis = std::static_pointer_cast<ObservableList<E>>(
-                        shared_from_this());
+                WeakPointer<ObservableList<E, Derived>> weakThis
+                        = std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this());
                 std::for_each(source.begin() + start, source.begin() + end,
                               [weakThis](E e) { if (!weakThis.expired()) weakThis.lock()->unbindE(e); });
                 source.erase(source.begin() + start, source.begin() + end);
@@ -137,7 +137,7 @@ namespace feather {
 
         protected:
             void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
-                s.remove(InvEvent::INVALIDATED);
+                s -= InvEvent::INVALIDATE_THIS;
             }
 
         private:
@@ -146,18 +146,133 @@ namespace feather {
             StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor;
 
             inline void bindE(E e) {
-                if (extractor) (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                if (extractor)
+                    (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this()));
             }
 
             inline void unbindE(E e) {
-                if (extractor) (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E>>(shared_from_this()));
+                if (extractor)
+                    (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this()));
             }
 
-            inline void invalidate() {
-                Invalidatable::invalidate(
-                        RegularEnumSet<InvEvent>(1u << static_cast<ULong>(InvEvent::LIST_CHANGE)),
-                        this
-                );
+            void invalidate() const {
+                static_cast<const Derived *>(this)->invalidate();
+            }
+        };
+
+        template<typename ListElementType, class ListType, typename MapType,
+                Pair<bool, MapType>(*Adjuster)(const ListElementType &)>
+        class SketchyObservableListWrapper : public Invalidatable {
+        public:
+            explicit SketchyObservableListWrapper(StrongPointer<const ListType> watched)
+                    : watched(std::move(watched)) {
+                if (watched) watched->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+            }
+
+            inline MapType get(UInt idx) const { return getVector()[idx]; }
+
+            inline bool contains(MapType mt) const {
+                return std::find(getVector().begin(), getVector().end(), std::move(mt)) != getVector().end();
+            }
+
+            inline UInt size() const { return getVector().size(); }
+
+            inline bool empty() const { return getVector().empty(); }
+
+        private:
+            WeakPointer<const ListType> watched;
+
+            mutable Vector <MapType> cached;
+
+            void recompute() const {
+                cached.clear();
+                auto ptr = watched.lock();
+                if (ptr) {
+                    for (UInt i = 0; i < ptr->size(); i++) {
+                        Pair<bool, MapType> p = Adjuster(ptr->get(i));
+                        if (p.first) cached.push_back(p.second);
+                    }
+                }
+            }
+
+            inline Vector <MapType> &getVector() const {
+                if (!isValid()) recompute();
+                return cached;
+            }
+        };
+
+        template<typename ListType, typename MapType, typename AdjusterType>
+        class LessSketchyObservableListWrapper : public Invalidatable {
+        public:
+            explicit LessSketchyObservableListWrapper(StrongPointer<const ListType> watched, AdjusterType adjuster)
+                    : watched(std::move(watched)), adjuster(std::move(adjuster)) {}
+
+            inline MapType get(UInt idx) const { return getVector()[idx]; }
+
+            inline bool contains(MapType mt) const {
+                return std::find(getVector().begin(), getVector().end(), std::move(mt)) != getVector().end();
+            }
+
+            inline UInt size() const { return getVector().size(); }
+
+            inline bool empty() const { return getVector().empty(); }
+
+        private:
+            WeakPointer<const ListType> watched;
+            AdjusterType adjuster;
+
+            mutable Vector <MapType> cached;
+
+            void recompute() const {
+                cached.clear();
+                auto ptr = watched.lock();
+                if (ptr) {
+                    for (UInt i = 0; i < ptr->size(); i++) {
+                        Pair<bool, MapType> p = adjuster(ptr->get(i));
+                        if (p.first) cached.push_back(p.second);
+                    }
+                }
+            }
+
+            inline Vector <MapType> &getVector() const {
+                if (!isValid()) recompute();
+                return cached;
+            }
+        };
+
+        template<typename ListType, typename Filter>
+        using FilteredList = LessSketchyObservableListWrapper<ListType, ListType, Filter>;
+
+        template<typename ElementType, typename Inv, typename Op>
+        class RiskyFilteredList : Invalidatable {
+        public:
+            explicit RiskyFilteredList(StrongPointer<const Inv> watched, Op op)
+                    : watched(std::move(watched)), op(std::move(op)) {}
+
+            inline ElementType get(UInt i) const { return getVector()[i]; }
+
+            inline UInt size() const { return getVector().size(); }
+
+            inline bool contains(const ElementType &e) const {
+                return std::find(getVector().begin(), getVector().end(), e);
+            }
+
+            inline bool empty() const { return getVector().empty(); }
+
+        private:
+            WeakPointer<const Inv> watched;
+            Op op;
+
+            mutable Vector <ElementType> cached;
+
+            Vector <ElementType> &getVector() {
+                if (isValid()) return cached;
+                else {
+                    cached.clear();
+                    auto ptr = watched.lock();
+                    if (ptr) op(ptr, cached);
+                    return cached;
+                }
             }
         };
     }

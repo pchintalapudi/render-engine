@@ -44,7 +44,7 @@ namespace feather {
 
             inline void setCancelBubble(bool b) { if (b) stopPropagation(); }
 
-            List<StrongPointer<EventTarget>> getDeepPath() const { return getComposedPath(); }
+            Vector<StrongPointer<EventTarget>> getDeepPath() const { return getComposedPath(); }
 
             inline bool getDefaultPrevented() const { return properties.contains(EventProperties::DEFAULT); }
 
@@ -74,7 +74,7 @@ namespace feather {
 
             bool isTrusted() const { return properties.contains(EventProperties::TRUSTED); }
 
-            List<StrongPointer<EventTarget>> getComposedPath() const;
+            Vector<StrongPointer<EventTarget>> getComposedPath() const;
 
             inline void preventDefault() { properties.remove(EventProperties::DEFAULT); }
 

@@ -45,3 +45,15 @@ feather::DOMString NamedNodeMap::toHTML() const {
     for (const auto &pair : backing) ((((html += " ") += pair.first) += "='") += pair.second->getValue()) += "'";
     return html;
 }
+
+bool NamedNodeMap::operator==(const feather::dom::NamedNodeMap &other) {
+    if (other.size() == size()) {
+        for (const auto &pair : backing) {
+            auto p1 = pair.second;
+            auto p2 = other.getNamedItem(pair.first);
+            if (p1 != p2) return false;
+        }
+        return true;
+    }
+    return false;
+}

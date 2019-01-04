@@ -73,6 +73,11 @@ namespace feather {
             inline void remove() {
                 getParentNode()->removeChild(std::static_pointer_cast<Node>(shared_from_this()));
             }
+
+            inline bool isEqualNode(const StrongPointer<const Node> &other) const override {
+                return other && other->getNodeTypeInternal() == getNodeTypeInternal() &&
+                       std::static_pointer_cast<const CharacterData>(other)->getData() == getData();
+            }
         };
     }
 }

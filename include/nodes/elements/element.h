@@ -22,31 +22,11 @@ namespace feather {
             HEIGHT, LEFT, TOP, WIDTH
         };
 
-        class FilteredByClassName : public observable::Invalidatable {
-        public:
-            inline StrongPointer<Element> get(UInt idx) { return getCached()[idx].lock(); }
+        class FilteredByTagName;
 
-            inline UInt size() { return getCached().size(); }
+        class FilteredByTagNameNS;
 
-        protected:
-            void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *) const override;
-
-        private:
-            DOMString className;
-            mutable Vector<WeakPointer<Element>> cached;
-
-            Vector<WeakPointer<Element>> &getCached();
-        };
-
-        class FilteredByTagName : public observable::Invalidatable {
-        private:
-            DOMString tagName;
-        };
-
-        class FilteredByTagNameNS : public observable::Invalidatable {
-        private:
-            DOMString name;
-        };
+        class FilteredByClassName;
 
         class Element : public Node, public Slotable {
         public:
@@ -126,7 +106,6 @@ namespace feather {
 
             StrongPointer<Element> getClosest(DOMString selector) const;
 
-            //TODO: Implement me
             StrongPointer<DOMString> getAttribute(DOMString name) const;
 
             inline DOMString getAttributeSafe(DOMString name) const {
@@ -136,21 +115,17 @@ namespace feather {
 
             inline Vector<DOMString> getAttributeNames() const { return attributes->getKeys(); }
 
-            //TODO: Implement me
             StrongPointer<DOMString> getAttributeNS(DOMString ns, DOMString name) const;
 
             DOMRect getBoundingClientRect() const;
 
             virtual Vector<DOMRect> getClientRects() const = 0;
 
-            //TODO: Implement me
-            StrongPointer<FilteredByClassName> getElementsByClassName() const;
+            StrongPointer<FilteredByClassName> getElementsByClassName(DOMString className) const;
 
-            //TODO: Implement me
-            StrongPointer<FilteredByTagName> getElementsByTagName() const;
+            StrongPointer<FilteredByTagName> getElementsByTagName(DOMString tagName) const;
 
-            //TODO: Implement me
-            StrongPointer<FilteredByTagNameNS> getElementsByTagNameNS() const;
+            StrongPointer<FilteredByTagNameNS> getElementsByTagNameNS(DOMString ns, DOMString tagName) const;
 
             inline bool hasAttribute(DOMString attr) const { return attributes->contains(std::move(attr)); }
 
@@ -195,8 +170,8 @@ namespace feather {
 
             inline void removeAttribute(DOMString attr) { attributes->removeNamedItem(std::move(attr)); }
 
-            inline void removeAttributes(DOMString ns, DOMString name) {
-                attributes->removeNamedItemNS(std::move(ns), std::move(name));
+            inline void removeAttributes(const DOMString &ns, const DOMString &name) {
+                attributes->removeNamedItemNS(ns, name);
             }
 
             //TODO: Implement me
@@ -215,7 +190,6 @@ namespace feather {
 
             inline void scrollTo(double x, double y) { scroll(x, y); }
 
-            //TODO: Implement me
             void setAttribute(DOMString name, DOMString value);
 
             inline void setAttribute(const DOMString &ns, const DOMString &local, DOMString value) {
@@ -225,10 +199,8 @@ namespace feather {
             //TODO: Implement me
             void setPointerCapture(ULong id);
 
-            //TODO: Implement me
             bool toggleAttribute(DOMString attr);
 
-            //TODO: Implement me
             bool toggleAttribute(DOMString attr, bool force);
 
             //ChildNode impl
@@ -259,11 +231,11 @@ namespace feather {
             inline StrongPointer<HTMLCollection> getChildren() const { return children; }
 
             inline StrongPointer<Element> getFirstElementChild() {
-                return children->size() ? children->getItem(0) : nullptr;
+                return !children->empty() ? children->get(0) : nullptr;
             }
 
             inline StrongPointer<Element> getLastElementChild() {
-                return children->size() ? children->getItem(children->size() - 1) : nullptr;
+                return !children->empty() ? children->get(children->size() - 1) : nullptr;
             }
 
             inline StrongPointer<Element> getThisRef() const { return thisRef; }
@@ -275,6 +247,10 @@ namespace feather {
             UInt getTypedElementIndex() const;
 
             UInt getLastTypedElementIndex() const;
+
+            StrongPointer<Node> cloneNode(bool deep) const override;
+
+            bool isEqualNode(const StrongPointer<const Node> &other) const override;
 
         protected:
 
@@ -308,6 +284,7 @@ namespace feather {
             void updateElementIndeces() const;
 
             void updatedTypedIndeces() const;
+
         };
     }
 }

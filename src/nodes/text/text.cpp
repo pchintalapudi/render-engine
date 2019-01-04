@@ -33,8 +33,3 @@ feather::StrongPointer<Text> Text::splitText(feather::ULong offset) {
 feather::StrongPointer<Node> Text::cloneNode(bool) const {
     return Text::create(getBaseURI(), StrongPointer<Node>(), getData());
 }
-
-bool Text::isEqualNode(const feather::dom::Node &other) const {
-    return other.getNodeTypeInternal() == getNodeTypeInternal() &&
-           static_cast<const Text &>(other).getData() == getData();
-}

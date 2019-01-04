@@ -11,29 +11,42 @@
 
 namespace feather {
     namespace dom {
+
         class Element;
 
-        class HTMLCollection : public observable::Invalidatable {
-        public:
-            explicit HTMLCollection(StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes)
-                    : childNodes(childNodes) {
-                childNodes->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
-            }
+        Pair<bool, StrongPointer<Element>> nodeToElement(const StrongPointer<Node> &p);
 
-            inline UInt size() const { return getVector().size(); }
-
-            inline StrongPointer<Element> getItem(UInt idx) const { return getVector()[idx].lock(); }
+        class HTMLCollection
+                : public observable::SketchyObservableListWrapper<StrongPointer<Node>, NodeList,
+                        StrongPointer<Element>, nodeToElement> {
+            explicit HTMLCollection(StrongPointer<NodeList> nodeList);
 
             StrongPointer<Element> getNamedItem(DOMString name) const;
 
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+        };
+
+        Pair<bool, StrongPointer<Element>> formFilter(const StrongPointer<Element> &p);
+
+        class HTMLFormControlsCollection
+                : public observable::SketchyObservableListWrapper<StrongPointer<Element>,
+                        HTMLCollection, StrongPointer<Element>, formFilter> {
+            StrongPointer<Element> getNamedItem(DOMString name) const;
+        };
+
+        class RadioNodeListFilter {
+        public:
+            bool operator()(const feather::StrongPointer<const Element> &p,
+                            feather::Vector<feather::StrongPointer<Element>> &addTo);
 
         private:
-            mutable std::vector<WeakPointer<Element>> cached = Vector<WeakPointer<Element>>();
-            StrongPointer<observable::ObservableList<StrongPointer<Node>>> childNodes;
+            DOMString filter;
+        };
 
-            std::vector<WeakPointer<Element>> &getVector() const;
+        class RadioNodeList
+                : public observable::RiskyFilteredList<StrongPointer<Element>, Element, RadioNodeListFilter> {
+            RadioNodeList(DOMString filter);
         };
     }
 }

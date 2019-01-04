@@ -15,44 +15,54 @@ namespace feather {
         class Attr : observable::Invalidatable {
         public:
 
-            Attr(DOMString localName, StrongPointer <Element> owner) : Attr("", "", localName, owner) {}
+            Attr(DOMString localName, const StrongPointer <Element> &owner) : Attr("", "", std::move(localName),
+                                                                                   owner) {}
 
-            Attr(DOMString ns, DOMString prefix, DOMString localName, StrongPointer <Element> owner)
-                    : ns(ns), prefix(prefix), localName(localName), name(prefix + localName), owner(owner) {}
+            Attr(DOMString ns, DOMString prefix, DOMString localName, const StrongPointer <Element> &owner)
+                    : name(prefix + localName), ns(std::move(ns)), prefix(std::move(prefix)),
+                      localName(std::move(localName)), owner(owner) {}
 
-            inline DOMString getNamespace() { return ns; }
+            inline DOMString getNamespace() const { return ns; }
 
-            inline DOMString getPrefix() { return prefix; }
+            inline DOMString getPrefix() const { return prefix; }
 
-            inline DOMString getLocalName() { return localName; }
+            inline DOMString getLocalName() const { return localName; }
 
-            inline DOMString getName() { return name; }
+            inline DOMString getName() const { return name; }
 
-            inline StrongPointer <Element> getOwner() { return owner.expired() ? nullptr : owner.lock(); }
+            inline StrongPointer <Element> getOwner() const { return owner.lock(); }
 
-            inline bool getSpecified() { return true; }
+            inline bool getSpecified() const { return true; }
 
-            inline DOMString getValue() { return toString(); }
+            inline DOMString getValue() const { return toString(); }
 
             virtual DOMString toString() const = 0;
 
             virtual void fromString(DOMString) = 0;
 
             inline void setValue(DOMString value) {
-                fromString(value);
+                fromString(std::move(value));
                 invalidate();
             }
 
+            bool operator==(const Attr &other) const {
+                return getName() == other.getName() && getValue() == other.getValue();
+            }
+
+            bool operator!=(const Attr &other) const {
+                return !(*this == other);
+            }
+
         private:
+            DOMString name;
             DOMString ns;
             DOMString prefix;
             DOMString localName;
-            DOMString name;
             WeakPointer <Element> owner;
 
             void invalidate() {
                 observable::Invalidatable::invalidate(
-                        RegularEnumSet<observable::InvEvent>(1u << static_cast<int>(observable::InvEvent::MAP_CHANGE)),
+                        RegularEnumSet<observable::InvEvent>() += observable::InvEvent::ATTRIBUTE_INTERNAL_CHANGE,
                         this);
             }
         };
@@ -60,10 +70,14 @@ namespace feather {
         class StandardAttr : public Attr {
         public:
 
-            StandardAttr(DOMString ns, DOMString prefix, DOMString localName, StrongPointer <Element> owner)
-                    : Attr(ns, prefix, localName, owner) {}
+            StandardAttr(DOMString ns, DOMString prefix, DOMString localName, const StrongPointer <Element> &owner)
+                    : Attr(std::move(ns), std::move(prefix), std::move(localName), owner) {}
 
-            StandardAttr(DOMString localName, StrongPointer <Element> owner) : Attr(localName, owner) {}
+            StandardAttr(DOMString localName, const StrongPointer <Element> &owner)
+                    : Attr(std::move(localName), owner) {}
+
+            StandardAttr(DOMString localName, const StrongPointer <Element> &owner, DOMString initial)
+                    : StandardAttr(std::move(localName), owner) { this->value = std::move(initial); }
 
             inline DOMString toString() const override { return value; }
 
@@ -76,9 +90,13 @@ namespace feather {
         class ClassAttr : public Attr {
         public:
 
-            ClassAttr(DOMString ns, DOMString prefix, DOMString localName,
-                      StrongPointer <Element> owner, StrongPointer <DOMTokenList> classList)
-                    : Attr(ns, prefix, localName, owner), classList(classList) {}
+            ClassAttr(const StrongPointer <Element> &owner, const StrongPointer <DOMTokenList> &classList)
+                    : Attr("", "", "class", owner), classList(classList) {}
+
+            ClassAttr(const StrongPointer <Element> &owner, const StrongPointer <DOMTokenList> &classList,
+                      DOMString initial) : ClassAttr(owner, classList) {
+                fromString(std::move(initial));
+            }
 
             inline DOMString toString() const override {
                 return classList.expired() ? "" : classList.lock()->getValue();

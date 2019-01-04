@@ -6,7 +6,7 @@
 #include "nodes/documents/document.h"
 #include "nodes/text/text.h"
 
-using namespace feather::dom;
+using namespace feather::dom::html;
 
 void HTMLElement::focus() {
     auto owner = getOwnerDocument();
@@ -50,7 +50,8 @@ void HTMLElement::setInnerText(feather::DOMString innerText) {
     auto children = getChildNodes();
     for (UInt i = 0; i < children->size(); children->get(i++)->clearParentNode());
     children->clear();
-    auto text = Text::create(getBaseURI(), getSharedFromThis());
+    cachedInnerText->set(innerText);
+    auto text = Text::create(getBaseURI(), getSharedFromThis(), std::move(innerText));
     children->add(text);
 }
 
@@ -64,7 +65,7 @@ feather::DOMString HTMLElement::getLang() const {
     //TODO: Actually determine language
 }
 
-feather::StrongPointer<Element> HTMLElement::getOffsetParent() const {
+feather::StrongPointer<feather::dom::Element> HTMLElement::getOffsetParent() const {
     return getParentElement();
     //TODO: Actually follow the algorithm for computing offset parents
 }
