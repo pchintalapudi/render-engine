@@ -15,8 +15,11 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 file(GLOB SOURCE_FILES ${PROJECT_SOURCE_DIR}/src/**/*.cpp)
 file(GLOB HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.h ${PROJECT_SOURCE_DIR}/include/**/*.h
         ${PROJECT_SOURCE_DIR}/include/**/*.hpp)
-add_library(feather ${SOURCE_FILES}
-        include/typedefs.h include/observable/invalidatable.h src/observable/invalidatable.cpp include/observable/observable_list.h include/observable/invalidation_event.h include/enums/enum_set.h include/enums/enum_map.h include/events/event_target.h include/events/event.h src/events/event.cpp src/events/event_target.cpp include/nodes/node.h include/nodes/documents/document.h include/nodes/elements/element.h include/observable/observable_item.h include/nodes/text/character_data.h include/nodes/text/text.h include/nodes/slotable.h src/nodes/node.cpp src/nodes/text/text.cpp include/nodes/text/comment.h include/nodes/elements/html_elements/html_element.h include/nodes/text/c_data_section.h include/nodes/text/processing_instruction.h include/nodes/elements/selectors/css_selector.h include/nodes/elements/selectors/xpath_selector.h include/nodes/utils/dom_token_list.h src/nodes/utils/dom_token_list.cpp include/nodes/utils/named_node_map.h include/nodes/utils/attr.h src/nodes/utils/named_node_map.cpp include/nodes/documents/shadow_root.h include/nodes/utils/html_collection.h src/nodes/utils/html_collection.cpp include/geom/dom_rect.h src/nodes/elements/element.cpp include/style/css/pseudoclass_manager.h src/css/pseudoclass_manager.cpp src/nodes/elements/selectors/css_selector.cpp src/nodes/elements/html_elements/html_element.cpp include/nodes/elements/html_elements/html_element_includes.h include/nodes/elements/html_elements/href_elements.h include/nodes/elements/html_elements/output_elements.h include/nodes/elements/html_elements/generic_elements.h include/nodes/elements/html_elements/input_elements.h include/nodes/elements/html_elements/other_elements.h include/nodes/elements/html_elements/table_elements.h)
+add_library(feather ${SOURCE_FILES} src/observable/invalidatable.cpp src/events/event.cpp
+        src/events/event_target.cpp src/nodes/node.cpp src/nodes/text/text.cpp src/nodes/utils/dom_token_list.cpp
+        src/nodes/utils/named_node_map.cpp src/nodes/utils/html_collection.cpp src/nodes/elements/element.cpp
+        src/css/pseudoclass_manager.cpp src/nodes/elements/selectors/css_selector.cpp
+        src/nodes/elements/html_elements/html_element.cpp)
 target_include_directories(feather PUBLIC include)
 add_subdirectory(src)
 
@@ -24,7 +27,6 @@ add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 target_include_directories(render-engine PRIVATE include)
 target_link_libraries(render-engine feather)
-
 
 
 configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)

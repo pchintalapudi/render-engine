@@ -34,7 +34,7 @@ namespace feather {
                 size_t index;
                 size_t length;
             public:
-                enum Token {
+                enum class Token {
                     IDENT_TOKEN,
                     FUNCTION,
                     AT_KEYWORD,
