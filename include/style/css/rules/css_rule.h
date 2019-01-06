@@ -12,22 +12,44 @@ namespace feather {
     namespace css {
         namespace rules {
             enum CSSRuleType {
+                UNKNOWN_RULE,
                 STYLE_RULE,
+                CHARSET_RULE,
                 IMPORT_RULE,
                 MEDIA_RULE,
                 FONT_FACE_RULE,
                 PAGE_RULE,
-                KEYFRAMES_RULE
+                KEYFRAMES_RULE,
+                KEYFRAME_RULE,
+                RESERVED_RULE,
+                NAMESPACE_RULE,
+                COUNTER_STYLE_RULE,
+                SUPPORTS_RULE,
+                DOCUMENT_RULE,
+                FONT_FEATURE_VALUES_RULE,
+                VIEWPORT_RULE,
+                REGION_STYLE_RULE
             };
 
             class CSSRule {
-                virtual DOMString getCssText();
+            public:
 
-                virtual std::shared_ptr<DOMString> getParentRule();
+                CSSRule(CSSRuleType type, const StrongPointer<CSSRule> &parentRule,
+                        const StrongPointer<CSSStyleSheet> &parentStylesheet)
+                        : type(type), parentRule(parentRule), parentStyleSheet(parentStylesheet) {}
 
-                virtual CSSStyleSheet getParentStyleSheet();
+                virtual DOMString getCssText() = 0;
 
-                virtual CSSRuleType getType();
+                inline StrongPointer<CSSRule> getParentRule() { return parentRule.lock(); }
+
+                inline StrongPointer<CSSStyleSheet> getParentStyleSheet() { return parentStyleSheet.lock(); }
+
+                inline CSSRuleType getType() { return type; }
+
+            private:
+                CSSRuleType type;
+                WeakPointer<CSSRule> parentRule;
+                WeakPointer<CSSStyleSheet> parentStyleSheet;
             };
         }
     }

@@ -9,8 +9,6 @@
 
 namespace feather {
     namespace observable {
-        typedef Long EventCountSize;
-
         enum class InvEvent {
             INVALIDATE_THIS,
             CONTINUE_PROPAGATION,
@@ -27,6 +25,7 @@ namespace feather {
             ELEMENT_INDEX_CHANGE,
             CONTENTEDITABLE_CHANGE,
             PSEUDOCLASS_CHANGE,
+            STYLE_PROPERTY_CHANGE,
             __MANGLE__LOCAL__,
             LOCAL_PARENT_CHANGE,
             LOCAL_CHILDREN_CHANGE,
@@ -38,6 +37,7 @@ namespace feather {
             LOCAL_SHADOW_ROOT_CHANGE,
             LOCAL_ELEMENT_INDEX_CHANGE,
             LOCAL_CONTENTEDITABLE_CHANGE,
+            LOCAL_STYLE_PROPERTY_CHANGE,
             __COUNT__
         };
     }
