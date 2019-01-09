@@ -19,6 +19,7 @@ namespace feather {
         class HTMLCollection
                 : public observable::SketchyObservableListWrapper<StrongPointer<Node>, NodeList,
                         StrongPointer<Element>, nodeToElement> {
+        public:
             explicit HTMLCollection(StrongPointer<NodeList> nodeList);
 
             StrongPointer<Element> getNamedItem(DOMString name) const;
@@ -32,6 +33,7 @@ namespace feather {
         class HTMLFormControlsCollection
                 : public observable::SketchyObservableListWrapper<StrongPointer<Element>,
                         HTMLCollection, StrongPointer<Element>, formFilter> {
+        public:
             StrongPointer<Element> getNamedItem(DOMString name) const;
         };
 
@@ -46,7 +48,8 @@ namespace feather {
 
         class RadioNodeList
                 : public observable::RiskyFilteredList<StrongPointer<Element>, Element, RadioNodeListFilter> {
-            RadioNodeList(DOMString filter);
+        public:
+            explicit RadioNodeList(DOMString filter);
         };
     }
 }

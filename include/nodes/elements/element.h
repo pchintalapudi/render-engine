@@ -12,6 +12,7 @@
 #include "../utils/html_collection.h"
 #include "selectors/css_selector.h"
 #include "geom/dom_rect.h"
+#include "style/css/rules/css_style_declaration.h"
 
 namespace feather {
     namespace dom {
@@ -22,22 +23,29 @@ namespace feather {
             HEIGHT, LEFT, TOP, WIDTH
         };
 
-        class FilteredByTagName;
+        namespace elists {
+            class FilteredByTagName;
 
-        class FilteredByTagNameNS;
+            class FilteredByTagNameNS;
 
-        class FilteredByClassName;
-
+            class FilteredByClassName;
+        }
         class Element : public Node, public Slotable {
         public:
 
-            inline StrongPointer<NamedNodeMap> getAttributes() const { return attributes; }
+            Element(DOMString baseURI, DOMString tagName, const StrongPointer<Node> &parent);
 
-            inline StrongPointer<DOMTokenList> getClassList() const { return classList; }
+            inline StrongPointer<NamedNodeMap> getAttributes() const {
+                return StrongPointer<NamedNodeMap>(shared_from_this(), &attributes);
+            }
 
-            inline DOMString getClassName() const { return classList->getValue(); }
+            inline StrongPointer<DOMTokenList> getClassList() const {
+                return StrongPointer<DOMTokenList>(shared_from_this(), &classList);
+            }
 
-            inline void setClassName(DOMString name) { classList->setValue(std::move(name)); }
+            inline DOMString getClassName() const { return classList.getValue(); }
+
+            inline void setClassName(DOMString name) { classList.setValue(std::move(name)); }
 
             inline double getClientHeight() const { return clientDim[static_cast<int>(Dimensions::HEIGHT)]; }
 
@@ -113,27 +121,27 @@ namespace feather {
                 return ptr ? *ptr : "";
             }
 
-            inline Vector<DOMString> getAttributeNames() const { return attributes->getKeys(); }
+            inline Vector<DOMString> getAttributeNames() const { return attributes.getKeys(); }
 
             StrongPointer<DOMString> getAttributeNS(DOMString ns, DOMString name) const;
 
             DOMRect getBoundingClientRect() const;
 
-            virtual Vector<DOMRect> getClientRects() const = 0;
+            Vector<DOMRect> getClientRects() const;
 
-            StrongPointer<FilteredByClassName> getElementsByClassName(DOMString className) const;
+            StrongPointer<elists::FilteredByClassName> getElementsByClassName(DOMString className) const;
 
-            StrongPointer<FilteredByTagName> getElementsByTagName(DOMString tagName) const;
+            StrongPointer<elists::FilteredByTagName> getElementsByTagName(DOMString tagName) const;
 
-            StrongPointer<FilteredByTagNameNS> getElementsByTagNameNS(DOMString ns, DOMString tagName) const;
+            StrongPointer<elists::FilteredByTagNameNS> getElementsByTagNameNS(DOMString ns, DOMString tagName) const;
 
-            inline bool hasAttribute(DOMString attr) const { return attributes->contains(std::move(attr)); }
+            inline bool hasAttribute(DOMString attr) const { return attributes.contains(std::move(attr)); }
 
             inline bool hasAttributeNS(const DOMString &ns, const DOMString &name) const {
-                return attributes->contains(ns + ":" + name);
+                return attributes.contains(ns + ":" + name);
             }
 
-            inline bool hasAttributes() const { return attributes && attributes->getLength(); }
+            inline bool hasAttributes() const { return attributes.getLength() != 0; }
 
             //TODO: Implement me
             bool hasPointerCapture(ULong id) const;
@@ -168,10 +176,10 @@ namespace feather {
             //TODO: Implement me
             void releasePointerCapture(ULong id);
 
-            inline void removeAttribute(DOMString attr) { attributes->removeNamedItem(std::move(attr)); }
+            inline void removeAttribute(DOMString attr) { attributes.removeNamedItem(std::move(attr)); }
 
             inline void removeAttributes(const DOMString &ns, const DOMString &name) {
-                attributes->removeNamedItemNS(ns, name);
+                attributes.removeNamedItemNS(ns, name);
             }
 
             //TODO: Implement me
@@ -226,16 +234,18 @@ namespace feather {
 
             //ParentNode impl
 
-            inline UInt getChildElementCount() { return children->size(); }
+            inline UInt getChildElementCount() { return children.size(); }
 
-            inline StrongPointer<HTMLCollection> getChildren() const { return children; }
+            inline StrongPointer<HTMLCollection> getChildren() const {
+                return StrongPointer<HTMLCollection>(shared_from_this(), &children);
+            }
 
             inline StrongPointer<Element> getFirstElementChild() {
-                return !children->empty() ? children->get(0) : nullptr;
+                return !children.empty() ? children.get(0) : nullptr;
             }
 
             inline StrongPointer<Element> getLastElementChild() {
-                return !children->empty() ? children->get(children->size() - 1) : nullptr;
+                return !children.empty() ? children.get(children.size() - 1) : nullptr;
             }
 
             inline StrongPointer<Element> getThisRef() const { return thisRef; }
@@ -252,19 +262,24 @@ namespace feather {
 
             bool isEqualNode(const StrongPointer<const Node> &other) const override;
 
+            StrongPointer<css::CSSStyleDeclaration> getComputedStyle() {
+                if (!computedStyle->isValid()) computeStyle();
+                return computedStyle;
+            }
+
         protected:
 
             //TODO: Implement me
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
 
         private:
-            StrongPointer<NamedNodeMap> attributes;
-            StrongPointer<DOMTokenList> classList;
+            mutable NamedNodeMap attributes;
+            mutable DOMTokenList classList;
             double clientDim[4];
             DOMString ns, prefix, localName;
             double scrollDim[4];
             StrongPointer<ShadowRoot> shadowRoot;
-            StrongPointer<HTMLCollection> children;
+            mutable HTMLCollection children;
 
             //Caches
             mutable DOMString innerHTML;
@@ -279,12 +294,15 @@ namespace feather {
 
             StrongPointer<Element> thisRef;
 
-            StrongPointer<observable::WatchedObservableItem<Pair<UInt, UInt>>> indeces, typedIndeces;
+            mutable observable::WatchedObservableItem<Pair<UInt, UInt>> indeces, typedIndeces;
 
             void updateElementIndeces() const;
 
             void updatedTypedIndeces() const;
 
+            StrongPointer<css::CSSStyleDeclaration> computedStyle;
+
+            void computeStyle();
         };
     }
 }

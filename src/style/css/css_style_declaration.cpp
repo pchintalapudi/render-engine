@@ -6,25 +6,18 @@
 
 using namespace feather::css;
 
-namespace {
-    template<typename K, typename V>
-    auto find(const feather::Map<K, V> &map, const feather::DOMString &str) {
-        return std::find(map.begin(), map.end(), str);
-    }
-}
-
 feather::DOMString CSSStyleDeclaration::getPropertyValue(const feather::DOMString &property) const {
-    auto it = find(indeces, property);
+    auto it = indeces.find(property);
     return it == indeces.end() ? "" : props[it->second].val;
 }
 
 feather::DOMString CSSStyleDeclaration::getPropertyPriority(const feather::DOMString &property) const {
-    auto it = find(indeces, property);
+    auto it = indeces.find(property);
     return it == indeces.end() || !props[it->second].priority ? "" : "!important";
 }
 
 void CSSStyleDeclaration::setProperty(const feather::DOMString &property, feather::DOMString value, bool priority) {
-    auto it = find(indeces, property);
+    auto it = indeces.find(property);
     if (it != indeces.end()) {
         auto val = props[it->second];
         val.val = std::move(value);
@@ -37,7 +30,7 @@ void CSSStyleDeclaration::setProperty(const feather::DOMString &property, feathe
 }
 
 feather::DOMString CSSStyleDeclaration::removeProperty(const DOMString &property) {
-    auto it = find(indeces, property);
+    auto it = indeces.find(property);
     if (it != indeces.end()) {
         auto pit = props.begin() + it->second;
         auto val = pit->val;
@@ -48,8 +41,12 @@ feather::DOMString CSSStyleDeclaration::removeProperty(const DOMString &property
     return "";
 }
 
-feather::UnaryPair<feather::DOMString> CSSStyleDeclaration::item(feather::UInt idx) const {
-    return idx < props.size() ? props[idx].getProp() : std::make_pair("", "");
+feather::Tuple<feather::DOMString, feather::DOMString, bool> CSSStyleDeclaration::item(feather::UInt idx) const {
+    if (idx < size()) {
+        auto item = props[idx];
+        return {item.key, item.val, item.priority};
+    }
+    return {"", "", false};
 }
 
 feather::DOMString CSSStyleDeclaration::getCssText() const {

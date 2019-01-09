@@ -40,6 +40,8 @@ namespace feather {
 
             virtual void fromString(DOMString) = 0;
 
+            virtual StrongPointer <Attr> clone(const StrongPointer <Element> &element) const = 0;
+
             inline void setValue(DOMString value) {
                 fromString(std::move(value));
                 invalidate();
@@ -79,9 +81,19 @@ namespace feather {
             StandardAttr(DOMString localName, const StrongPointer <Element> &owner, DOMString initial)
                     : StandardAttr(std::move(localName), owner) { this->value = std::move(initial); }
 
+            StandardAttr(DOMString ns, DOMString prefix, DOMString localName, const StrongPointer <Element> &owner,
+                         DOMString initial)
+                    : Attr(std::move(ns), std::move(prefix), std::move(localName), owner) {
+                value = std::move(initial);
+            }
+
             inline DOMString toString() const override { return value; }
 
             inline void fromString(DOMString value) override { this->value = value; }
+
+            StrongPointer <Attr> clone(const StrongPointer <Element> &element) const override {
+                return std::make_shared<StandardAttr>(getNamespace(), getPrefix(), getLocalName(), element, value);
+            }
 
         private:
             DOMString value = "";
@@ -106,6 +118,8 @@ namespace feather {
                 if (!classList.expired())
                     classList.lock()->setValue(value);
             }
+
+            StrongPointer <Attr> clone(const StrongPointer <Element> &element) const override;
 
         private:
             WeakPointer <DOMTokenList> classList;

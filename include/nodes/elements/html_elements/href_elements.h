@@ -6,15 +6,14 @@
 #define CURL_HREF_ELEMENTS_H
 
 #include "html_element.h"
-#include "style/style_sheet.h"
+#include "style/css/css_style_sheet.h"
 
 namespace feather {
     namespace dom {
 
         namespace html {
-            class HyperlinkUtils {
+            class Hyperlink : public HTMLElement {
             public:
-                HyperlinkUtils() = default;
 
                 inline DOMString getHref() const { return href; }
 
@@ -79,7 +78,7 @@ namespace feather {
                 UInt pointers[static_cast<int>(URLPointer::__COUNT__)];
             };
 
-            class HTMLAnchorElement : public HTMLElement, private HyperlinkUtils {
+            class HTMLAnchorElement : public Hyperlink {
             public:
                 inline DOMString getDownload() const { return getAttributeSafe("download"); }
 
@@ -106,7 +105,7 @@ namespace feather {
                 inline StrongPointer<DOMString> getText() const { return getTextContent(); }
             };
 
-            class HTMLAreaElement : public HTMLElement, private HyperlinkUtils {
+            class HTMLAreaElement : public Hyperlink {
             public:
 
                 inline DOMString getAlt() const { return getAttributeSafe("alt"); }
@@ -163,12 +162,12 @@ namespace feather {
 
             class LinkStyle {
             public:
-                inline StrongPointer<css::StyleSheet> getSheet() { return stylesheet; }
+                inline StrongPointer <css::CSSStyleSheet> getSheet() { return stylesheet; }
 
-                inline void setSheet(StrongPointer<css::StyleSheet> sheet) { stylesheet = std::move(sheet); }
+                inline void setSheet(StrongPointer <css::CSSStyleSheet> sheet) { stylesheet = std::move(sheet); }
 
             private:
-                StrongPointer<css::StyleSheet> stylesheet;
+                StrongPointer <css::CSSStyleSheet> stylesheet;
             };
 
             class HTMLLinkElement : public HTMLElement, public LinkStyle {

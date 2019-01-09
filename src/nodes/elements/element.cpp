@@ -22,29 +22,7 @@ namespace {
     private:
         feather::DOMString tagName;
     };
-}
 
-class feather::dom::FilteredByTagName
-        : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
-public:
-    FilteredByTagName(StrongPointer<const Element> element, DOMString filter)
-            : RiskyFilteredList(std::move(element), TagNameFilter(std::move(filter))) {}
-
-protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
-};
-
-class feather::dom::FilteredByTagNameNS
-        : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
-public:
-    FilteredByTagNameNS(StrongPointer<const Element> element, const DOMString &ns, const DOMString &name)
-            : RiskyFilteredList(std::move(element), TagNameFilter(ns + name)) {}
-
-protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
-};
-
-namespace {
     class ClassNameFilter {
     public:
         explicit ClassNameFilter(feather::DOMString className) : className(std::move(className)) {}
@@ -61,7 +39,27 @@ namespace {
     };
 }
 
-class feather::dom::FilteredByClassName
+class feather::dom::elists::FilteredByTagName
+        : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
+public:
+    FilteredByTagName(StrongPointer<const Element> element, DOMString filter)
+            : RiskyFilteredList(std::move(element), TagNameFilter(std::move(filter))) {}
+
+protected:
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
+};
+
+class feather::dom::elists::FilteredByTagNameNS
+        : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
+public:
+    FilteredByTagNameNS(StrongPointer<const Element> element, const DOMString &ns, const DOMString &name)
+            : RiskyFilteredList(std::move(element), TagNameFilter(ns + name)) {}
+
+protected:
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
+};
+
+class feather::dom::elists::FilteredByClassName
         : observable::RiskyFilteredList<StrongPointer<Element>, Element, ClassNameFilter> {
 public:
     FilteredByClassName(StrongPointer<const Element> element, DOMString className)
@@ -73,8 +71,13 @@ protected:
     }
 };
 
+Element::Element(feather::DOMString baseURI, feather::DOMString tagName,
+                 const feather::StrongPointer<feather::dom::Node> &parent)
+        : Node(std::move(baseURI), std::move(tagName), NodeType::ELEMENT_NODE,
+               StrongPointer<DOMString>(), parent), children(getChildNodes()) {}
+
 feather::StrongPointer<feather::DOMString> Element::getAttribute(feather::DOMString name) const {
-    auto attr = attributes->getNamedItem(std::move(name));
+    auto attr = attributes.getNamedItem(std::move(name));
     return attr ? std::make_shared<DOMString>(attr->getValue()) : StrongPointer<DOMString>();
 }
 
@@ -83,6 +86,11 @@ feather::StrongPointer<Element> Element::getClosest(feather::DOMString selector)
     auto sel = selector::CSSSelector::parse(std::move(selector), ref);
     while (!sel.matches(ref) && (ref = ref->getParentElement()));
     return ref;
+}
+
+feather::Vector<DOMRect> Element::getClientRects() const {
+    //TODO: implement method
+    return {};
 }
 
 DOMRect Element::getBoundingClientRect() const {
@@ -207,7 +215,7 @@ feather::DOMString Element::cacheInnerHTML() const {
 feather::DOMString Element::cacheOuterHTML() const {
     DOMString html;
     UInt reserve = 0;
-    DOMString attrs = attributes->toHTML();
+    DOMString attrs = attributes.toHTML();
     DOMString inner = getInnerHtml();
     reserve += 1 + getTagName().length() + attrs.length() + 1 + inner.length() + 2 + getTagName().length() + 1;
     html.reserve(reserve);
@@ -251,7 +259,7 @@ feather::StrongPointer<Element> Element::getPreviousElementSibling() const {
 void Element::updateElementIndeces() const {
     if (getParentElement()) {
         auto children = getParentElement()->getChildren();
-        for (UInt i = 0, ri = children->size(); ri--; i++) children->get(i)->indeces->set(std::make_pair(i, ri));
+        for (UInt i = 0, ri = children->size(); ri--; i++) children->get(i)->indeces.set(std::make_pair(i, ri));
     } else if (getParentNode()) {
         Vector <StrongPointer<Element>> v;
         auto children = getParentNode()->getChildNodes();
@@ -260,9 +268,9 @@ void Element::updateElementIndeces() const {
             if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE)
                 v.push_back(std::static_pointer_cast<Element>(child));
         }
-        for (UInt i = 0, ri = children->size(); ri--; i++) v[i]->indeces->set(std::make_pair(i, ri));
+        for (UInt i = 0, ri = children->size(); ri--; i++) v[i]->indeces.set(std::make_pair(i, ri));
     } else {
-        indeces->set(std::make_pair(0, 0));
+        indeces.set(std::make_pair(0, 0));
     }
 }
 
@@ -272,14 +280,14 @@ void Element::updatedTypedIndeces() const {
         Multimap <DOMString, StrongPointer<Element>> m;
         for (UInt i = 0, ri = children->size(); ri--; i++) {
             auto child = children->get(i);
-            child->indeces->set(std::make_pair(i, ri));
+            child->indeces.set(std::make_pair(i, ri));
             m.emplace(child->getTagName(), child);
         }
         Vector <StrongPointer<Element>> v;
         DOMString s;
         for (const auto &pair : m) {
             if (s != pair.first) {
-                for (UInt i = 0, ri = v.size(); ri--; i++) v[i]->typedIndeces->set(std::make_pair(i, ri));
+                for (UInt i = 0, ri = v.size(); ri--; i++) v[i]->typedIndeces.set(std::make_pair(i, ri));
                 v.clear();
                 s = pair.first;
             }
@@ -302,35 +310,35 @@ void Element::updatedTypedIndeces() const {
             if (s != pair.first) {
                 for (UInt i = 0, ri = v.size(); ri--; i++) {
                     Pair <UInt, StrongPointer<Element>> p = v[i];
-                    p.second->typedIndeces->set(std::make_pair(i, ri));
-                    p.second->indeces->set(std::make_pair(p.first, size - p.first));
+                    p.second->typedIndeces.set(std::make_pair(i, ri));
+                    p.second->indeces.set(std::make_pair(p.first, size - p.first));
                 }
             }
         }
     } else {
-        indeces->set(std::make_pair(0, 0));
-        typedIndeces->set(std::make_pair(0, 0));
+        indeces.set(std::make_pair(0, 0));
+        typedIndeces.set(std::make_pair(0, 0));
     }
 }
 
 feather::UInt Element::getElementIndex() const {
-    if (!indeces->isValid()) updateElementIndeces();
-    return indeces->get().first;
+    if (!indeces.isValid()) updateElementIndeces();
+    return indeces.get().first;
 }
 
 feather::UInt Element::getLastElementIndex() const {
-    if (!indeces->isValid()) updateElementIndeces();
-    return indeces->get().second;
+    if (!indeces.isValid()) updateElementIndeces();
+    return indeces.get().second;
 }
 
 feather::UInt Element::getTypedElementIndex() const {
-    if (!typedIndeces->isValid()) updatedTypedIndeces();
-    return typedIndeces->get().first;
+    if (!typedIndeces.isValid()) updatedTypedIndeces();
+    return typedIndeces.get().first;
 }
 
 feather::UInt Element::getLastTypedElementIndex() const {
-    if (!typedIndeces->isValid()) updatedTypedIndeces();
-    return typedIndeces->get().second;
+    if (!typedIndeces.isValid()) updatedTypedIndeces();
+    return typedIndeces.get().second;
 }
 
 feather::StrongPointer<feather::DOMString>
@@ -338,20 +346,20 @@ Element::getAttributeNS(feather::DOMString ns, feather::DOMString name) const {
     return getAttribute(ns + std::move(name));
 }
 
-feather::StrongPointer<FilteredByClassName> Element::getElementsByClassName(DOMString className) const {
-    return std::make_shared<FilteredByClassName>(std::static_pointer_cast<const Element>(shared_from_this()),
-                                                 std::move(className));
+feather::StrongPointer<elists::FilteredByClassName> Element::getElementsByClassName(DOMString className) const {
+    return std::make_shared<elists::FilteredByClassName>(std::static_pointer_cast<const Element>(shared_from_this()),
+                                                         std::move(className));
 }
 
-feather::StrongPointer<FilteredByTagName> Element::getElementsByTagName(feather::DOMString tagName) const {
-    return std::make_shared<FilteredByTagName>(std::static_pointer_cast<const Element>(shared_from_this()),
-                                               std::move(tagName));
+feather::StrongPointer<elists::FilteredByTagName> Element::getElementsByTagName(feather::DOMString tagName) const {
+    return std::make_shared<elists::FilteredByTagName>(std::static_pointer_cast<const Element>(shared_from_this()),
+                                                       std::move(tagName));
 }
 
-feather::StrongPointer<FilteredByTagNameNS> Element::getElementsByTagNameNS(feather::DOMString ns,
-                                                                            feather::DOMString tagName) const {
-    return std::make_shared<FilteredByTagNameNS>(std::static_pointer_cast<const Element>(shared_from_this()),
-                                                 std::move(ns), std::move(tagName));
+feather::StrongPointer<elists::FilteredByTagNameNS> Element::getElementsByTagNameNS(feather::DOMString ns,
+                                                                                    feather::DOMString tagName) const {
+    return std::make_shared<elists::FilteredByTagNameNS>(std::static_pointer_cast<const Element>(shared_from_this()),
+                                                         std::move(ns), std::move(tagName));
 }
 
 bool Element::toggleAttribute(feather::DOMString attr) {
@@ -373,7 +381,8 @@ bool Element::toggleAttribute(feather::DOMString attr, bool force) {
 void Element::setAttribute(feather::DOMString name, feather::DOMString value) {
     switch (hasher(name.c_str())) {
         case hasher("class"): {
-            getAttributes()->setNamedItem(std::make_shared<ClassAttr>(getThisRef(), classList, std::move(value)));
+            getAttributes()->setNamedItem(
+                    std::make_shared<ClassAttr>(getThisRef(), getClassList(), std::move(value)));
             break;
         }
         default: {
@@ -390,4 +399,23 @@ bool Element::isEqualNode(const feather::StrongPointer<const feather::dom::Node>
         }
     }
     return false;
+}
+
+feather::StrongPointer<Attr> ClassAttr::clone(const feather::StrongPointer<feather::dom::Element> &element) const {
+    return std::make_shared<ClassAttr>(element, element->getClassList(), getValue());
+}
+
+feather::StrongPointer<Node> Element::cloneNode(bool deep) const {
+    auto clone = std::make_shared<Element>(getBaseURI(), getTagName(), StrongPointer<Node>());
+    auto map = getAttributes(), cmap = clone->getAttributes();
+    auto backing = *(map->getBacking()), cbacking = *(cmap->getBacking());
+    auto order = *(map->getInsertionOrder()), corder = *(cmap->getInsertionOrder());
+    for (const auto &pair : backing) cbacking[pair.first] = pair.second->clone(clone);
+    corder.insert(corder.end(), order.begin(), order.end());
+    if (deep) {
+        auto children = getChildNodes(), cchildren = clone->getChildNodes();
+        cchildren->reserve(children->size());
+        for (UInt i = 0; i < children->size(); cchildren->add(children->get(i++)->cloneNode(true)));
+    }
+    return clone;
 }

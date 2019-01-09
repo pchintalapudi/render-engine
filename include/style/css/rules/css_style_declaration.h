@@ -31,7 +31,7 @@ namespace feather {
             void setProperty(const DOMString &property, DOMString value, bool priority);
 
             inline bool hasProperty(const DOMString &property) const {
-                return std::find(indeces.begin(), indeces.end(), property) != indeces.end();
+                return indeces.find(property) != indeces.end();
             }
 
             DOMString getPropertyPriority(const DOMString &) const;
@@ -40,15 +40,19 @@ namespace feather {
 
             DOMString removeProperty(const DOMString &);
 
-            UnaryPair<DOMString> item(UInt) const;
+            Tuple<DOMString, DOMString, bool> item(UInt) const;
 
             DOMString getCssText() const;
 
             void setCssText(DOMString cssText);
 
-            inline UInt getLength() const { return props.size(); }
+            inline UInt getLength() const { return size(); }
+
+            inline UInt size() const { return props.size(); }
 
             inline StrongPointer<rules::CSSRule> getParentRule() const { return parentRule.lock(); }
+
+            inline void markValid() const { validate(); }
         };
     }
 }

@@ -44,6 +44,16 @@ namespace feather {
 
             inline bool operator!=(const NamedNodeMap &other) { return !(*this == other); }
 
+            //Danger zone
+
+            Map<DOMString, StrongPointer<Attr>> *getBacking() { return &backing; }
+
+            const Map<DOMString, StrongPointer<Attr>> *getBacking() const { return &backing; }
+
+            List<DOMString> *getInsertionOrder() { return &insertionOrder; }
+
+            const List<DOMString> *getInsertionOrder() const { return &insertionOrder; }
+
         protected:
             void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
                 s -= observable::InvEvent::INVALIDATE_THIS;

@@ -246,7 +246,7 @@ namespace feather {
         template<typename ElementType, typename Inv, typename Op>
         class RiskyFilteredList : Invalidatable {
         public:
-            explicit RiskyFilteredList(StrongPointer<const Inv> watched, Op op)
+            RiskyFilteredList(StrongPointer<const Inv> watched, Op op)
                     : watched(std::move(watched)), op(std::move(op)) {}
 
             inline ElementType get(UInt i) const { return getVector()[i]; }
