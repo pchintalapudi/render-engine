@@ -59,7 +59,7 @@ namespace feather::dom::dlists {
 }
 
 feather::StrongPointer<feather::dom::html::HTMLHtmlElement> Document::getDocumentElement() const {
-    StrongPointer <NodeList> children = getChildNodes();
+    auto children = getChildNodes();
     for (UInt i = children->size(); i-- > 0;) {
         auto child = children->get(i);
         if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE &&

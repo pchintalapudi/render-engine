@@ -102,7 +102,7 @@ namespace feather {
 
                 inline void setTarget(DOMString target) { setAttribute("target", std::move(target)); }
 
-                inline StrongPointer<DOMString> getText() const { return getTextContent(); }
+                inline StrongPointer<const DOMString> getText() const { return getTextContent(); }
             };
 
             class HTMLAreaElement : public Hyperlink {
@@ -146,7 +146,7 @@ namespace feather {
 
                 inline void setTarget(DOMString target) { setAttribute("target", std::move(target)); }
 
-                inline StrongPointer<DOMString> getText() const { return getTextContent(); }
+                inline StrongPointer<const DOMString> getText() const { return getTextContent(); }
             };
 
             class HTMLBaseElement : public HTMLElement {

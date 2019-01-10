@@ -407,13 +407,15 @@ feather::StrongPointer<Attr> ClassAttr::clone(const feather::StrongPointer<feath
 
 feather::StrongPointer<Node> Element::cloneNode(bool deep) const {
     auto clone = std::make_shared<Element>(getBaseURI(), getTagName(), StrongPointer<Node>());
-    auto map = getAttributes(), cmap = clone->getAttributes();
+    auto map = getAttributes();
+    auto cmap = clone->getAttributes();
     auto backing = *(map->getBacking()), cbacking = *(cmap->getBacking());
     auto order = *(map->getInsertionOrder()), corder = *(cmap->getInsertionOrder());
     for (const auto &pair : backing) cbacking[pair.first] = pair.second->clone(clone);
     corder.insert(corder.end(), order.begin(), order.end());
     if (deep) {
-        auto children = getChildNodes(), cchildren = clone->getChildNodes();
+        auto children = getChildNodes();
+        auto cchildren = clone->getChildNodes();
         cchildren->reserve(children->size());
         for (UInt i = 0; i < children->size(); cchildren->add(children->get(i++)->cloneNode(true)));
     }

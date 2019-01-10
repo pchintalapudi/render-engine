@@ -35,11 +35,19 @@ namespace feather {
 
             Element(DOMString baseURI, DOMString tagName, const StrongPointer<Node> &parent);
 
-            inline StrongPointer<NamedNodeMap> getAttributes() const {
+            inline StrongPointer<const NamedNodeMap> getAttributes() const {
+                return StrongPointer<const NamedNodeMap>(shared_from_this(), &attributes);
+            }
+
+            inline StrongPointer<NamedNodeMap> getAttributes() {
                 return StrongPointer<NamedNodeMap>(shared_from_this(), &attributes);
             }
 
-            inline StrongPointer<DOMTokenList> getClassList() const {
+            inline StrongPointer<const DOMTokenList> getClassList() const {
+                return StrongPointer<const DOMTokenList>(shared_from_this(), &classList);
+            }
+
+            inline StrongPointer<DOMTokenList> getClassList() {
                 return StrongPointer<DOMTokenList>(shared_from_this(), &classList);
             }
 
@@ -234,18 +242,22 @@ namespace feather {
 
             //ParentNode impl
 
-            inline UInt getChildElementCount() { return children.size(); }
+            inline UInt getChildElementCount() const { return children.size(); }
 
-            inline StrongPointer<HTMLCollection> getChildren() const {
+            inline StrongPointer<const HTMLCollection> getChildren() const {
+                return StrongPointer<const HTMLCollection>(shared_from_this(), &children);
+            }
+
+            inline StrongPointer<HTMLCollection> getChildren() {
                 return StrongPointer<HTMLCollection>(shared_from_this(), &children);
             }
 
-            inline StrongPointer<Element> getFirstElementChild() {
-                return !children.empty() ? children.get(0) : nullptr;
+            inline StrongPointer<Element> getFirstElementChild() const {
+                return !children.empty() ? children.get(0) : StrongPointer<Element>();
             }
 
-            inline StrongPointer<Element> getLastElementChild() {
-                return !children.empty() ? children.get(children.size() - 1) : nullptr;
+            inline StrongPointer<Element> getLastElementChild() const {
+                return !children.empty() ? children.get(children.size() - 1) : StrongPointer<Element>();
             }
 
             inline StrongPointer<Element> getThisRef() const { return thisRef; }
@@ -270,16 +282,17 @@ namespace feather {
         protected:
 
             //TODO: Implement me
-            void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
+            void
+            modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
 
         private:
-            mutable NamedNodeMap attributes;
-            mutable DOMTokenList classList;
+            NamedNodeMap attributes;
+            DOMTokenList classList;
             double clientDim[4];
             DOMString ns, prefix, localName;
             double scrollDim[4];
             StrongPointer<ShadowRoot> shadowRoot;
-            mutable HTMLCollection children;
+            HTMLCollection children;
 
             //Caches
             mutable DOMString innerHTML;

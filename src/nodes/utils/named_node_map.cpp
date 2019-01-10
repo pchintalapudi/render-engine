@@ -46,7 +46,7 @@ feather::DOMString NamedNodeMap::toHTML() const {
     return html;
 }
 
-bool NamedNodeMap::operator==(const feather::dom::NamedNodeMap &other) {
+bool NamedNodeMap::operator==(const feather::dom::NamedNodeMap &other) const {
     if (other.size() == size()) {
         for (const auto &pair : backing) {
             auto p1 = pair.second;

@@ -40,9 +40,9 @@ namespace feather {
 
             DOMString toHTML() const;
 
-            bool operator==(const NamedNodeMap &other);
+            bool operator==(const NamedNodeMap &other) const;
 
-            inline bool operator!=(const NamedNodeMap &other) { return !(*this == other); }
+            inline bool operator!=(const NamedNodeMap &other) const { return !(*this == other); }
 
             //Danger zone
 

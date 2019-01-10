@@ -12,7 +12,8 @@ namespace feather {
         template<typename E, typename Derived>
         class ObservableList : public Invalidatable {
         public:
-            ObservableList() : extractor(StrongPointer < Function < StrongPointer<Invalidatable>(E) >> ()) {}
+            ObservableList() : extractor(
+                    feather::StrongPointer<feather::Function<StrongPointer<Invalidatable>(E) >>()) {}
 
             explicit ObservableList(StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor)
                     : extractor(std::move(extractor)) {}
@@ -200,48 +201,6 @@ namespace feather {
                 return cached;
             }
         };
-
-        template<typename ListType, typename MapType, typename AdjusterType>
-        class LessSketchyObservableListWrapper : public Invalidatable {
-        public:
-            explicit LessSketchyObservableListWrapper(StrongPointer<const ListType> watched, AdjusterType adjuster)
-                    : watched(std::move(watched)), adjuster(std::move(adjuster)) {}
-
-            inline MapType get(UInt idx) const { return getVector()[idx]; }
-
-            inline bool contains(MapType mt) const {
-                return std::find(getVector().begin(), getVector().end(), std::move(mt)) != getVector().end();
-            }
-
-            inline UInt size() const { return getVector().size(); }
-
-            inline bool empty() const { return getVector().empty(); }
-
-        private:
-            WeakPointer<const ListType> watched;
-            AdjusterType adjuster;
-
-            mutable Vector <MapType> cached;
-
-            void recompute() const {
-                cached.clear();
-                auto ptr = watched.lock();
-                if (ptr) {
-                    for (UInt i = 0; i < ptr->size(); i++) {
-                        Pair<bool, MapType> p = adjuster(ptr->get(i));
-                        if (p.first) cached.push_back(p.second);
-                    }
-                }
-            }
-
-            inline Vector <MapType> &getVector() const {
-                if (!isValid()) recompute();
-                return cached;
-            }
-        };
-
-        template<typename ListType, typename Filter>
-        using FilteredList = LessSketchyObservableListWrapper<ListType, ListType, Filter>;
 
         template<typename ElementType, typename Inv, typename Op>
         class RiskyFilteredList : Invalidatable {
