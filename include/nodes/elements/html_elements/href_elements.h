@@ -7,75 +7,19 @@
 
 #include "html_element.h"
 #include "style/css/css_style_sheet.h"
+#include "globals/window.h"
 
 namespace feather {
     namespace dom {
 
         namespace html {
-            class Hyperlink : public HTMLElement {
+
+            class Hyperlink : public HTMLElement, global::URLUtils<Hyperlink> {
             public:
 
-                inline DOMString getHref() const { return href; }
+                inline DOMString getHref() const { return getAttributeSafe("href"); }
 
-                void setHref(DOMString protocol);
-
-                inline DOMString getOrigin() const { return getProtocol() + getHost(); }
-
-                inline DOMString getProtocol() const { return getPart(URLPointer::SCHEME, URLPointer::USERNAME); }
-
-                void setProtocol(DOMString protocol);
-
-                inline DOMString getUsername() const { return getPart(URLPointer::USERNAME, URLPointer::PASSWORD); }
-
-                void setUsername(DOMString username);
-
-                inline DOMString getPassword() const { return getPart(URLPointer::PASSWORD, URLPointer::HOSTNAME); }
-
-                void setPassword(DOMString password);
-
-                inline DOMString getHost() const { return getPart(URLPointer::HOSTNAME, URLPointer::PATHNAME); }
-
-                void setHost(DOMString host);
-
-                inline DOMString getHostName() const { return getPart(URLPointer::HOSTNAME, URLPointer::PORT); }
-
-                void setHostName(DOMString hostName);
-
-                inline UShort getPort() const {
-                    auto port = getPart(URLPointer::PORT, URLPointer::PATHNAME);
-                    return port.empty() ? ~0u : std::stoi(port.substr(1));
-                }
-
-                void setPort(UShort port);
-
-                Vector<DOMString> getPath() const;
-
-                void setPath(DOMString path);
-
-                inline DOMString getSearch() const { return getPart(URLPointer::SEARCH, URLPointer::HASH); }
-
-                void setSearch(DOMString search);
-
-                inline DOMString getHash() const { return getPart(URLPointer::HASH, URLPointer::END); }
-
-                void setHash(DOMString hash);
-
-                inline DOMString toString() const { return getHref(); }
-
-            private:
-
-                enum class URLPointer {
-                    SCHEME, USERNAME, PASSWORD, HOSTNAME, PORT, PATHNAME, SEARCH, HASH, END, __COUNT__
-                };
-
-                inline DOMString getPart(URLPointer start, URLPointer end) const {
-                    return getHref().substr(static_cast<UInt>(start),
-                                            static_cast<UInt>(end) - static_cast<UInt>(start));
-                }
-
-                DOMString href;
-                DOMString original;
-                UInt pointers[static_cast<int>(URLPointer::__COUNT__)];
+                inline void setHref(DOMString href) { setAttribute("href", std::move(href)); }
             };
 
             class HTMLAnchorElement : public Hyperlink {

@@ -149,9 +149,7 @@ namespace feather {
             Vector<feather::StrongPointer<const dom::Element>> focused = Vector<StrongPointer<const dom::Element>>();
 
             inline void invalidate() const {
-                observable::Invalidatable::invalidate(
-                        RegularEnumSet<observable::InvEvent>() += observable::InvEvent::PSEUDOCLASS_CHANGE, this
-                );
+                //TODO: actually invalidate
             }
         };
     }

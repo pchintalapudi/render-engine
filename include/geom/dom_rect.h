@@ -4,6 +4,9 @@
 
 #ifndef FEATHER_DOM_RECT_H
 #define FEATHER_DOM_RECT_H
+
+#include "observable/invalidatable.h"
+
 namespace feather {
     namespace dom {
         class DOMRectReadOnly {
@@ -36,10 +39,7 @@ namespace feather {
         class DOMRect : public DOMRectReadOnly {
         public:
 
-            DOMRect() : DOMRectReadOnly() {}
-
-            DOMRect(double x, double y, double width, double height)
-                    : DOMRectReadOnly(x, y, width, height) {}
+            using DOMRectReadOnly::DOMRectReadOnly;
 
             inline void setX(double x) { this->x = x; }
 
@@ -48,6 +48,37 @@ namespace feather {
             inline void setWidth(double width) { this->width = width; }
 
             inline void setHeight(double height) { this->height = height; }
+        };
+
+        class ObservableDOMRect : public DOMRectReadOnly, public observable::Invalidatable {
+        public:
+            using DOMRectReadOnly::DOMRectReadOnly;
+            using Invalidatable::Invalidatable;
+
+            inline void setX(double x) {
+                this->x = x;
+                invalidate();
+            }
+
+            inline void setY(double y) {
+                this->y = y;
+                invalidate();
+            }
+
+            inline void setWidth(double width) {
+                this->width = width;
+                invalidate();
+            }
+
+            inline void setHeight(double height) {
+                this->height = height;
+                invalidate();
+            }
+
+        private:
+            void invalidate() {
+                validate();
+            }
         };
     }
 }

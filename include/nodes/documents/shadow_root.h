@@ -5,6 +5,7 @@
 #ifndef FEATHER_SHADOW_ROOT_H
 #define FEATHER_SHADOW_ROOT_H
 
+#include "document.h"
 #include "../elements/element.h"
 
 namespace feather {

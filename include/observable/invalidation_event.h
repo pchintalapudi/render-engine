@@ -11,9 +11,10 @@ namespace feather {
     namespace observable {
         enum class InvEvent {
             INVALIDATE_THIS,
-            CONTINUE_PROPAGATION,
+            STOP_PROPAGATION,
             REBOUND,
-            PROPAGATE_UPWARDS,
+            PROPAGATE_DOWNWARD,
+            __MANGLE_NONLOCAL__,
             PARENT_CHANGE,
             CHILDREN_CHANGE,
             NODE_INDEX_CHANGE,
@@ -22,9 +23,7 @@ namespace feather {
             ATTRIBUTE_SIZE_CHANGE,
             CLASS_CHANGE,
             SHADOW_ROOT_CHANGE,
-            ELEMENT_INDEX_CHANGE,
             CONTENTEDITABLE_CHANGE,
-            PSEUDOCLASS_CHANGE,
             STYLE_PROPERTY_CHANGE,
             __MANGLE__LOCAL__,
             LOCAL_PARENT_CHANGE,
@@ -35,7 +34,6 @@ namespace feather {
             LOCAL_ATTRIBUTE_SIZE_CHANGE,
             LOCAL_CLASS_CHANGE,
             LOCAL_SHADOW_ROOT_CHANGE,
-            LOCAL_ELEMENT_INDEX_CHANGE,
             LOCAL_CONTENTEDITABLE_CHANGE,
             LOCAL_STYLE_PROPERTY_CHANGE,
             __COUNT__

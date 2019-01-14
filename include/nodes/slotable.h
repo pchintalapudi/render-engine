@@ -13,9 +13,11 @@ namespace feather {
 
         class Slotable {
         public:
-            inline StrongPointer <HTMLSlotElement> getAssignedSlot() { return slot.expired() ? nullptr : slot.lock(); }
+            inline StrongPointer <HTMLSlotElement> getAssignedSlot() {
+                return slot.expired() ? StrongPointer<HTMLSlotElement>() : slot.lock();
+            }
 
-            inline void setAssignedSlot(StrongPointer <HTMLSlotElement> slotPointer) { slot = slotPointer; }
+            inline void setAssignedSlot(const StrongPointer <HTMLSlotElement> &slotPointer) { slot = slotPointer; }
 
         private:
             WeakPointer <HTMLSlotElement> slot;

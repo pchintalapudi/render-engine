@@ -22,52 +22,48 @@ namespace feather {
             class CSSAttributeSelector {
             public:
 
-                CSSAttributeSelector(DOMString &&attr, DOMString &&val, CSSAttributeType type, TriValue caseSensitive);
+                CSSAttributeSelector(DOMString attr, DOMString val, CSSAttributeType type, TriValue caseSensitive);
 
                 DOMString toString() const;
 
-                bool matches(StrongPointer<const Element> element) const;
+                bool matches(const StrongPointer<const Element> &element) const;
 
             private:
-                DOMString attr;
+                DOMString attr{};
                 CSSAttributeType type;
                 TriValue caseSensitive;
-                DOMString val;
+                DOMString val{};
             };
 
             class CSSPseudoclassSelector {
             public:
 
-                CSSPseudoclassSelector() = default;
-
                 virtual DOMString toString() const = 0;
 
-                virtual bool matches(StrongPointer<const Element> element) const = 0;
-
-                virtual CSSPseudoclassSelector *clone() const = 0;
+                virtual bool matches(const StrongPointer<const Element> &element) const = 0;
 
                 virtual ~CSSPseudoclassSelector() = default;
             };
 
             class CSSToken {
             public:
-                CSSToken(DOMString &&tagName, DOMString &&id, Vector<DOMString> &&classes,
-                         Vector<CSSAttributeSelector> &&attributes,
-                         Vector<CSSPseudoclassSelector *> &&pseudoclasses, CSSRelation relation)
-                        : tagName(tagName), id(id), classes(classes), attributes(attributes),
-                          pseudoclasses(pseudoclasses), relation(relation) {}
+                CSSToken(DOMString tagName, DOMString id, Vector<DOMString> classes,
+                         Vector<CSSAttributeSelector> attributes, Vector<CSSPseudoclassSelector *> pseudoclasses,
+                         CSSRelation relation) : tagName(std::move(tagName)), id(std::move(id)),
+                                                 classes(std::move(classes)), attributes(std::move(attributes)),
+                                                 pseudoclasses(std::move(pseudoclasses)), relation(relation) {}
 
-                CSSToken(const CSSToken &other);
+                CSSToken(const CSSToken &other) = delete;
 
-                CSSToken &operator=(const CSSToken &other) = default;
+                auto operator=(const CSSToken &other) = delete;
 
-                CSSToken(CSSToken &&other) noexcept;
+                CSSToken(CSSToken &&other) = default;
 
                 CSSToken &operator=(CSSToken &&other) = default;
 
                 DOMString toString() const;
 
-                bool matches(StrongPointer<const Element> element) const;
+                bool matches(const StrongPointer<const Element> &element) const;
 
                 inline CSSRelation getRelation() const { return relation; }
 
@@ -76,34 +72,35 @@ namespace feather {
                 ~CSSToken() { for (auto pclass : pseudoclasses) delete pclass; }
 
             private:
-                DOMString tagName;
-                DOMString id;
-                Vector<DOMString> classes;
-                Vector<CSSAttributeSelector> attributes;
-                Vector<CSSPseudoclassSelector *> pseudoclasses;
+                DOMString tagName{};
+                DOMString id{};
+                Vector<DOMString> classes{};
+                Vector<CSSAttributeSelector> attributes{};
+                Vector<CSSPseudoclassSelector *> pseudoclasses{};
                 CSSRelation relation;
             };
 
             class CSSDescendantToken {
             public:
 
-                explicit CSSDescendantToken(Vector<CSSToken> &&group);
+                explicit CSSDescendantToken(Vector<CSSToken> group);
 
                 DOMString toString() const;
 
-                bool matches(StrongPointer<const Element> element) const;
+                bool matches(const StrongPointer<const Element> &element) const;
 
                 inline UInt size() const { return length; }
 
             private:
-                Vector<CSSToken> group;
-                UInt length;
+                Vector<CSSToken> group{};
+                UInt length = 0;
             };
 
             class CSSSelector {
             public:
 
-                explicit CSSSelector(Vector<CSSDescendantToken> &&descendants) : descendants(descendants) {}
+                explicit CSSSelector(Vector<CSSDescendantToken> descendants)
+                        : descendants(std::move(descendants)) {}
 
                 bool matches(const StrongPointer<const Element> &element) const;
 
@@ -138,7 +135,7 @@ namespace feather {
                                                              StrongPointer<const Element> scope);
 
             private:
-                Vector<CSSDescendantToken> descendants;
+                Vector<CSSDescendantToken> descendants{};
 
                 Vector<CSSDescendantToken>::const_iterator
                 preprocess(StrongPointer<const Element> scope) const;

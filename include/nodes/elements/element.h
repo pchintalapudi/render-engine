@@ -279,12 +279,6 @@ namespace feather {
                 return computedStyle;
             }
 
-        protected:
-
-            //TODO: Implement me
-            void
-            modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
-
         private:
             NamedNodeMap attributes;
             DOMTokenList classList;

@@ -3,6 +3,7 @@
 //
 
 #include "nodes/elements/element.h"
+#include "nodes/documents/shadow_root.h"
 
 using namespace feather::dom;
 namespace {
@@ -20,7 +21,7 @@ namespace {
         }
 
     private:
-        feather::DOMString tagName;
+        feather::DOMString tagName{};
     };
 
     class ClassNameFilter {
@@ -35,7 +36,7 @@ namespace {
         }
 
     private:
-        feather::DOMString className;
+        feather::DOMString className{};
     };
 }
 
@@ -43,38 +44,55 @@ class feather::dom::elists::FilteredByTagName
         : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
 public:
     FilteredByTagName(StrongPointer<const Element> element, DOMString filter)
-            : RiskyFilteredList(std::move(element), TagNameFilter(std::move(filter))) {}
+            : RiskyFilteredList(std::move(element), TagNameFilter(std::move(filter))) {
+        element->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+    }
 
 protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
+        if (s.contains(observable::InvEvent::CHILDREN_CHANGE)) s += observable::InvEvent::INVALIDATE_THIS;
+        else s -= observable::InvEvent::INVALIDATE_THIS;
+    }
 };
 
 class feather::dom::elists::FilteredByTagNameNS
         : observable::RiskyFilteredList<StrongPointer<Element>, Element, TagNameFilter> {
 public:
     FilteredByTagNameNS(StrongPointer<const Element> element, const DOMString &ns, const DOMString &name)
-            : RiskyFilteredList(std::move(element), TagNameFilter(ns + name)) {}
+            : RiskyFilteredList(std::move(element), TagNameFilter(ns + name)) {
+        element->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+    }
 
 protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {}
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
+        if (s.contains(observable::InvEvent::CHILDREN_CHANGE)) s += observable::InvEvent::INVALIDATE_THIS;
+        else s -= observable::InvEvent::INVALIDATE_THIS;
+    }
 };
 
 class feather::dom::elists::FilteredByClassName
         : observable::RiskyFilteredList<StrongPointer<Element>, Element, ClassNameFilter> {
 public:
     FilteredByClassName(StrongPointer<const Element> element, DOMString className)
-            : RiskyFilteredList(std::move(element), ClassNameFilter(std::move(className))) {}
+            : RiskyFilteredList(std::move(element), ClassNameFilter(std::move(className))) {
+        element->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+    }
 
 protected:
-    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override {
-
+    void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
+        if (s.contains(observable::InvEvent::CHILDREN_CHANGE) || s.contains(observable::InvEvent::CLASS_CHANGE))
+            s += observable::InvEvent::INVALIDATE_THIS;
+        else s -= observable::InvEvent::INVALIDATE_THIS;
     }
 };
 
 Element::Element(feather::DOMString baseURI, feather::DOMString tagName,
                  const feather::StrongPointer<feather::dom::Node> &parent)
         : Node(std::move(baseURI), std::move(tagName), NodeType::ELEMENT_NODE,
-               StrongPointer<DOMString>(), parent), children(getChildNodes()) {}
+               StrongPointer<DOMString>(), parent), Slotable(), children(getChildNodes()) {
+    bind(getAttributes());
+    bind(getClassList());
+}
 
 feather::StrongPointer<feather::DOMString> Element::getAttribute(feather::DOMString name) const {
     auto attr = attributes.getNamedItem(std::move(name));

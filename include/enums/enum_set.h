@@ -73,6 +73,8 @@ namespace feather {
 
         inline size_type toBitfield() const { return field; }
 
+        inline void fromBitfield(size_type field) { this->field = field; }
+
         inline bool operator!() const { return !field; }
 
         explicit inline operator bool() const { return field != 0; }

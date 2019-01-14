@@ -16,7 +16,15 @@ namespace feather {
             WatchedObservableItem() = default;
 
             explicit WatchedObservableItem(RegularEnumSet <InvEvent> required)
-                    : required(required), anyOf(RegularEnumSet<InvEvent>()) {}
+                    : required(required) {}
+
+            explicit WatchedObservableItem(RegularEnumSet <InvEvent> required, RegularEnumSet <InvEvent> anyOf)
+                    : required(required), anyOf(anyOf) {}
+
+            explicit WatchedObservableItem(I i) : i(i) {}
+
+            explicit WatchedObservableItem(I i, RegularEnumSet <InvEvent> required, RegularEnumSet <InvEvent> anyOf)
+                    : i(i), required(required), anyOf(anyOf) {}
 
             inline I get() const { return i; }
 
@@ -31,8 +39,8 @@ namespace feather {
             }
 
         private:
-            I i;
-            RegularEnumSet <InvEvent> required, anyOf;
+            I i{};
+            RegularEnumSet <InvEvent> required{}, anyOf{};
         };
 
         template<typename I>
@@ -43,11 +51,24 @@ namespace feather {
 
             explicit SourceObservableItem(I init) : i(std::move(init)) {}
 
-            inline I get() const { return i; }
+            inline const I &get() const { return i; }
 
             inline void set(I i) {
                 this->i = i;
                 invalidate(RegularEnumSet<InvEvent>(), this);
+            }
+
+            SourceObservableItem &operator=(I i) {
+                set(i);
+                return *this;
+            }
+
+            const I &operator*() const {
+                return get();
+            }
+
+            const I *operator->() const {
+                return &i;
             }
 
         protected:
@@ -56,7 +77,7 @@ namespace feather {
             }
 
         private:
-            I i = I();
+            I i{};
         };
     }
 }

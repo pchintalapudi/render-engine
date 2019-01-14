@@ -17,6 +17,17 @@ bool NodeList::deepEquals(const feather::dom::NodeList &other) const {
     return false;
 }
 
+void NodeList::invShort() const {
+    invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_CHILDREN_CHANGE, this);
+    invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_NODE_INDEX_CHANGE +
+               observable::InvEvent::PROPAGATE_DOWNWARD, this);
+}
+
+void NodeList::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
+                      const feather::observable::Invalidatable *) const {
+    s -= observable::InvEvent::INVALIDATE_THIS;
+}
+
 feather::UInt Node::getIndex() const {
     if (nodeIndex.isValid()) return nodeIndex.get();
     if (getParentNode()) {
@@ -261,7 +272,7 @@ void Node::setParentNode(const feather::StrongPointer<feather::dom::Node> &paren
     auto ptr = StrongPointer<observable::WatchedObservableItem<UInt>>(shared_from_this(), &nodeIndex);
     auto old = parent.get().lock();
     if (old) old->getChildNodes()->unbind(ptr);
-    parent.set(parentNode);
+    parent = parentNode;
     parentNode->getChildNodes()->bind(ptr);
 }
 
@@ -342,13 +353,38 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
            feather::StrongPointer<feather::DOMString> value,
            const feather::StrongPointer<feather::dom::Node> &parent)
         : baseURI(std::move(baseURI)), name(std::move(name)), type(type), value(std::move(value)) {
+    bind(getChildNodes());
     this->parent.bind(feather::StrongPointer<observable::WatchedObservableItem<feather::WeakPointer<Document>>>
                               (shared_from_this(), &ownerPtr));
-    this->parent.bind(StrongPointer<observable::WatchedObservableItem<UInt>>(shared_from_this(), &nodeIndex));
+    this->parent->lock()->childNodes.bind(
+            StrongPointer<observable::WatchedObservableItem<UInt>>(shared_from_this(), &nodeIndex));
     setParentNode(parent);
 }
 
-void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
-                  const feather::observable::Invalidatable *) const {
+namespace {
+    bool isLocal(const feather::RegularEnumSet<feather::observable::InvEvent> &types) {
+        return types.toBitfield() << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
+    }
 
+    const feather::ULong global_mask = ~(~0u
+            >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__));
+
+    void delocalize(feather::RegularEnumSet<feather::observable::InvEvent> &types) {
+        types.fromBitfield((types.toBitfield() & global_mask) |
+                           (types.toBitfield() << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
+                                               >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
+    }
+}
+
+void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
+                  const feather::observable::Invalidatable *p) const {
+    types += observable::InvEvent::INVALIDATE_THIS;
+    if (isLocal(types)) {
+        delocalize(types);
+        //TODO: Implement change-specific handling
+    }
+    if (types.contains(observable::InvEvent::PROPAGATE_DOWNWARD)) {
+        types += observable::InvEvent::STOP_PROPAGATION;
+        for (const auto &child : childNodes) child->invalidate(types, p);
+    }
 }

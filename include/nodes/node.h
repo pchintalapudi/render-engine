@@ -35,7 +35,7 @@ namespace feather {
 
             NodeList() = default;
 
-            void invalidate() const {}
+            void invShort() const;
 
             bool deepEquals(const NodeList &other) const;
 
@@ -44,7 +44,7 @@ namespace feather {
             ~NodeList() override = default;
 
         protected:
-            void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *p) const override {}
+            void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *p) const override;
         };
 
         class Document;
@@ -79,7 +79,7 @@ namespace feather {
 
             StrongPointer<Node> getNextSibling() const;
 
-            inline DOMString getNodeName() const { return name; }
+            inline const DOMString &getNodeName() const { return name; }
 
             inline NodeType __MANGLE__getNodeType() const {
                 return static_cast<UInt>(type) ? type : NodeType::DOCUMENT_FRAGMENT_NODE;
@@ -91,7 +91,11 @@ namespace feather {
                 return value;
             }
 
-            void setNodeValue(const DOMString &value) { if (this->value) *this->value = value; }
+            inline const DOMString &getNodeValueUnsafe() const { return *value; }
+
+            inline void setNodeValue(DOMString value) { if (this->value) setNodeValueUnsafe(std::move(value)); }
+
+            inline void setNodeValueUnsafe(DOMString value) { *this->value = std::move(value); }
 
             StrongPointer<Document> getOwnerDocument() const;
 
@@ -186,14 +190,14 @@ namespace feather {
             void modify(RegularEnumSet<observable::InvEvent> &types, const Invalidatable *source) const override;
 
         private:
-            DOMString baseURI;
-            NodeList childNodes;
-            DOMString name;
+            DOMString baseURI{};
+            NodeList childNodes{};
+            DOMString name{};
             NodeType type;
-            StrongPointer<DOMString> value;
+            StrongPointer<DOMString> value{};
             observable::SourceObservableItem<WeakPointer<Node>> parent{};
-            mutable observable::WatchedObservableItem<UInt> nodeIndex;
-            mutable observable::WatchedObservableItem<WeakPointer<Document>> ownerPtr;
+            mutable observable::WatchedObservableItem<UInt> nodeIndex{0};
+            mutable observable::WatchedObservableItem<WeakPointer<Document>> ownerPtr{};
 
             DOMString getTextContentInternal() const;
         };

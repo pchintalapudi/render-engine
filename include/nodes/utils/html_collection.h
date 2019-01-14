@@ -23,9 +23,6 @@ namespace feather {
             explicit HTMLCollection(StrongPointer<NodeList> nodeList);
 
             StrongPointer<Element> getNamedItem(DOMString name) const;
-
-        protected:
-            void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *p) const override;
         };
 
         Pair<bool, StrongPointer<Element>> formFilter(const StrongPointer<Element> &p);

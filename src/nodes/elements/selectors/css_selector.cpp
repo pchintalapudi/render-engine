@@ -11,19 +11,19 @@
 using namespace feather::dom::selector;
 
 namespace {
-    feather::DOMString toLowercase(feather::DOMString s) {
-        feather::DOMString str;
+    feather::DOMString toLowercase(const feather::DOMString &s) {
+        feather::DOMString str{};
         str.reserve(s.length());
         for (auto c : s) str += static_cast<char>(std::tolower(c));
         return str;
     }
 }
 
-CSSAttributeSelector::CSSAttributeSelector(feather::DOMString &&attr, feather::DOMString &&val,
+CSSAttributeSelector::CSSAttributeSelector(feather::DOMString attr, feather::DOMString val,
                                            feather::dom::selector::CSSAttributeType type,
                                            feather::TriValue caseSensitive)
-        : attr(attr), type(type), caseSensitive(caseSensitive),
-          val(caseSensitive == TriValue::NO ? toLowercase(val) : val) {}
+        : attr(std::move(attr)), type(type), caseSensitive(caseSensitive),
+          val(caseSensitive == TriValue::NO ? toLowercase(val) : std::move(val)) {}
 
 feather::DOMString CSSAttributeSelector::toString() const {
     switch (type) {
@@ -46,7 +46,7 @@ feather::DOMString CSSAttributeSelector::toString() const {
     }
 }
 
-bool CSSAttributeSelector::matches(const feather::StrongPointer<const feather::dom::Element> element) const {
+bool CSSAttributeSelector::matches(const feather::StrongPointer<const feather::dom::Element> &element) const {
     switch (type) {
         case CSSAttributeType::CONTAINS: {
             auto val = element->getAttributeSafe(attr);
@@ -93,9 +93,9 @@ bool CSSAttributeSelector::matches(const feather::StrongPointer<const feather::d
 namespace {
 
     feather::DOMString toString(const feather::DOMString &pclass,
-                                feather::Vector<feather::dom::selector::CSSSelector> selectors) {
-        feather::Vector<feather::DOMString> temp;
-        feather::DOMString concat;
+                                const feather::Vector<feather::dom::selector::CSSSelector> &selectors) {
+        feather::Vector<feather::DOMString> temp{};
+        feather::DOMString concat{};
         feather::UInt reserve = pclass.length() + 1;
         for (const auto &sel : selectors) {
             auto str = sel.toString();
@@ -122,7 +122,7 @@ namespace {
     public:
         feather::DOMString toString() const override { return ":active"; }
 
-        bool matches(const feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             auto doc = element->getRootNode();
             if (doc) {
                 switch (doc->getNodeTypeInternal()) {
@@ -139,18 +139,17 @@ namespace {
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new ActivePseudoclass(); }
+
     };
 
     class AnyLinkPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":any-link"; }
 
-        bool matches(const feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isAnyLink(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new AnyLinkPseudoclass(); }
 
     };
 
@@ -158,44 +157,44 @@ namespace {
     public:
         feather::DOMString toString() const override { return ":blank"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isBlank(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new BlankPseudoclass(); }
+
     };
 
     class CheckedPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":checked"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isChecked(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new CheckedPseudoclass(); }
+
     };
 
     class DefaultPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":default"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isDefault(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new DefaultPseudoclass(); }
+
     };
 
     class DefinedPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":defined"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isDefined(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new DefinedPseudoclass(); }
+
     };
 
     class DirPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
@@ -205,11 +204,10 @@ namespace {
 
         feather::DOMString toString() const override { return ":dir(" + feather::DOMString(ltr ? "ltr" : "rtl") + ")"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isDir(element, ltr);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new DirPseudoclass(ltr); }
 
     private:
         const bool ltr;
@@ -219,81 +217,78 @@ namespace {
     public:
         feather::DOMString toString() const override { return ":disabled"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isDisabled(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new DisabledPseudoclass(); }
+
     };
 
     class EmptyPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":empty"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isEmpty(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new EmptyPseudoclass(); }
+
     };
 
     class EnabledPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":enabled"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isEnabled(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new EnabledPseudoclass(); }
+
     };
 
     class FirstChildPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":first-child"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isFirstChild(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new FirstChildPseudoclass(); }
+
     };
 
     class FirstOfTypePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit FirstOfTypePseudoclass(feather::DOMString &&type) : type(type) {}
+        explicit FirstOfTypePseudoclass(feather::DOMString type) : type(std::move(type)) {}
 
         feather::DOMString toString() const override { return ":first-of-type"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isFirstOfType(element, type);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new FirstOfTypePseudoclass(feather::DOMString(type));
-        }
 
     private:
-        const feather::DOMString type;
+        feather::DOMString type{};
     };
 
     class FullscreenPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":fullscreen"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isFullscreen(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new FullscreenPseudoclass(); }
+
     };
 
     class FocusPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":focus"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             auto doc = element->getRootNode();
             if (doc) {
                 switch (doc->getNodeTypeInternal()) {
@@ -310,14 +305,14 @@ namespace {
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new FocusPseudoclass(); }
+
     };
 
     class FocusVisiblePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":focus-visible"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             auto doc = element->getRootNode();
             if (doc) {
                 switch (doc->getNodeTypeInternal()) {
@@ -334,14 +329,14 @@ namespace {
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new FocusVisiblePseudoclass(); }
+
     };
 
     class FocusWithinPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":focus-within"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             auto doc = element->getRootNode();
             if (doc) {
                 switch (doc->getNodeTypeInternal()) {
@@ -358,77 +353,68 @@ namespace {
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new FocusWithinPseudoclass(); }
+
     };
 
     class HasPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit HasPseudoclass(feather::Vector<feather::dom::selector::CSSSelector> &&selectors)
-                : selectors(selectors) {}
+        explicit HasPseudoclass(feather::Vector<feather::dom::selector::CSSSelector> selectors)
+                : selectors(std::move(selectors)) {}
 
         feather::DOMString toString() const override {
             return ::toString(":has", selectors);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             if (element) for (const auto &selector : selectors) if (selector.querySelector(element)) return true;
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new HasPseudoclass(feather::Vector<CSSSelector>(selectors));
-        }
 
     private:
-        const feather::Vector<CSSSelector> selectors;
+        feather::Vector<CSSSelector> selectors{};
     };
 
     class HostPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":host"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isHost(element);
         }
-
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new HostPseudoclass(); }
     };
 
     class HostManagedPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit HostManagedPseudoclass(const feather::Vector<CSSSelector> &&selectors) : selectors(selectors) {}
+        explicit HostManagedPseudoclass(feather::Vector<CSSSelector> selectors) : selectors(std::move(selectors)) {}
 
         feather::DOMString toString() const override {
             return ::toString(":host", selectors);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             if (feather::css::PseudoclassManager::isHost(element) && element->getParentElement()) {
                 for (const auto &sel : selectors) if (sel.matches(element->getParentElement())) return true;
             }
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new HostManagedPseudoclass(feather::Vector<CSSSelector>(selectors));
-        }
-
     private:
-        const feather::Vector<CSSSelector> selectors;
+        feather::Vector<CSSSelector> selectors{};
     };
 
     class HostContextPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit HostContextPseudoclass(feather::Vector<CSSSelector> &&selectors) : selectors(selectors) {}
+        explicit HostContextPseudoclass(feather::Vector<CSSSelector> selectors) : selectors(std::move(selectors)) {}
 
         feather::DOMString toString() const override {
             return ::toString(":host-context", selectors);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             if (feather::css::PseudoclassManager::isHost(element) && element->getParentElement()) {
                 for (const auto &sel : selectors) {
                     auto parent = element->getParentElement();
@@ -439,18 +425,14 @@ namespace {
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new HostContextPseudoclass(feather::Vector<CSSSelector>(selectors));
-        }
-
     private:
-        const feather::Vector<CSSSelector> selectors;
+        const feather::Vector<CSSSelector> selectors{};
     };
 
     class HoverPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
         feather::DOMString toString() const override { return ":hover"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             auto doc = element->getRootNode();
             if (doc) {
                 switch (doc->getNodeTypeInternal()) {
@@ -467,85 +449,76 @@ namespace {
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new HoverPseudoclass(); }
+
     };
 
     class IndeterminatePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":indeterminate"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isIndeterminate(element);
         }
-
-        feather::dom::selector::CSSPseudoclassSelector *
-        clone() const override { return new IndeterminatePseudoclass(); }
     };
 
     class InRangePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":in-range"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isInRange(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new InRangePseudoclass(); }
+
     };
 
     class InvalidPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":invalid"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isInvalid(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new InvalidPseudoclass(); }
+
     };
 
     class IsPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit IsPseudoclass(feather::Vector<feather::dom::selector::CSSSelector> &&selectors)
-                : selectors(selectors) {}
+        explicit IsPseudoclass(feather::Vector<feather::dom::selector::CSSSelector> selectors)
+                : selectors(std::move(selectors)) {}
 
         feather::DOMString toString() const override {
             return ::toString(":is", selectors);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             if (element) for (const auto &sel : selectors) if (sel.matches(element)) return true;
             return false;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new IsPseudoclass(feather::Vector<CSSSelector>(selectors));
-        }
 
     private:
-        const feather::Vector<CSSSelector> selectors;
+        const feather::Vector<CSSSelector> selectors{};
     };
 
     class LangPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit LangPseudoclass(feather::DOMString &&lang = "en-US") : lang(lang) {}
+        explicit LangPseudoclass(feather::DOMString lang = "en-US") : lang(std::move(lang)) {}
 
         feather::DOMString toString() const override {
             return ":lang(" + lang + ")";
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isLang(element, lang);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new LangPseudoclass(feather::DOMString(lang));
-        }
 
     private:
-        const feather::DOMString lang;
+        const feather::DOMString lang{};
     };
 
     class LastChildPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
@@ -554,32 +527,29 @@ namespace {
             return ":last-child";
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isLastChild(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new LastChildPseudoclass(); }
+
     };
 
     class LastOfTypePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit LastOfTypePseudoclass(feather::DOMString &&type) : type(type) {}
+        explicit LastOfTypePseudoclass(feather::DOMString type) : type(std::move(type)) {}
 
         feather::DOMString toString() const override {
             return ":last-of-type";
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isLastOfType(element, type);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new LastOfTypePseudoclass(feather::DOMString(type));
-        }
 
     private:
-        const feather::DOMString type;
+        const feather::DOMString type{};
     };
 
     class LinkPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
@@ -588,18 +558,18 @@ namespace {
             return ":link";
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isLink(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new LinkPseudoclass(); }
+
     };
 
     class NotPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit NotPseudoclass(feather::Vector<feather::dom::selector::CSSSelector> &&selectors)
-                : selectors(selectors) {}
+        explicit NotPseudoclass(feather::Vector<feather::dom::selector::CSSSelector> selectors)
+                : selectors(std::move(selectors)) {}
 
         feather::DOMString toString() const override {
             feather::UInt reserve = 5;
@@ -617,18 +587,15 @@ namespace {
             return string;
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             if (!element) return false;
             for (const auto &sel : selectors) if (sel.matches(element)) return false;
             return true;
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new NotPseudoclass(feather::Vector<CSSSelector>(selectors));
-        }
 
     private:
-        const feather::Vector<feather::dom::selector::CSSSelector> selectors;
+        feather::Vector<feather::dom::selector::CSSSelector> selectors{};
     };
 
     class NthChildPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
@@ -639,35 +606,32 @@ namespace {
             return ::toString(":nth-child", a, b);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isNthChild(element, a, b);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new NthChildPseudoclass(a, b); }
 
     private:
-        const feather::Long a, b;
+        feather::Long a = 0, b = 0;
     };
 
     class NthOfTypePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
-        NthOfTypePseudoclass(feather::Long a, feather::Long b, feather::DOMString &&type) : a(a), b(b), type(type) {}
+        NthOfTypePseudoclass(feather::Long a, feather::Long b, feather::DOMString type) : a(a), b(b),
+                                                                                          type(std::move(type)) {}
 
         feather::DOMString toString() const override {
             return ::toString(":nth-of-type", a, b);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isNthOfType(element, a, b, type);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new NthOfTypePseudoclass(a, b, feather::DOMString(type));
-        }
 
     private:
-        const feather::Long a, b;
-        const feather::DOMString type;
+        feather::Long a = 0, b = 0;
+        feather::DOMString type{};
     };
 
     class NthLastChildPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
@@ -679,64 +643,55 @@ namespace {
             return ::toString(":nth-last-child", a, b);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isNthLastChild(element, a, b);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new NthLastChildPseudoclass(a, b);
-        }
 
     private:
-        const feather::Long a, b;
+        const feather::Long a = 0, b = 0;
     };
 
     class NthLastOfTypePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
-        NthLastOfTypePseudoclass(feather::Long a, feather::Long b, feather::DOMString &&type) : a(a), b(b),
-                                                                                                type(type) {}
+        NthLastOfTypePseudoclass(feather::Long a, feather::Long b, feather::DOMString type)
+                : a(a), b(b), type(std::move(type)) {}
 
         feather::DOMString toString() const override {
             return ::toString(":nth-last-of-type", a, b);
         }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isNthLastOfType(element, a, b, type);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new NthLastOfTypePseudoclass(a, b, feather::DOMString(type));
-        }
 
     private:
-        const feather::Long a, b;
-        const feather::DOMString type;
+        feather::Long a = 0, b = 0;
+        feather::DOMString type = 0;
     };
 
     class OnlyChildPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":only-child"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isOnlyChild(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new OnlyChildPseudoclass(); }
+
     };
 
     class OnlyOfTypePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
-        explicit OnlyOfTypePseudoclass(feather::DOMString &&type) : type(type) {}
+        explicit OnlyOfTypePseudoclass(feather::DOMString type) : type(std::move(type)) {}
 
         feather::DOMString toString() const override { return ":only-of-type"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isOnlyOfType(element, type);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new OnlyOfTypePseudoclass(feather::DOMString(type));
-        }
 
     private:
         const feather::DOMString type;
@@ -746,162 +701,143 @@ namespace {
     public:
         feather::DOMString toString() const override { return ":optional"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isOptional(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new OptionalPseudoclass(); }
+
     };
 
     class OutOfRangePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":out-of-range"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isOutOfRange(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new OutOfRangePseudoclass(); }
+
     };
 
     class PlaceholderShownPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":placeholder-shown"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isPlaceholderShown(element);
         }
-
-        feather::dom::selector::CSSPseudoclassSelector *
-        clone() const override { return new PlaceholderShownPseudoclass(); }
     };
 
     class ReadOnlyPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":read-only"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isReadOnly(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new ReadOnlyPseudoclass(); }
+
     };
 
     class ReadWritePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":read-write"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isReadWrite(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new ReadWritePseudoclass(); }
+
     };
 
     class RequiredPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":required"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isRequired(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new RequiredPseudoclass(); }
+
     };
 
     class RootPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":root"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isRoot(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new RootPseudoclass(); }
+
     };
 
     class ScopePseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
 
-        explicit ScopePseudoclass(feather::StrongPointer<const feather::dom::Element> &&scope) : scope(scope) {}
+        explicit ScopePseudoclass(feather::StrongPointer<const feather::dom::Element> scope)
+                : scope(std::move(scope)) {}
 
         feather::DOMString toString() const override { return ":scope"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isScope(element, scope);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override {
-            return new ScopePseudoclass(feather::StrongPointer<const feather::dom::Element>(scope));
-        }
 
     private:
-        const feather::StrongPointer<const feather::dom::Element> scope;
+        feather::StrongPointer<const feather::dom::Element> scope{};
     };
 
     class TargetPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":target"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isTarget(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new TargetPseudoclass(); }
+
     };
 
     class ValidPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":valid"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isValid(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new ValidPseudoclass(); }
+
     };
 
     class VisitedPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
     public:
         feather::DOMString toString() const override { return ":visited"; }
 
-        bool matches(feather::StrongPointer<const feather::dom::Element> element) const override {
+        bool matches(const feather::StrongPointer<const feather::dom::Element> &element) const override {
             return feather::css::PseudoclassManager::isVisited(element);
         }
 
-        feather::dom::selector::CSSPseudoclassSelector *clone() const override { return new VisitedPseudoclass(); }
+
     };
-}
-
-CSSToken::CSSToken(const feather::dom::selector::CSSToken &other)
-        : tagName(other.tagName), id(other.id), classes(other.classes), attributes(other.attributes),
-          pseudoclasses(), relation(other.relation) {
-    pseudoclasses.reserve(other.pseudoclasses.size());
-    for (auto pclass : other.pseudoclasses) pseudoclasses.push_back(pclass->clone());
-}
-
-CSSToken::CSSToken(feather::dom::selector::CSSToken &&other) noexcept
-        : tagName(std::move(other.tagName)), id(std::move(other.id)), classes(std::move(other.classes)),
-          attributes(std::move(other.attributes)), pseudoclasses(std::move(other.pseudoclasses)),
-          relation(other.relation) {
-    other.pseudoclasses.clear();
 }
 
 feather::DOMString CSSToken::toString() const {
     UInt reserve = 0;
     for (const auto &cls : classes) reserve += cls.length() + 1;
-    DOMString clazzes;
+    DOMString clazzes{};
     clazzes.reserve(reserve);
     for (const auto &cls : classes) clazzes += '.' + cls;
     reserve = 0;
-    Vector <DOMString> temp;
+    Vector <DOMString> temp{};
     temp.reserve(attributes.size());
     for (const auto &attr : attributes) {
         auto str = attr.toString();
         temp.push_back(str);
         reserve += str.length();
     }
-    DOMString attrs;
+    DOMString attrs{};
     attrs.reserve(reserve);
     for (const auto &str : temp) attrs += str;
     reserve = 0;
@@ -911,13 +847,13 @@ feather::DOMString CSSToken::toString() const {
         temp.push_back(str);
         reserve += str.length();
     }
-    DOMString pseudoclasses;
+    DOMString pseudoclasses{};
     pseudoclasses.reserve(reserve);
     for (const auto &str : temp) pseudoclasses += str;
     return (tagName.empty() ? "*" : tagName) + (id.empty() ? "" : ("#" + id)) + clazzes + attrs + pseudoclasses;
 }
 
-bool CSSToken::matches(feather::StrongPointer<const feather::dom::Element> element) const {
+bool CSSToken::matches(const feather::StrongPointer<const feather::dom::Element> &element) const {
     if (!tagName.empty() && element->getTagName() != tagName) return false;
     if (!id.empty() && element->getId() != id) return false;
     auto classList = element->getClassList();
@@ -945,8 +881,8 @@ namespace {
 }
 
 CSSDescendantToken::CSSDescendantToken(
-        feather::Vector<feather::dom::selector::CSSToken> &&group)
-        : group(group) {
+        feather::Vector<feather::dom::selector::CSSToken> group)
+        : group(std::move(group)) {
     length = 0;
     for (auto it = this->group.begin() + 1; it < this->group.end(); it++)
         if (it->getRelation() == CSSRelation::IMMEDIATE_DESCENDANT) length++;
@@ -970,7 +906,7 @@ feather::DOMString CSSDescendantToken::toString() const {
     return string;
 }
 
-bool CSSDescendantToken::matches(feather::StrongPointer<const feather::dom::Element> element) const {
+bool CSSDescendantToken::matches(const feather::StrongPointer<const feather::dom::Element> &element) const {
     if (!group.back().matches(element)) return false;
     auto focus = element;
     for (auto begin = group.rbegin() + 1; begin < group.rend(); begin++) {
@@ -1260,8 +1196,8 @@ namespace {
     }
 
     feather::dom::selector::CSSPseudoclassSelector *
-    getPseudoclass(feather::DOMString &&psel, feather::DOMString &&tag,
-                   feather::StrongPointer<const feather::dom::Element> &&scope) {
+    getPseudoclass(const feather::DOMString &psel, const feather::DOMString &tag,
+                   const feather::StrongPointer<const feather::dom::Element> &scope) {
         CSSPseudoclassSelector *pclass = nullptr;
         switch (hasher(psel.c_str())) {
             case hasher("active"):
@@ -1295,7 +1231,7 @@ namespace {
                 pclass = new FirstChildPseudoclass();
                 break;
             case hasher("first-of-type"):
-                pclass = new FirstOfTypePseudoclass(std::move(tag));
+                pclass = new FirstOfTypePseudoclass(tag);
                 break;
             case hasher("fullscreen"):
                 pclass = new FullscreenPseudoclass();
@@ -1328,7 +1264,7 @@ namespace {
                 pclass = new LastChildPseudoclass();
                 break;
             case hasher("last-of-type"):
-                pclass = new LastOfTypePseudoclass(std::move(tag));
+                pclass = new LastOfTypePseudoclass(tag);
                 break;
             case hasher("link"):
                 pclass = new LinkPseudoclass();
@@ -1337,7 +1273,7 @@ namespace {
                 pclass = new OnlyChildPseudoclass();
                 break;
             case hasher("only-of-type"):
-                pclass = new OnlyOfTypePseudoclass(std::move(tag));
+                pclass = new OnlyOfTypePseudoclass(tag);
                 break;
             case hasher("optional"):
                 pclass = new OptionalPseudoclass();
@@ -1361,7 +1297,7 @@ namespace {
                 pclass = new RootPseudoclass();
                 break;
             case hasher("scope"):
-                pclass = new ScopePseudoclass(std::move(scope));
+                pclass = new ScopePseudoclass(scope);
                 break;
             case hasher("target"):
                 pclass = new TargetPseudoclass();

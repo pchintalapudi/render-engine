@@ -29,15 +29,6 @@ feather::StrongPointer<Element> HTMLCollection::getNamedItem(feather::DOMString 
     return e;
 }
 
-void HTMLCollection::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
-                            const feather::observable::Invalidatable *p) const {
-    if (s.contains(observable::InvEvent::ELEMENT_INDEX_CHANGE)) {
-        s += observable::InvEvent::INVALIDATE_THIS;
-    } else {
-        s -= observable::InvEvent::INVALIDATE_THIS;
-    }
-}
-
 namespace {
     //Taken from stackoverflow: https://stackoverflow.com/a/2112111
     constexpr unsigned int hasher(const char *input) {

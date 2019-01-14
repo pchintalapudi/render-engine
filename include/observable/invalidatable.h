@@ -20,9 +20,9 @@ public:
 
     inline bool isValid() const { return valid; }
 
-    void bind(WeakPointer<Invalidatable>) const;
+    void bind(StrongPointer<const Invalidatable>) const;
 
-    void unbind(WeakPointer<Invalidatable>) const;
+    void unbind(StrongPointer<const Invalidatable>) const;
 
     void gc(unsigned char) override;
 
@@ -37,7 +37,7 @@ protected:
 
 private:
     mutable bool valid = false;
-    mutable WeakSet<Invalidatable> dependents = WeakSet<Invalidatable>();
+    mutable WeakSet<const Invalidatable> dependents{};
 };
 
 #endif //FEATHER_INVALIDATABLE_H
