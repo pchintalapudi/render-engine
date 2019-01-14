@@ -23,7 +23,7 @@ add_library(feather ${SOURCE_FILES} src/observable/invalidatable.cpp src/events/
 target_include_directories(feather PUBLIC include)
 add_subdirectory(src)
 
-add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)
+add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp src/typedefs.cpp)
 
 target_include_directories(render-engine PRIVATE include)
 target_link_libraries(render-engine feather)

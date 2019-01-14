@@ -13,13 +13,16 @@ namespace feather {
         class ShadowRoot : public Element, public DocumentOrShadowRoot {
         public:
 
+            ShadowRoot(DOMString baseURI, const StrongPointer <Element> &parent)
+                    : Element(std::move(baseURI), "shadow", parent, KnownElements::HTMLShadowElement),
+                      DocumentOrShadowRoot() {}
+
             inline bool getMode() { return open; }
 
-            inline StrongPointer <Element> getHost() { return host.expired() ? nullptr : host.lock(); }
+            inline StrongPointer <Element> getHost() { return std::static_pointer_cast<Element>(getParentNode()); }
 
         private:
-            bool open;
-            WeakPointer <Element> host;
+            bool open = false;
         };
     }
 }

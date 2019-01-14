@@ -57,7 +57,7 @@ namespace feather {
             Node(DOMString baseURI, DOMString name, NodeType type,
                  StrongPointer<DOMString> value, const StrongPointer<Node> &parent);
 
-            inline DOMString getBaseURI() const { return baseURI; }
+            inline const DOMString &getBaseURI() const { return baseURI; }
 
             inline StrongPointer<NodeList> getChildNodes() {
                 return StrongPointer<NodeList>(shared_from_this(), &childNodes);

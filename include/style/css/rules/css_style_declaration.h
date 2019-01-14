@@ -27,6 +27,7 @@ namespace feather {
             Map<DOMString, UInt> indeces{};
             Vector<Property> props{};
             WeakPointer<rules::CSSRule> parentRule{};
+            mutable DOMString styleString{};
         public:
             void setProperty(const DOMString &property, DOMString value, bool priority);
 
@@ -42,7 +43,7 @@ namespace feather {
 
             Tuple<DOMString, DOMString, bool> item(UInt) const;
 
-            DOMString getCssText() const;
+            const DOMString &getCssText() const;
 
             void setCssText(DOMString cssText);
 

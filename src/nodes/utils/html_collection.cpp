@@ -24,31 +24,27 @@ feather::StrongPointer<Element> HTMLCollection::getNamedItem(feather::DOMString 
     for (UInt i = 0; i < size(); i++) {
         auto child = get(i);
         if (child->getId() == name) return child;
-        else if (!e && child->getTagName() == name) e = child;
+        else if (!e && compareType(e, name)) e = child;
     }
     return e;
 }
 
 namespace {
-    //Taken from stackoverflow: https://stackoverflow.com/a/2112111
-    constexpr unsigned int hasher(const char *input) {
-        return *input ? static_cast<unsigned int>(*input) + 33 * hasher(input + 1) : 5381;
-    }
 
     bool isFormElement(const feather::StrongPointer<Element> &p) {
-        switch (hasher(p->getTagName().c_str())) {
-            case hasher("button"):
-            case hasher("fieldset"):
-            case hasher("input"):
-            case hasher("label"):
-            case hasher("legend"):
-            case hasher("meter"):
-            case hasher("optgroup"):
-            case hasher("option"):
-            case hasher("output"):
-            case hasher("param"):
-            case hasher("select"):
-            case hasher("textarea"):
+        switch (p->getElementType()) {
+            case KnownElements::HTMLButtonElement:
+            case KnownElements::HTMLFieldSetElement:
+            case KnownElements::HTMLInputElement:
+            case KnownElements::HTMLLabelElement:
+            case KnownElements::HTMLLegendElement:
+            case KnownElements::HTMLMeterElement:
+            case KnownElements::HTMLOptGroupElement:
+            case KnownElements::HTMLOptionElement:
+            case KnownElements::HTMLOutputElement:
+            case KnownElements::HTMLParamElement:
+            case KnownElements::HTMLSelectElement:
+            case KnownElements::HTMLTextAreaElement:
                 return true;
             default:
                 return false;

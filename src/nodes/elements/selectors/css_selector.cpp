@@ -694,7 +694,7 @@ namespace {
 
 
     private:
-        const feather::DOMString type;
+        feather::DOMString type{};
     };
 
     class OptionalPseudoclass : public feather::dom::selector::CSSPseudoclassSelector {
@@ -854,7 +854,7 @@ feather::DOMString CSSToken::toString() const {
 }
 
 bool CSSToken::matches(const feather::StrongPointer<const feather::dom::Element> &element) const {
-    if (!tagName.empty() && element->getTagName() != tagName) return false;
+    if (!tagName.empty() && !compareType(element, tagName)) return false;
     if (!id.empty() && element->getId() != id) return false;
     auto classList = element->getClassList();
     for (const auto &cls : classes) if (!classList->contains(cls)) return false;

@@ -44,11 +44,11 @@ namespace feather {
 
         class DocumentType : public Node {
         public:
-            inline DOMString getName() const { return name; }
+            inline const DOMString &getName() const { return name; }
 
-            inline DOMString getPublicId() const { return ""; }
+            inline const DOMString &getPublicId() const { return getEmptyString(); }
 
-            inline DOMString getSystemId() const { return ""; }
+            inline const DOMString &getSystemId() const { return getEmptyString(); }
 
             inline void remove() { getParentNode()->removeChild(getSharedFromThis()); }
 
@@ -63,7 +63,7 @@ namespace feather {
 
             void setBody(StrongPointer<html::HTMLElement> body);
 
-            DOMString getCharacterSet() const { return characterSet; }
+            const DOMString &getCharacterSet() const { return characterSet; }
 
             inline TriValue getMode() const { return quirks; }
 
@@ -104,19 +104,19 @@ namespace feather {
             inline DOMString getSelectedStyleSheet() const { return preferredStyleSheet; }
 
         private:
-            DOMString characterSet;
-            TriValue quirks;
-            DOMString documentURI;
-            bool hidden;
-            DOMString lastStyleSheet;
-            DOMString preferredStyleSheet;
+            DOMString characterSet{};
+            TriValue quirks = TriValue::NO;
+            DOMString documentURI{};
+            bool hidden = false;
+            DOMString lastStyleSheet{};
+            DOMString preferredStyleSheet{};
 
-            mutable StrongPointer<dlists::ObjectMappedList> objects;
-            mutable StrongPointer<dlists::FormMappedList> forms;
-            mutable StrongPointer<dlists::ImageMappedList> images;
-            mutable StrongPointer<dlists::LinkMappedList> links;
-            mutable StrongPointer<dlists::EmbedMappedList> embeds;
-            mutable StrongPointer<dlists::ScriptMappedList> scripts;
+            mutable StrongPointer<dlists::ObjectMappedList> objects{};
+            mutable StrongPointer<dlists::FormMappedList> forms{};
+            mutable StrongPointer<dlists::ImageMappedList> images{};
+            mutable StrongPointer<dlists::LinkMappedList> links{};
+            mutable StrongPointer<dlists::EmbedMappedList> embeds{};
+            mutable StrongPointer<dlists::ScriptMappedList> scripts{};
         };
     }
 }

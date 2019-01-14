@@ -8,6 +8,11 @@
 #include "../element.h"
 
 namespace feather {
+
+    namespace css {
+        class CSSStyleDeclaration;
+    }
+
     namespace dom {
 
         namespace html {
@@ -58,12 +63,6 @@ namespace feather {
                 inline double getOffsetLeft() const { return offsets[static_cast<int>(Dimensions::LEFT)]; }
 
                 StrongPointer<Element> getOffsetParent() const;
-
-                //TODO: Get a CSSStyleDeclaration
-                StrongPointer<void> getStyle() const;
-
-                //TODO: Get a CSSStyleDeclaration
-                void setStyle(StrongPointer<void> style);
 
                 inline UInt getTabIndex() const { return std::stoul(getAttributeSafe("tabindex")); }
 

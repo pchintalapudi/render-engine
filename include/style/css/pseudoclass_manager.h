@@ -110,9 +110,10 @@ namespace feather {
 
             static bool isNthLastChild(const StrongPointer<const dom::Element> &e, Long a, Long b);
 
-            static bool isNthOfType(const StrongPointer<const dom::Element> &e, Long a, Long b, DOMString type);
+            static bool isNthOfType(const StrongPointer<const dom::Element> &e, Long a, Long b, const DOMString &type);
 
-            static bool isNthLastOfType(const StrongPointer<const dom::Element> &e, Long a, Long b, DOMString type);
+            static bool
+            isNthLastOfType(const StrongPointer<const dom::Element> &e, Long a, Long b, const DOMString &type);
 
             static bool isOnlyChild(const StrongPointer<const dom::Element> &e);
 

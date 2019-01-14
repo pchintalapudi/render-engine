@@ -31,7 +31,7 @@ namespace feather {
             inline void setRealData(DOMString data) { this->data = std::move(data); }
 
         private:
-            DOMString data = "";
+            DOMString data{};
         };
     }
 }

@@ -49,8 +49,9 @@ feather::Tuple<feather::DOMString, feather::DOMString, bool> CSSStyleDeclaration
     return {"", "", false};
 }
 
-feather::DOMString CSSStyleDeclaration::getCssText() const {
-    DOMString str;
-    for (const auto &prop : props) str += prop.toString();
-    return str;
+const feather::DOMString &CSSStyleDeclaration::getCssText() const {
+    if (isValid()) return styleString;
+    styleString.clear();
+    for (const auto &prop : props) styleString += prop.toString();
+    return styleString;
 }

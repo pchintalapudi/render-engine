@@ -117,11 +117,11 @@ namespace feather {
 
                 DOMString toString() const;
 
-                static inline CSSSelector parse(DOMString string, StrongPointer<const Element> scope) {
+                static inline CSSSelector parse(const DOMString &string, StrongPointer<const Element> scope) {
                     return parseDelegate(string.begin(), string.end(), std::move(scope));
                 }
 
-                static inline Vector<CSSSelector> parseSelectorList(DOMString string,
+                static inline Vector<CSSSelector> parseSelectorList(const DOMString &string,
                                                                     StrongPointer<const Element> scope) {
                     return parseDelegateList(string.begin(), string.end(), std::move(scope));
                 }
@@ -137,8 +137,7 @@ namespace feather {
             private:
                 Vector<CSSDescendantToken> descendants{};
 
-                Vector<CSSDescendantToken>::const_iterator
-                preprocess(StrongPointer<const Element> scope) const;
+                Vector<CSSDescendantToken>::const_iterator preprocess(StrongPointer<const Element> scope) const;
 
                 StrongPointer<Element> querySelectorInternal(Vector<CSSDescendantToken>::const_iterator begin,
                                                              StrongPointer<const Element> scope) const;

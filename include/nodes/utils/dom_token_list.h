@@ -13,33 +13,33 @@ namespace feather {
         public:
             inline UInt getLength() const { return source.size(); }
 
-            DOMString getValue() const;
+            const DOMString &getValue() const;
 
             void setValue(DOMString value);
 
-            inline DOMString getItem(UInt idx) const { return source[idx]; }
+            inline const DOMString &getItem(UInt idx) const { return source[idx]; }
 
             void add(DOMString value);
 
-            void remove(DOMString value);
+            void remove(const DOMString &value);
 
             bool toggle(DOMString value);
 
             bool toggle(DOMString value, bool force);
 
-            bool replace(DOMString old, DOMString replace);
+            bool replace(const DOMString &old, DOMString replace);
 
-            inline bool supports(DOMString feature) const {
+            inline bool supports(const DOMString &feature) const {
                 return features.get() && features->find(feature) != features->end();
             }
 
-            inline bool contains(DOMString str) const {
+            inline bool contains(const DOMString &str) const {
                 return std::find(source.begin(), source.end(), str) != source.end();
             }
 
         private:
-            mutable DOMString cached = "";
-            Vector<DOMString> source = Vector<DOMString>();
+            mutable DOMString cached{};
+            Vector<DOMString> source{};
             StrongPointer<Set<DOMString>> features;
         };
     }

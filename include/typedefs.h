@@ -68,6 +68,11 @@ namespace feather {
     template<typename E>
     using Deque = std::deque<E>;
 
+    template<typename T>
+    const StrongPointer<T> &getEmptyPtr();
+
+    const DOMString &getEmptyString();
+
     enum class TriValue {
         AUTO, NO, YES
     };

@@ -30,10 +30,175 @@ namespace feather {
 
             class FilteredByClassName;
         }
+
+        enum class KnownElements {
+            HTMLAnchorElement,
+            HTMLAreaElement,
+            HTMLAudioElement,
+            HTMLBRElement,
+            HTMLBaseElement,
+            HTMLBaseFontElement,
+            HTMLBodyElement,
+            HTMLButtonElement,
+            HTMLCanvasElement,
+            HTMLContentElement,
+            HTMLCustomElement,
+            HTMLDListElement,
+            HTMLDataElement,
+            HTMLDataListElement,
+            HTMLDialogElement,
+            HTMLDivElement,
+            HTMLDocument,
+            HTMLEmbedElement,
+            HTMLFieldSetElement,
+            HTMLFormElement,
+            HTMLFrameSetElement,
+            HTMLHRElement,
+            HTMLHeadElement,
+            HTMLHeadingElement,
+            HTMLHtmlElement,
+            HTMLIFrameElement,
+            HTMLImageElement,
+            HTMLInputElement,
+            HTMLIsIndexElement,
+            HTMLKeygenElement,
+            HTMLLIElement,
+            HTMLLabelElement,
+            HTMLLegendElement,
+            HTMLLinkElement,
+            HTMLMapElement,
+            HTMLMediaElement,
+            HTMLMetaElement,
+            HTMLMeterElement,
+            HTMLModElement,
+            HTMLOListElement,
+            HTMLObjectElement,
+            HTMLOptGroupElement,
+            HTMLOptionElement,
+            HTMLOutputElement,
+            HTMLParagraphElement,
+            HTMLParamElement,
+            HTMLPictureElement,
+            HTMLPreElement,
+            HTMLProgressElement,
+            HTMLQuoteElement,
+            HTMLScriptElement,
+            HTMLSelectElement,
+            HTMLShadowElement,
+            HTMLSourceElement,
+            HTMLSpanElement,
+            HTMLStyleElement,
+            HTMLTableCaptionElement,
+            HTMLTableCellElement,
+            HTMLTableColElement,
+            HTMLTableElement,
+            HTMLTableHeaderCellElement,
+            HTMLTableRowElement,
+            HTMLTableHeaderSectionElement,
+            HTMLTableBodySectionElement,
+            HTMLTableFooterSectionElement,
+            HTMLTemplateElement,
+            HTMLTextAreaElement,
+            HTMLTimeElement,
+            HTMLTitleElement,
+            HTMLTrackElement,
+            HTMLUListElement,
+            HTMLUnknownElement,
+            HTMLVideoElement,
+            SVGAElement,
+            SVGAltGlyphElement,
+            SVGAnimateColorElement,
+            SVGAnimateElement,
+            SVGAnimateMotionElement,
+            SVGAnimateTransformElement,
+            SVGAnimationElement,
+            SVGCircleElement,
+            SVGClipPathElement,
+            SVGComponentTransferFunctionElement,
+            SVGCursorElement,
+            SVGDefsElement,
+            SVGDescElement,
+            SVGDocument,
+            SVGEllipseElement,
+            SVGFEBlendElement,
+            SVGFEColorMatrixElement,
+            SVGFEComponentTransferElement,
+            SVGFECompositeElement,
+            SVGFEConvolveMatrixElement,
+            SVGFEDiffuseLightingElement,
+            SVGFEDisplacementMapElement,
+            SVGFEDistantLightElement,
+            SVGFEDropShadowElement,
+            SVGFEFloodElement,
+            SVGFEFuncAElement,
+            SVGFEFuncBElement,
+            SVGFEFuncGElement,
+            SVGFEFuncRElement,
+            SVGFEGaussianBlurElement,
+            SVGFEImageElement,
+            SVGFEMergeElement,
+            SVGFEMergeNodeElement,
+            SVGFEMorphologyElement,
+            SVGFEOffsetElement,
+            SVGFEPointLightElement,
+            SVGFESpecularLightingElement,
+            SVGFESpotLightElement,
+            SVGFETileElement,
+            SVGFETurbulenceElement,
+            SVGFilterElement,
+            SVGFontElement,
+            SVGFontFaceElement,
+            SVGFontFaceFormatElement,
+            SVGFontFaceNameElement,
+            SVGFontFaceSrcElement,
+            SVGFontFaceUriElement,
+            SVGForeignObjectElement,
+            SVGGElement,
+            SVGGlyphElement,
+            SVGGradientElement,
+            SVGGraphicsElement,
+            SVGHKernElement,
+            SVGImageElement,
+            SVGLineElement,
+            SVGLinearGradientElement,
+            SVGMPathElement,
+            SVGMarkerElement,
+            SVGMaskElement,
+            SVGMetadataElement,
+            SVGMissingGlyphElement,
+            SVGPathElement,
+            SVGPatternElement,
+            SVGPolygonElement,
+            SVGPolylineElement,
+            SVGRadialGradientElement,
+            SVGRectElement,
+            SVGSVGElement,
+            SVGScriptElement,
+            SVGSetElement,
+            SVGStopElement,
+            SVGStyleElement,
+            SVGSwitchElement,
+            SVGSymbolElement,
+            SVGTRefElement,
+            SVGTSpanElement,
+            SVGTextContentElement,
+            SVGTextElement,
+            SVGTextPathElement,
+            SVGTextPositioningElement,
+            SVGTitleElement,
+            SVGUseElement,
+            SVGVKernElement,
+            SVGViewElement
+        };
+
+        DOMString encodeType(const DOMString &input);
+
+        KnownElements getType(const DOMString &encoded);
+
         class Element : public Node, public Slotable {
         public:
 
-            Element(DOMString baseURI, DOMString tagName, const StrongPointer<Node> &parent);
+            Element(DOMString baseURI, DOMString tagName, const StrongPointer<Node> &parent, KnownElements type);
 
             inline StrongPointer<const NamedNodeMap> getAttributes() const {
                 return StrongPointer<const NamedNodeMap>(shared_from_this(), &attributes);
@@ -49,6 +214,14 @@ namespace feather {
 
             inline StrongPointer<DOMTokenList> getClassList() {
                 return StrongPointer<DOMTokenList>(shared_from_this(), &classList);
+            }
+
+            inline StrongPointer<const css::CSSStyleDeclaration> getStyle() const {
+                return StrongPointer<const css::CSSStyleDeclaration>(shared_from_this(), &style);
+            }
+
+            inline StrongPointer<css::CSSStyleDeclaration> getStyle() {
+                return StrongPointer<css::CSSStyleDeclaration>(shared_from_this(), &style);
             }
 
             inline DOMString getClassName() const { return classList.getValue(); }
@@ -120,13 +293,13 @@ namespace feather {
             //TODO: Implement me
             StrongPointer<ShadowRoot> attachShadow(bool open);
 
-            StrongPointer<Element> getClosest(DOMString selector) const;
+            StrongPointer<Element> getClosest(const DOMString &selector) const;
 
-            StrongPointer<DOMString> getAttribute(DOMString name) const;
+            StrongPointer<DOMString> getAttribute(const DOMString &name) const;
 
-            inline DOMString getAttributeSafe(DOMString name) const {
-                auto ptr = getAttribute(std::move(name));
-                return ptr ? *ptr : "";
+            inline const DOMString &getAttributeSafe(const DOMString &name) const {
+                auto ptr = getAttribute(name);
+                return ptr ? *ptr : getEmptyString();
             }
 
             inline Vector<DOMString> getAttributeNames() const { return attributes.getKeys(); }
@@ -143,7 +316,7 @@ namespace feather {
 
             StrongPointer<elists::FilteredByTagNameNS> getElementsByTagNameNS(DOMString ns, DOMString tagName) const;
 
-            inline bool hasAttribute(DOMString attr) const { return attributes.contains(std::move(attr)); }
+            inline bool hasAttribute(const DOMString &attr) const { return attributes.contains(attr); }
 
             inline bool hasAttributeNS(const DOMString &ns, const DOMString &name) const {
                 return attributes.contains(ns + ":" + name);
@@ -274,14 +447,16 @@ namespace feather {
 
             bool isEqualNode(const StrongPointer<const Node> &other) const override;
 
-            StrongPointer<css::CSSStyleDeclaration> getComputedStyle() {
-                if (!computedStyle->isValid()) computeStyle();
-                return computedStyle;
-            }
+            inline KnownElements getElementType() const { return type; }
+
+        protected:
+            virtual StrongPointer<Element> virtualClone() const = 0;
 
         private:
+            KnownElements type;
             NamedNodeMap attributes;
             DOMTokenList classList;
+            css::CSSStyleDeclaration style;
             double clientDim[4];
             DOMString ns, prefix, localName;
             double scrollDim[4];
@@ -306,11 +481,9 @@ namespace feather {
             void updateElementIndeces() const;
 
             void updatedTypedIndeces() const;
-
-            StrongPointer<css::CSSStyleDeclaration> computedStyle;
-
-            void computeStyle();
         };
+
+        bool compareType(const StrongPointer<const Element> &e, const DOMString &type);
     }
 }
 

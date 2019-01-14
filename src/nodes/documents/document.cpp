@@ -10,7 +10,7 @@ using namespace feather::dom;
 namespace {
     template<typename ElementType, const char *string>
     feather::Pair<bool, feather::StrongPointer<ElementType>> mapper(const feather::StrongPointer<Element> &ref) {
-        return ref && ref->getTagName() == string
+        return ref && compareType(ref, feather::DOMString(string))
                ? std::make_pair(true, std::static_pointer_cast<ElementType>(ref))
                : std::make_pair(false, feather::StrongPointer<ElementType>());
     }
@@ -22,7 +22,8 @@ namespace {
 
     feather::Pair<bool, feather::StrongPointer<html::Hyperlink>>
     linkMapper(const feather::StrongPointer<Element> &ref) {
-        return ref && (ref->getTagName() == "a" || ref->getTagName() == "area")
+        return ref && (ref->getElementType() == KnownElements::HTMLAnchorElement ||
+                       ref->getElementType() == KnownElements::HTMLAreaElement)
                ? std::make_pair(true, std::static_pointer_cast<html::Hyperlink>(ref->getThisRef()))
                : std::make_pair(false, feather::StrongPointer<html::Hyperlink>());
     }
@@ -63,7 +64,7 @@ feather::StrongPointer<feather::dom::html::HTMLHtmlElement> Document::getDocumen
     for (UInt i = children->size(); i-- > 0;) {
         auto child = children->get(i);
         if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE &&
-            std::static_pointer_cast<Element>(child)->getTagName() == "html")
+            std::static_pointer_cast<Element>(child)->getElementType() == KnownElements::HTMLHtmlElement)
             return std::static_pointer_cast<html::HTMLHtmlElement>(child);
     }
     return StrongPointer<html::HTMLHtmlElement>();
@@ -75,7 +76,8 @@ feather::StrongPointer<feather::dom::html::HTMLHeadElement> Document::getHead() 
         auto children = dElement->getChildren();
         for (UInt i = 0; i < children->size(); i++) {
             auto child = children->get(i);
-            if (child->getTagName() == "head") return std::static_pointer_cast<html::HTMLHeadElement>(child);
+            if (child->getElementType() == KnownElements::HTMLHeadElement)
+                return std::static_pointer_cast<html::HTMLHeadElement>(child);
         }
     }
     return StrongPointer<html::HTMLHeadElement>();
@@ -87,7 +89,8 @@ feather::StrongPointer<feather::dom::html::HTMLBodyElement> Document::getBody() 
         auto children = dElement->getChildren();
         for (UInt i = children->size(); i-- > 0;) {
             auto child = children->get(i);
-            if (child->getTagName() == "body") return std::static_pointer_cast<html::HTMLBodyElement>(child);
+            if (child->getElementType() == KnownElements::HTMLBodyElement)
+                return std::static_pointer_cast<html::HTMLBodyElement>(child);
         }
     }
     return StrongPointer<html::HTMLBodyElement>();

@@ -245,9 +245,8 @@ feather::DOMString Node::getTextContentInternal() const {
         case NodeType::DOCUMENT_NODE:
         case NodeType::DOCUMENT_FRAGMENT_NODE:
         case NodeType::SHADOW_ROOT: {
-            auto children = getChildNodes();
             DOMString temp;
-            for (UInt i = 0; i < children->size(); i++) temp += children->get(i)->getTextContentInternal();
+            for (UInt i = 0; i < childNodes.size(); i++) temp += childNodes.get(i)->getTextContentInternal();
             return temp;
         }
         default:
@@ -257,7 +256,7 @@ feather::DOMString Node::getTextContentInternal() const {
 
 feather::StrongPointer<feather::dom::Node> Node::getPrevSibling() const {
     auto idx = getIndex();
-    return idx ? getChildNodes()->get(idx - 1) : StrongPointer<Node>();
+    return idx ? childNodes.get(idx - 1) : StrongPointer<Node>();
 }
 
 feather::StrongPointer<Element> Node::getParentElement() const {
@@ -294,9 +293,8 @@ void Node::insertBeforeChildNDTCN(const feather::StrongPointer<const feather::do
         UInt idx;
         if (ref->nodeIndex.isValid()) idx = ref->nodeIndex.get();
         else {
-            auto children = getChildNodes();
             idx = ~0u;
-            while (++idx < children->size() && children->get(idx) != ref) children->get(idx)->nodeIndex.set(idx);
+            while (++idx < childNodes.size() && childNodes.get(idx) != ref) childNodes.get(idx)->nodeIndex.set(idx);
         }
         for (UInt i = 0; i < add.size(); i++) {
             auto child = add[i];
@@ -304,7 +302,7 @@ void Node::insertBeforeChildNDTCN(const feather::StrongPointer<const feather::do
             child->setParentNode(getSharedFromThis());
             child->nodeIndex.set(idx + i);
         }
-        getChildNodes()->insertAll(idx, add);
+        childNodes.insertAll(idx, add);
     }
 }
 
@@ -314,9 +312,8 @@ void Node::insertAfterChildNDTCN(const feather::StrongPointer<const feather::dom
         UInt idx;
         if (ref->nodeIndex.isValid()) idx = ref->nodeIndex.get() + 1;
         else {
-            auto children = getChildNodes();
             idx = 0;
-            while (idx < children->size() && children->get(idx++) != ref);
+            while (idx < childNodes.size() && childNodes.get(idx++) != ref);
         }
         for (UInt i = 0; i < add.size(); i++) {
             auto child = add[i];
@@ -324,7 +321,7 @@ void Node::insertAfterChildNDTCN(const feather::StrongPointer<const feather::dom
             child->setParentNode(getSharedFromThis());
             child->nodeIndex.set(idx + i);
         }
-        getChildNodes()->insertAll(idx, add);
+        childNodes.insertAll(idx, add);
     }
 }
 
@@ -334,9 +331,8 @@ void Node::replaceChildNDTCN(const feather::StrongPointer<const feather::dom::No
         UInt idx;
         if (ref->nodeIndex.isValid()) idx = ref->nodeIndex.get();
         else {
-            auto children = getChildNodes();
             idx = 0;
-            while (idx < children->size() && children->get(idx++) != ref);
+            while (idx < childNodes.size() && childNodes.get(idx++) != ref);
         }
         for (UInt i = 0; i < add.size(); i++) {
             auto child = add[i];
@@ -344,8 +340,8 @@ void Node::replaceChildNDTCN(const feather::StrongPointer<const feather::dom::No
             child->setParentNode(getSharedFromThis());
             child->nodeIndex.set(idx + i);
         }
-        getChildNodes()->insertAll(idx, add);
-        getChildNodes()->remove(idx - 1)->clearParentNode();
+        childNodes.insertAll(idx, add);
+        childNodes.remove(idx - 1)->clearParentNode();
     }
 }
 

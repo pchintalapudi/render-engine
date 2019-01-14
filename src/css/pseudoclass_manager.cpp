@@ -8,13 +8,14 @@
 using namespace feather::css;
 
 namespace {
-    bool isALink(const feather::DOMString &tag, const feather::DOMString &href) {
-        return (tag == "a" || tag == "area" || tag == "link") && !href.empty();
+    bool isALink(const feather::StrongPointer<const feather::dom::Element> &e, const feather::DOMString &href) {
+        return (e->getElementType() == feather::dom::KnownElements::HTMLAnchorElement ||
+                e->getElementType() == feather::dom::KnownElements::HTMLAreaElement) && !href.empty();
     }
 }
 
 bool PseudoclassManager::isAnyLink(const feather::StrongPointer<const feather::dom::Element> &e) {
-    return isALink(e->getTagName(), e->getAttributeSafe("href"));
+    return isALink(e, e->getAttributeSafe("href"));
 }
 
 //TODO: Implement me
@@ -64,7 +65,7 @@ bool PseudoclassManager::isFirstChild(const feather::StrongPointer<const feather
 
 bool PseudoclassManager::isFirstOfType(const feather::StrongPointer<const feather::dom::Element> &e,
                                        const feather::DOMString &type) {
-    return e && (type.empty() || e->getTagName() == type) && !e->getTypedElementIndex();
+    return e && (type.empty() || compareType(e, type)) && !e->getTypedElementIndex();
 }
 
 //TODO: Implement me
@@ -104,7 +105,7 @@ bool PseudoclassManager::isLastChild(const feather::StrongPointer<const feather:
 
 bool PseudoclassManager::isLastOfType(const feather::StrongPointer<const feather::dom::Element> &e,
                                       const feather::DOMString &type) {
-    return e && (type.empty() || e->getTagName() == type) && !e->getLastTypedElementIndex();
+    return e && (type.empty() || compareType(e, type)) && !e->getLastTypedElementIndex();
 }
 
 //TODO: Track visited links
@@ -124,9 +125,8 @@ bool PseudoclassManager::isNthChild(const feather::StrongPointer<const feather::
 
 bool
 PseudoclassManager::isNthOfType(const feather::StrongPointer<const feather::dom::Element> &e, feather::Long a,
-                                feather::Long b,
-                                feather::DOMString type) {
-    if (!(e && (type.empty() || e->getTagName() == type))) return false;
+                                feather::Long b, const feather::DOMString &type) {
+    if (!(e && (type.empty() || dom::compareType(e, type)))) return false;
     if (!e->getParentNode()) return !b;
     //We're trying to invert An + b = idx into n = (idx - b) / A,
     //where n is some arbitrary integer
@@ -146,8 +146,8 @@ bool PseudoclassManager::isNthLastChild(const feather::StrongPointer<const feath
 }
 
 bool PseudoclassManager::isNthLastOfType(const feather::StrongPointer<const feather::dom::Element> &e, feather::Long a,
-                                         feather::Long b, feather::DOMString type) {
-    if (!(e && (type.empty() || e->getTagName() == type))) return false;
+                                         feather::Long b, const feather::DOMString &type) {
+    if (!(e && (type.empty() || dom::compareType(e, type)))) return false;
     if (!e->getParentNode()) return !b;
     //We're trying to invert An + b = idx into n = (idx - b) / A,
     //where n is some arbitrary integer
@@ -161,7 +161,7 @@ bool PseudoclassManager::isOnlyChild(const feather::StrongPointer<const feather:
 
 bool PseudoclassManager::isOnlyOfType(const feather::StrongPointer<const feather::dom::Element> &e,
                                       const feather::DOMString &type) {
-    return e && e->getTagName() == type && !e->getTypedElementIndex() && !e->getLastTypedElementIndex();
+    return e && dom::compareType(e, type) && !e->getTypedElementIndex() && !e->getLastTypedElementIndex();
 }
 
 //TODO: Implement me

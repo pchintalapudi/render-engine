@@ -10,17 +10,17 @@
 namespace feather {
     namespace global {
         namespace navigator {
+            static const DOMString appCodeName = "Mozilla",
+                    appName = "Netscape",
+                    appVersion = "4.0",
+                    platform{},
+                    product = "Gecko",
+                    productSub = "20000000",
+                    userAgent = "Feather/1.0",
+                    vendor = "Feather",
+                    vendorSub{};
+
             class NavigatorID {
-            private:
-                DOMString appCodeName = "Mozilla",
-                        appName = "Netscape",
-                        appVersion = "4.0",
-                        platform = "",
-                        product = "Gecko",
-                        productSub = "20000000",
-                        userAgent = "Feather/1.0",
-                        vendor = "Feather",
-                        vendorSub = "";
             public:
                 const DOMString &getAppCodeName() const {
                     return appCodeName;

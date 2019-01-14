@@ -6,7 +6,7 @@
 
 using namespace feather::dom;
 
-feather::DOMString DOMTokenList::getValue() const {
+const feather::DOMString &DOMTokenList::getValue() const {
     if (isValid()) return cached;
     cached = "";
     UInt reserve = 0;
@@ -50,7 +50,7 @@ void DOMTokenList::add(feather::DOMString value) {
     if (std::find(source.begin(), source.end(), value) == source.end()) source.push_back(value);
 }
 
-void DOMTokenList::remove(feather::DOMString value) {
+void DOMTokenList::remove(const feather::DOMString &value) {
     auto idx = std::find(source.begin(), source.end(), value);
     if (idx != source.end()) source.erase(idx);
 }
@@ -83,12 +83,12 @@ bool DOMTokenList::toggle(feather::DOMString value, bool force) {
     }
 }
 
-bool DOMTokenList::replace(feather::DOMString old, feather::DOMString replace) {
+bool DOMTokenList::replace(const feather::DOMString &old, feather::DOMString replace) {
     auto valid = std::find(source.begin(), source.end(), replace);
     if (valid == source.end()) {
         auto idx = std::find(source.begin(), source.end(), old);
         if (idx != source.end()) {
-            source[idx - source.begin()] = replace;
+            *idx = std::move(replace);
             return true;
         }
     }
