@@ -55,3 +55,9 @@ const feather::DOMString &CSSStyleDeclaration::getCssText() const {
     for (const auto &prop : props) styleString += prop.toString();
     return styleString;
 }
+
+void CSSStyleDeclaration::mergeBefore(const feather::css::CSSStyleDeclaration &other) {
+    Vector <DOMString> keys{};
+    Vector <Property> newProperties{};
+
+}
