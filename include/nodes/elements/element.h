@@ -224,7 +224,7 @@ namespace feather {
                 return StrongPointer<css::CSSStyleDeclaration>(shared_from_this(), &style);
             }
 
-            inline DOMString getClassName() const { return classList.getValue(); }
+            inline const DOMString &getClassName() const { return classList.getValue(); }
 
             inline void setClassName(DOMString name) { classList.setValue(std::move(name)); }
 
@@ -236,7 +236,7 @@ namespace feather {
 
             inline double getClientWidth() const { return clientDim[static_cast<int>(Dimensions::WIDTH)]; }
 
-            inline DOMString getId() const { return getAttributeSafe("id"); }
+            inline const DOMString &getId() const { return getAttributeSafe("id"); }
 
             inline void setId(DOMString id) { setAttribute("id", std::move(id)); }
 
@@ -454,13 +454,13 @@ namespace feather {
 
         private:
             KnownElements type;
-            NamedNodeMap attributes;
-            DOMTokenList classList;
-            css::CSSStyleDeclaration style;
+            NamedNodeMap attributes{};
+            DOMTokenList classList{};
+            css::CSSStyleDeclaration style{};
             double clientDim[4];
-            DOMString ns, prefix, localName;
+            DOMString ns{}, prefix{}, localName;
             double scrollDim[4];
-            StrongPointer<ShadowRoot> shadowRoot;
+            StrongPointer<ShadowRoot> shadowRoot{};
             HTMLCollection children;
 
             //Caches

@@ -8,6 +8,28 @@
 
 using namespace feather::dom::html;
 
+namespace {
+    feather::DOMString kebabCase(const feather::DOMString &camelCase) {
+        feather::DOMString copy = "data-";
+        feather::UInt add = 0;
+        for (const auto &c : camelCase) if (isupper(c)) add++;
+        copy.reserve(add + camelCase.length() + 5);
+        for (const auto &c : camelCase) {
+            if (isupper(c)) copy += char('-') + tolower(c);
+            else copy += c;
+        }
+        return copy;
+    }
+}
+
+feather::StrongPointer<feather::dom::Attr> DataSetView::getAttr(const feather::DOMString &attr) const {
+    return watched.getNamedItem(kebabCase(attr));
+}
+
+void DataSetView::setAttr(const feather::DOMString &attr, feather::DOMString value) {
+    owner.setAttribute(kebabCase(attr), std::move(value));
+}
+
 void HTMLElement::focus() {
     auto owner = getOwnerDocument();
     if (owner) {
@@ -30,11 +52,6 @@ void HTMLElement::blur() {
 
 void HTMLElement::click() {
     //TODO: fire event
-}
-
-void HTMLElement::setAccessKey(feather::DOMString key) {
-    accessKey = std::move(key);
-    //TODO: handle access keys
 }
 
 feather::DOMString HTMLElement::getInnerText() const {

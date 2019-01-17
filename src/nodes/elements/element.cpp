@@ -280,7 +280,7 @@ namespace {
 }
 
 feather::DOMString Element::cacheInnerHTML() const {
-    DOMString html;
+    innerHTML.clear();
     UInt reserve = 0;
     for (UInt i = 0; i < getChildNodes()->size(); i++) {
         auto child = getChildNodes()->get(i);
@@ -300,45 +300,45 @@ feather::DOMString Element::cacheInnerHTML() const {
                 break;
         }
     }
-    html.reserve(reserve);
+    innerHTML.reserve(reserve);
     for (UInt i = 0; i < getChildNodes()->size(); i++) {
         auto child = getChildNodes()->get(i);
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
                 //It's been computed before, so this is actually a very cheap call
-                html += std::static_pointer_cast<Element>(child)->getInnerHtml();
+                innerHTML += std::static_pointer_cast<Element>(child)->getInnerHtml();
                 break;
             case NodeType::TEXT_NODE:
-                html += encode(*child->getNodeValue());
+                innerHTML += encode(*child->getNodeValue());
                 break;
             case NodeType::COMMENT_NODE:
-                html += "<!--" + *child->getNodeValue() + "-->";
+                innerHTML += "<!--" + *child->getNodeValue() + "-->";
                 break;
             default:
                 //Idc about the other random nodes; they dont really matter
                 break;
         }
     }
-    return html;
+    return innerHTML;
 }
 
 feather::DOMString Element::cacheOuterHTML() const {
-    DOMString html;
+    outerHTML.clear();
     UInt reserve = 0;
     DOMString attrs = attributes.toHTML();
     DOMString inner = getInnerHtml();
     reserve += 1 + getTagName().length() + attrs.length() + 1 + inner.length() + 2 + getTagName().length() + 1;
-    html.reserve(reserve);
-    html += "<";
-    html += getTagName();
-    html += attrs;
-    html += ">";
-    html += inner;
-    html += "</";
-    html += getTagName();
-    html += ">";
-    innerHTMLValid = true;
-    return innerHTML = html;
+    outerHTML.reserve(reserve);
+    outerHTML += "<";
+    outerHTML += getTagName();
+    outerHTML += attrs;
+    outerHTML += ">";
+    outerHTML += inner;
+    outerHTML += "</";
+    outerHTML += getTagName();
+    outerHTML += ">";
+    outerHTMLValid = true;
+    return outerHTML;
 }
 
 feather::StrongPointer<Element> Element::getNextElementSibling() const {

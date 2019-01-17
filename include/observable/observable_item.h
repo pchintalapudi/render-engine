@@ -26,10 +26,15 @@ namespace feather {
             explicit WatchedObservableItem(I i, RegularEnumSet <InvEvent> required, RegularEnumSet <InvEvent> anyOf)
                     : i(i), required(required), anyOf(anyOf) {}
 
-            inline I get() const { return i; }
+            inline const I &get() const { return i; }
 
-            inline void set(I i) {
+            inline void set(const I &i) {
                 this->i = i;
+                validate();
+            }
+
+            inline void set(I &&i) {
+                this->i = std::move(i);
                 validate();
             }
 
@@ -53,12 +58,22 @@ namespace feather {
 
             inline const I &get() const { return i; }
 
-            inline void set(I i) {
+            inline void set(I &&i) {
+                this->i = std::move(i);
+                invalidate(RegularEnumSet<InvEvent>(), this);
+            }
+
+            inline void set(const I &i) {
                 this->i = i;
                 invalidate(RegularEnumSet<InvEvent>(), this);
             }
 
-            SourceObservableItem &operator=(I i) {
+            SourceObservableItem &operator=(I &&i) {
+                set(std::move(i));
+                return *this;
+            }
+
+            SourceObservableItem &operator=(const I &i) {
                 set(i);
                 return *this;
             }
@@ -73,7 +88,7 @@ namespace feather {
 
         protected:
             void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
-                s - InvEvent::INVALIDATE_THIS;
+                s -= InvEvent::INVALIDATE_THIS;
             }
 
         private:
