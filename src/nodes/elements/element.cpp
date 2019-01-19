@@ -184,6 +184,8 @@ Element::Element(feather::DOMString baseURI, feather::DOMString tagName,
           Slotable(), type(type), children(getChildNodes()) {
     bind(getAttributes());
     bind(getClassList());
+    bind(StrongPointer<Invalidatable>(shared_from_this(), &innerHTML));
+    bind(StrongPointer<Invalidatable>(shared_from_this(), &outerHTML));
 }
 
 feather::StrongPointer<feather::DOMString> Element::getAttribute(const feather::DOMString &name) const {
@@ -279,8 +281,8 @@ namespace {
     }
 }
 
-feather::DOMString Element::cacheInnerHTML() const {
-    innerHTML.clear();
+const feather::DOMString &Element::constructInnerHTML() const {
+    DOMString temp;
     UInt reserve = 0;
     for (UInt i = 0; i < getChildNodes()->size(); i++) {
         auto child = getChildNodes()->get(i);
@@ -300,45 +302,44 @@ feather::DOMString Element::cacheInnerHTML() const {
                 break;
         }
     }
-    innerHTML.reserve(reserve);
+    temp.reserve(reserve);
     for (UInt i = 0; i < getChildNodes()->size(); i++) {
         auto child = getChildNodes()->get(i);
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
                 //It's been computed before, so this is actually a very cheap call
-                innerHTML += std::static_pointer_cast<Element>(child)->getInnerHtml();
+                temp += std::static_pointer_cast<Element>(child)->getInnerHtml();
                 break;
             case NodeType::TEXT_NODE:
-                innerHTML += encode(*child->getNodeValue());
+                temp += encode(*child->getNodeValue());
                 break;
             case NodeType::COMMENT_NODE:
-                innerHTML += "<!--" + *child->getNodeValue() + "-->";
+                temp += "<!--" + *child->getNodeValue() + "-->";
                 break;
             default:
                 //Idc about the other random nodes; they dont really matter
                 break;
         }
     }
-    return innerHTML;
+    return innerHTML.set(std::move(temp));
 }
 
-feather::DOMString Element::cacheOuterHTML() const {
-    outerHTML.clear();
+const feather::DOMString &Element::constructOuterHTML() const {
+    DOMString temp;
     UInt reserve = 0;
     DOMString attrs = attributes.toHTML();
     DOMString inner = getInnerHtml();
     reserve += 1 + getTagName().length() + attrs.length() + 1 + inner.length() + 2 + getTagName().length() + 1;
-    outerHTML.reserve(reserve);
-    outerHTML += "<";
-    outerHTML += getTagName();
-    outerHTML += attrs;
-    outerHTML += ">";
-    outerHTML += inner;
-    outerHTML += "</";
-    outerHTML += getTagName();
-    outerHTML += ">";
-    outerHTMLValid = true;
-    return outerHTML;
+    temp.reserve(reserve);
+    temp += "<";
+    temp += getTagName();
+    temp += attrs;
+    temp += ">";
+    temp += inner;
+    temp += "</";
+    temp += getTagName();
+    temp += ">";
+    return outerHTML.set(std::move(temp));
 }
 
 feather::StrongPointer<Element> Element::getNextElementSibling() const {
@@ -489,16 +490,9 @@ bool Element::toggleAttribute(feather::DOMString attr, bool force) {
 }
 
 void Element::setAttribute(feather::DOMString name, feather::DOMString value) {
-    switch (hasher(name.c_str())) {
-        case hasher("class"): {
-            getAttributes()->setNamedItem(
-                    std::make_shared<ClassAttr>(getThisRef(), getClassList(), std::move(value)));
-            break;
-        }
-        default: {
-            auto attr = std::make_shared<StandardAttr>(name, getThisRef());
-        }
-    }
+    attributes.setNamedItem(
+            Attr::getAttr(std::move(name), std::static_pointer_cast<Element>(shared_from_this()),
+                          std::move(value)));
 }
 
 bool Element::isEqualNode(const feather::StrongPointer<const feather::dom::Node> &other) const {
@@ -514,12 +508,28 @@ bool Element::isEqualNode(const feather::StrongPointer<const feather::dom::Node>
     return false;
 }
 
+feather::StrongPointer<Attr> Attr::getAttr(feather::DOMString name,
+                                           const feather::StrongPointer<feather::dom::Element> &owner) {
+    switch (hasher(name.c_str())) {
+        case hasher("class"):
+            return std::make_shared<ClassAttr>(owner, owner->getClassList());
+        case hasher("style"):
+            return std::make_shared<StyleAttr>(owner, owner->getStyle());
+        default:
+            return std::make_shared<StandardAttr>(std::move(name), owner);
+    }
+}
+
 feather::StrongPointer<Attr> ClassAttr::clone(const feather::StrongPointer<feather::dom::Element> &element) const {
     return std::make_shared<ClassAttr>(element, element->getClassList(), getValue());
 }
 
-feather::StrongPointer<Node> Element::cloneNode(bool deep) const {
-    auto clone = virtualClone();
+feather::StrongPointer<Attr> StyleAttr::clone(const feather::StrongPointer<feather::dom::Element> &element) const {
+    return std::make_shared<StyleAttr>(element, element->getStyle(),
+                                       getOwner() ? "" : getOwner()->getStyle()->getCssText());
+}
+
+void Element::cloneElementProperties(const feather::StrongPointer<feather::dom::Element> &clone, bool deep) const {
     auto map = getAttributes();
     auto cmap = clone->getAttributes();
     auto backing = *(map->getBacking()), cbacking = *(cmap->getBacking());
@@ -532,7 +542,6 @@ feather::StrongPointer<Node> Element::cloneNode(bool deep) const {
         cchildren->reserve(children->size());
         for (UInt i = 0; i < children->size(); cchildren->add(children->get(i++)->cloneNode(true)));
     }
-    return clone;
 }
 
 bool feather::dom::compareType(const feather::StrongPointer<const feather::dom::Element> &e,

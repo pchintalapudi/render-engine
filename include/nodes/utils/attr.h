@@ -56,6 +56,15 @@ namespace feather {
                 return !(*this == other);
             }
 
+            static StrongPointer<Attr> getAttr(DOMString name, const StrongPointer<Element> &owner);
+
+            static inline StrongPointer<Attr>
+            getAttr(DOMString name, const StrongPointer<Element> &owner, DOMString value) {
+                auto attr = getAttr(std::move(name), owner);
+                attr->setValue(std::move(value));
+                return attr;
+            }
+
         private:
             DOMString name{};
             DOMString ns{};
@@ -140,8 +149,10 @@ namespace feather {
             }
 
             inline void fromString(DOMString value) override {
-                if (!style.expired()) style.lock()->setCssText(std::move(value));
+                if (!style.expired()) style.lock()->setCssText(value);
             }
+
+            StrongPointer<Attr> clone(const StrongPointer<Element> &owner) const override;
 
         private:
             WeakPointer<css::CSSStyleDeclaration> style{};

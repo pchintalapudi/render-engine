@@ -54,22 +54,17 @@ void HTMLElement::click() {
     //TODO: fire event
 }
 
-feather::DOMString HTMLElement::getInnerText() const {
-    if (cachedInnerText->isValid()) return cachedInnerText->get();
-    else {
-        auto it = computeInnerText();
-        cachedInnerText->set(it);
-        return it;
-    }
+const feather::DOMString &HTMLElement::getInnerText() const {
+    return cachedInnerText.isValid() ? cachedInnerText.get() : cachedInnerText.set(computeInnerText());
 }
 
 void HTMLElement::setInnerText(feather::DOMString innerText) {
     auto children = getChildNodes();
     for (UInt i = 0; i < children->size(); children->get(i++)->clearParentNode());
     children->clear();
-    cachedInnerText->set(innerText);
-    auto text = Text::create(getBaseURI(), getSharedFromThis(), std::move(innerText));
+    auto text = Text::create(getBaseURI(), getSharedFromThis(), innerText);
     children->add(text);
+    cachedInnerText.set(std::move(innerText));
 }
 
 feather::DOMString HTMLElement::computeInnerText() const {

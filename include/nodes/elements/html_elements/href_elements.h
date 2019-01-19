@@ -17,173 +17,118 @@ namespace feather {
             class Hyperlink : public HTMLElement, global::URLUtils<Hyperlink> {
             public:
 
-                inline DOMString getHref() const { return getAttributeSafe("href"); }
+                using HTMLElement::HTMLElement;
 
-                inline void setHref(DOMString href) { setAttribute("href", std::move(href)); }
+                ATTRIBUTE(href, Href)
+
+                ATTRIBUTE(download, Download)
+
+                ATTRIBUTE(media, Media)
+
+                ATTRIBUTE(referrer, ReferrerPolicy)
+
+                ATTRIBUTE(rel, Rel)
+
+                Vector<DOMString> getRelList() const;
+
+                ATTRIBUTE(target, Target)
+
+                inline StrongPointer<const DOMString> getText() const { return getTextContent(); }
             };
 
             class HTMLAnchorElement : public Hyperlink {
             public:
-                inline DOMString getDownload() const { return getAttributeSafe("download"); }
+                HTMLAnchorElement(DOMString baseURI, const StrongPointer<Node> &parent)
+                        : Hyperlink(std::move(baseURI), "a", parent, KnownElements::HTMLAnchorElement) {}
 
-                inline void setDownload(DOMString download) { setAttribute("download", std::move(download)); }
-
-                inline DOMString getMedia() const { return getAttributeSafe("media"); }
-
-                inline void setMedia(DOMString media) { setAttribute("media", std::move(media)); }
-
-                inline DOMString getReferrerPolicy() const { return getAttributeSafe("referrer"); }
-
-                inline void setReferrerPolicy(DOMString referrer) { setAttribute("referrer", std::move(referrer)); }
-
-                inline DOMString getRel() const { return getAttributeSafe("rel"); }
-
-                inline void setRel(DOMString rel) { setAttribute("rel", std::move(rel)); }
-
-                Vector<DOMString> getRelList() const;
-
-                inline DOMString getTarget() const { return getAttributeSafe("target"); }
-
-                inline void setTarget(DOMString target) { setAttribute("target", std::move(target)); }
-
-                inline StrongPointer<const DOMString> getText() const { return getTextContent(); }
+                CLONE_DEC(HTMLAnchorElement)
             };
 
             class HTMLAreaElement : public Hyperlink {
             public:
 
-                inline DOMString getAlt() const { return getAttributeSafe("alt"); }
+                HTMLAreaElement(DOMString baseURI, const StrongPointer<Node> &parent)
+                        : Hyperlink(std::move(baseURI), "area", parent, KnownElements::HTMLAreaElement) {}
 
-                inline void setAlt(DOMString alt) { setAttribute("alt", std::move(alt)); }
+                ATTRIBUTE(alt, Alt)
 
-                inline DOMString getCoords() const { return getAttributeSafe("coords"); }
+                ATTRIBUTE(coords, Coords)
 
-                inline void setCoords(DOMString coords) { setAttribute("coords", std::move(coords)); }
+                ATTRIBUTE(hreflang, HrefLang)
 
-                inline DOMString getDownload() const { return getAttributeSafe("download"); }
+                ATTRIBUTE(shape, Shape)
 
-                inline void setDownload(DOMString download) { setAttribute("download", std::move(download)); }
-
-                inline DOMString getHrefLang() const { return getAttributeSafe("hreflang"); }
-
-                inline void setHrefLang(DOMString hrefLang) { setAttribute("hreflang", std::move(hrefLang)); }
-
-                inline DOMString getMedia() const { return getAttributeSafe("media"); }
-
-                inline void setMedia(DOMString media) { setAttribute("media", std::move(media)); }
-
-                inline DOMString getReferrerPolicy() const { return getAttributeSafe("referrer"); }
-
-                inline void setReferrerPolicy(DOMString referrer) { setAttribute("referrer", std::move(referrer)); }
-
-                inline DOMString getRel() const { return getAttributeSafe("rel"); }
-
-                inline void setRel(DOMString rel) { setAttribute("rel", std::move(rel)); }
-
-                Vector<DOMString> getRelList() const;
-
-                inline DOMString getShape() const { return getAttributeSafe("shape"); }
-
-                inline void setShape(DOMString shape) { setAttribute("shape", std::move(shape)); }
-
-                inline DOMString getTarget() const { return getAttributeSafe("target"); }
-
-                inline void setTarget(DOMString target) { setAttribute("target", std::move(target)); }
-
-                inline StrongPointer<const DOMString> getText() const { return getTextContent(); }
+                CLONE_DEC(HTMLAreaElement)
             };
 
             class HTMLBaseElement : public HTMLElement {
             public:
-                inline DOMString getHref() const { return getAttributeSafe("href"); }
 
-                inline void setHref(DOMString href) { setAttribute("href", std::move(href)); }
+                HTML_ELEMENT_CONSTRUCTOR(HTMLBaseElement, base, KnownElements::HTMLBaseElement)
 
-                inline DOMString getTarget() const { return getAttributeSafe("target"); }
+                ATTRIBUTE(href, Href)
 
-                inline void setTarget(DOMString target) { setAttribute("target", std::move(target)); }
+                ATTRIBUTE(target, Target)
             };
 
             class LinkStyle {
             public:
-                inline StrongPointer <css::CSSStyleSheet> getSheet() { return stylesheet; }
+                inline StrongPointer<css::CSSStyleSheet> getSheet() { return stylesheet; }
 
-                inline void setSheet(StrongPointer <css::CSSStyleSheet> sheet) { stylesheet = std::move(sheet); }
+                inline void setSheet(StrongPointer<css::CSSStyleSheet> sheet) { stylesheet = std::move(sheet); }
 
             private:
-                StrongPointer <css::CSSStyleSheet> stylesheet;
+                StrongPointer<css::CSSStyleSheet> stylesheet;
             };
 
             class HTMLLinkElement : public HTMLElement, public LinkStyle {
             public:
-                inline DOMString getAs() const { return getAttributeSafe("as"); }
 
-                inline void setAs(DOMString as) { setAttribute("as", std::move(as)); }
+                HTMLLinkElement(DOMString baseURI, const StrongPointer<Node> &parent)
+                        : HTMLElement(std::move(baseURI), "link", parent, KnownElements::HTMLLinkElement),
+                          LinkStyle() {}
 
-                inline DOMString getCrossOrigin() const { return getAttributeSafe("crossorigin"); }
+                ATTRIBUTE(as, As)
 
-                inline void setCrossOrigin(DOMString crossorigin) {
-                    setAttribute("crossorigin", std::move(crossorigin));
-                }
+                ATTRIBUTE(crossorigin, CrossOrigin)
 
-                inline bool isDisabled() const { return hasAttribute("disabled"); }
+                B_ATTRIBUTE(disabled, Disabled)
 
-                inline void setDisabled(bool disabled) { toggleAttribute("disabled", disabled); }
+                ATTRIBUTE(href, Href)
 
-                inline DOMString getHref() const { return getAttributeSafe("href"); }
+                ATTRIBUTE(hreflang, HrefLang)
 
-                inline void setHref(DOMString href) { setAttribute("href", std::move(href)); }
+                ATTRIBUTE(media, Media)
 
-                inline DOMString getHreflang() const { return getAttributeSafe("hreflang"); }
+                ATTRIBUTE(referrer, ReferrerPolicy)
 
-                inline void setHreflang(DOMString hreflang) { setAttribute("hreflang", std::move(hreflang)); }
-
-                inline DOMString getMedia() const { return getAttributeSafe("media"); }
-
-                inline void setMedia(DOMString media) { setAttribute("media", std::move(media)); }
-
-                inline DOMString getReferrerPolicy() const { return getAttributeSafe("referrer"); }
-
-                inline void setReferrerPolicy(DOMString referrer) { setAttribute("referrer", std::move(referrer)); }
-
-                inline DOMString getRel() const { return getAttributeSafe("rel"); }
-
-                inline void setRel(DOMString rel) { setAttribute("rel", std::move(rel)); }
+                ATTRIBUTE(rel, Rel)
 
                 inline Vector<DOMString> getRelList() const;
 
                 inline Vector<DOMString> getSizes() const;
 
-                inline DOMString getType() const { return getAttributeSafe("type"); }
+                ATTRIBUTE(types, Types)
 
-                inline void setType(DOMString type) { setAttribute("type", std::move(type)); }
+                CLONE_DEC(HTMLLinkElement)
             };
 
             class HTMLSourceElement : public HTMLElement {
             public:
-                inline DOMString getKeySystem() const { return getAttributeSafe("keysystem"); }
 
-                inline void setKeySystem(DOMString keySystem) { setAttribute("keysystem", std::move(keySystem)); }
+                HTML_ELEMENT_CONSTRUCTOR(HTMLSourceElement, src, KnownElements::HTMLSourceElement)
 
-                inline DOMString getMedia() const { return getAttributeSafe("media"); }
+                ATTRIBUTE(keysystem, KeySystem)
 
-                inline void setMedia(DOMString media) { setAttribute("media", std::move(media)); }
+                ATTRIBUTE(media, Media)
 
-                inline DOMString getSizes() const { return getAttributeSafe("sizes"); }
+                ATTRIBUTE(sizes, Sizes)
 
-                inline void setSizes(DOMString sizes) { setAttribute("sizes", std::move(sizes)); }
+                ATTRIBUTE(src, Src)
 
-                inline DOMString getSrc() const { return getAttributeSafe("src"); }
+                ATTRIBUTE(srcset, SrcSet)
 
-                inline void setSrc(DOMString src) { setAttribute("src", std::move(src)); }
-
-                inline DOMString getSrcset() const { return getAttributeSafe("srcset"); }
-
-                inline void setSrcset(DOMString srcset) { setAttribute("srcset", std::move(srcset)); }
-
-                inline DOMString getType() const { return getAttributeSafe("type"); }
-
-                inline void setType(DOMString type) { setAttribute("type", std::move(type)); }
+                ATTRIBUTE(type, Type)
             };
         }
     }

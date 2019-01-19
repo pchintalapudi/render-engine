@@ -56,8 +56,33 @@ const feather::DOMString &CSSStyleDeclaration::getCssText() const {
     return styleString;
 }
 
-void CSSStyleDeclaration::mergeBefore(const feather::css::CSSStyleDeclaration &other) {
-    Vector <DOMString> keys{};
-    Vector <Property> newProperties{};
+void CSSStyleDeclaration::setCssText(feather::DOMString cssText) {
+    //TODO: parse css variables
+    styleString = std::move(cssText);
+    //TODO: invalidate
+    validate();
+}
 
+void CSSStyleDeclaration::mergeBefore(const feather::css::CSSStyleDeclaration &other) {
+    Vector <Property> newProperties(other.props);
+    for (auto prop : props) {
+        auto idx = other.indeces.find(prop.key);
+        if (idx != other.indeces.end()) newProperties[idx->second] = std::move(prop);
+        else {
+            indeces[prop.key] = newProperties.size();
+            newProperties.push_back(std::move(prop));
+        }
+    }
+    props.swap(newProperties);
+}
+
+void CSSStyleDeclaration::mergeAfter(const feather::css::CSSStyleDeclaration &other) {
+    for (const auto &prop : other.props) {
+        auto idx = indeces.find(prop.key);
+        if (idx != indeces.end()) props[idx->second] += prop;
+        else {
+            indeces[prop.key] = props.size();
+            props.push_back(prop);
+        }
+    }
 }

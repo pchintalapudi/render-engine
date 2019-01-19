@@ -15,20 +15,33 @@ namespace feather {
         private:
 
             struct Property {
-                DOMString key;
-                DOMString val;
-                bool priority;
+                DOMString key{};
+                DOMString val{};
+                bool priority{false};
 
                 Property() = default;
 
-                Property(DOMString key, DOMString val, bool priority) : key(key), val(val), priority(priority) {}
+                Property(DOMString key, DOMString val, bool priority) : key(std::move(key)), val(std::move(val)),
+                                                                        priority(priority) {}
 
                 UnaryPair<DOMString> getProp() const { return {key, val}; }
 
                 DOMString toString() const { return key + ": " + val + (priority ? " !important" : ""); }
 
                 Property operator+(const Property &other) const {
-                    return Property(other.key, priority ? val : other.val, priority | other.priority);
+                    return Property(other.key, priority && priority ^ other.priority ? val : other.val,
+                                    priority | other.priority);
+                }
+
+                Property &operator+=(const Property &other) {
+                    val = priority && priority ^ other.priority ? val : other.val;
+                    priority |= other.priority;
+                    return *this;
+                }
+
+                Property &operator+=(Property &&other) {
+                    priority |= other.priority;
+                    return *this;
                 }
             };
 
@@ -58,7 +71,7 @@ namespace feather {
 
             const DOMString &getCssText() const;
 
-            void setCssText(const DOMString &cssText);
+            void setCssText(DOMString cssText);
 
             inline UInt getLength() const { return size(); }
 
@@ -73,6 +86,14 @@ namespace feather {
             inline void merge(const CSSStyleDeclaration &other) {
                 if (after) mergeAfter(other); else mergeBefore(other);
             }
+
+            auto begin() const { return props.begin(); }
+
+            auto begin() { return props.begin(); }
+
+            auto end() const { return props.end(); }
+
+            auto end() { return props.end(); }
         };
     }
 }

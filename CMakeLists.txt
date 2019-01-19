@@ -19,7 +19,7 @@ add_library(feather ${SOURCE_FILES} src/observable/invalidatable.cpp src/events/
         src/events/event_target.cpp src/nodes/node.cpp src/nodes/text/text.cpp src/nodes/utils/dom_token_list.cpp
         src/nodes/utils/named_node_map.cpp src/nodes/utils/html_collection.cpp src/nodes/elements/element.cpp
         src/css/pseudoclass_manager.cpp src/nodes/elements/selectors/css_selector.cpp
-        src/nodes/elements/html_elements/html_element.cpp src/nodes/documents/document.cpp include/globals/window.h src/globals/window.cpp include/globals/storage.h include/globals/window_utils.h include/globals/navigator.h tests/nonstandard/node/elements/selectors/css_selector_test.h tests/nonstandard/node/elements/selectors/css_selector_test.cpp)
+        src/nodes/elements/html_elements/html_element.cpp src/nodes/documents/document.cpp include/globals/window.h src/globals/window.cpp include/globals/storage.h include/globals/window_utils.h include/globals/navigator.h tests/nonstandard/node/elements/selectors/css_selector_test.h tests/nonstandard/node/elements/selectors/css_selector_test.cpp src/nodes/elements/html_elements/html_element_impl_1.cpp)
 target_include_directories(feather PUBLIC include)
 add_subdirectory(src)
 

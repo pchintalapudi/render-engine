@@ -34,6 +34,12 @@ namespace feather {
                 HTMLElement &owner;
             };
 
+#define ATTRIBUTE(attr, attrPascalCase) inline const DOMString &get##attrPascalCase() const {return getAttributeSafe(#attr);} inline void set##attrPascalCase(DOMString attr) {setAttribute(#attr, std::move(attr));}
+#define B_ATTRIBUTE(attr, attrPascalCase) inline bool is##attrPascalCase() const {return hasAttribute(#attr);} inline void set##attrPascalCase(bool (attr)) {toggleAttribute(#attr, attr);}
+#define STATIC_FACTORY(name) static StrongPointer<name> create(DOMString baseURI, const StrongPointer<Node> &parent) {return std::make_shared<name>(std::move(baseURI), parent);}
+#define CLONE_DEC(name) StrongPointer<Node> cloneNode(bool deep) const override;
+#define HTML_ELEMENT_CONSTRUCTOR(name, tag, id) name(DOMString baseURI, const StrongPointer<Node> &parent) : HTMLElement(std::move(baseURI), #tag, parent, id) {} STATIC_FACTORY(name) CLONE_DEC(name)
+
             class HTMLElement : public Element {
             public:
 
@@ -43,17 +49,11 @@ namespace feather {
                     bind(StrongPointer<Invalidatable>(shared_from_this(), &cachedInnerText));
                 }
 
-                inline DOMString getAccessKey() const { return getAttributeSafe("accesskey"); }
-
-                inline void setAccessKey(DOMString key) { setAttribute("accesskey", std::move(key)); }
+                ATTRIBUTE(accesskey, AccessKey)
 
                 inline DOMString getAssignedAccessKey() const { return realAccessKey; }
 
-                inline bool isContentEditable() const { return hasAttribute("contenteditable"); }
-
-                inline void setContentEditable(bool contenteditable) {
-                    toggleAttribute("contenteditable", contenteditable);
-                }
+                B_ATTRIBUTE(contenteditable, ContentEditable)
 
                 inline StrongPointer<const DataSetView> getDataSet() const {
                     return StrongPointer<const DataSetView>(shared_from_this(), &dataset);
@@ -68,19 +68,19 @@ namespace feather {
                     return dir.empty() ? TriValue::AUTO : dir == "rtl" ? TriValue::NO : TriValue::YES;
                 }
 
-                inline bool isDraggable() const { return hasAttribute("draggable"); }
+                B_ATTRIBUTE(draggable, Draggable)
 
-                inline bool isHidden() const { return hasAttribute("hidden"); }
+                B_ATTRIBUTE(hidden, Hidden)
 
-                inline bool isInert() const { return hasAttribute("inert"); }
+                B_ATTRIBUTE(inert, Inert)
 
-                DOMString getInnerText() const;
+                const DOMString &getInnerText() const;
 
                 void setInnerText(DOMString innerText);
 
                 DOMString getLang() const;
 
-                inline bool isNomodule() const { return hasAttribute("nomodule"); }
+                B_ATTRIBUTE(nomodule, NoModule)
 
                 inline ULong getNonce() const { return nonce; }
 
@@ -113,7 +113,7 @@ namespace feather {
                 double offsets[4]{};
 
                 //Caches
-                observable::WatchedObservableItem<DOMString> cachedInnerText;
+                mutable observable::WatchedObservableItem<DOMString> cachedInnerText;
 
                 DOMString computeInnerText() const;
             };

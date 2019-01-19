@@ -28,14 +28,16 @@ namespace feather {
 
             inline const I &get() const { return i; }
 
-            inline void set(const I &i) {
+            inline const I &set(const I &i) {
                 this->i = i;
                 validate();
+                return i;
             }
 
-            inline void set(I &&i) {
+            inline const I &set(I &&i) {
                 this->i = std::move(i);
                 validate();
+                return this->i;
             }
 
         protected:

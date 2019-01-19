@@ -55,7 +55,12 @@ namespace feather {
             HTMLFrameSetElement,
             HTMLHRElement,
             HTMLHeadElement,
-            HTMLHeadingElement,
+            HTMLH1Element,
+            HTMLH2Element,
+            HTMLH3Element,
+            HTMLH4Element,
+            HTMLH5Element,
+            HTMLH6Element,
             HTMLHtmlElement,
             HTMLIFrameElement,
             HTMLImageElement,
@@ -103,7 +108,6 @@ namespace feather {
             HTMLTitleElement,
             HTMLTrackElement,
             HTMLUListElement,
-            HTMLUnknownElement,
             HTMLVideoElement,
             SVGAElement,
             SVGAltGlyphElement,
@@ -240,23 +244,27 @@ namespace feather {
 
             inline void setId(DOMString id) { setAttribute("id", std::move(id)); }
 
-            inline DOMString getInnerHtml() const { return innerHTMLValid ? innerHTML : cacheInnerHTML(); }
+            inline const DOMString &getInnerHtml() const {
+                return innerHTML.isValid() ? innerHTML.get() : constructInnerHTML();
+            }
 
             //TODO: Implement me
             void setInnerHtml(DOMString innerHtml);
 
-            inline DOMString getLocalName() const { return localName; }
+            inline const DOMString &getLocalName() const { return localName; }
 
-            inline DOMString getNamespaceURI() const { return ns; }
+            inline const DOMString &getNamespaceURI() const { return ns; }
 
             inline StrongPointer<Element> getNextElementSibling() const;
 
-            inline DOMString getOuterHtml() const { return outerHTMLValid ? outerHTML : cacheOuterHTML(); }
+            inline const DOMString &getOuterHtml() const {
+                return outerHTML.isValid() ? outerHTML.get() : constructOuterHTML();
+            }
 
             //TODO: Implement me
             void setOuterHtml(DOMString html);
 
-            inline DOMString getPrefix() const { return prefix; }
+            inline const DOMString &getPrefix() const { return prefix; }
 
             StrongPointer<Element> getPreviousElementSibling() const;
 
@@ -336,20 +344,20 @@ namespace feather {
             //TODO: Implement me
             void insertAdjacentText(DOMString position, DOMString text);
 
-            inline bool matches(DOMString selector) const {
-                return selector::CSSSelector::parse(std::move(selector),
+            inline bool matches(const DOMString &selector) const {
+                return selector::CSSSelector::parse(selector,
                                                     std::static_pointer_cast<const Element>(shared_from_this()))
                         .matches(std::static_pointer_cast<const Element>(shared_from_this()));
             }
 
-            inline StrongPointer<Element> querySelector(DOMString selector) const {
-                return selector::CSSSelector::parse(std::move(selector),
+            inline StrongPointer<Element> querySelector(const DOMString &selector) const {
+                return selector::CSSSelector::parse(selector,
                                                     std::static_pointer_cast<const Element>(shared_from_this()))
                         .querySelector(std::static_pointer_cast<const Element>(shared_from_this()));
             }
 
-            inline Vector<StrongPointer<Element>> querySelectorAll(DOMString selector) const {
-                return selector::CSSSelector::parse(std::move(selector),
+            inline Vector<StrongPointer<Element>> querySelectorAll(const DOMString &selector) const {
+                return selector::CSSSelector::parse(selector,
                                                     std::static_pointer_cast<const Element>(shared_from_this()))
                         .querySelectorAll(std::static_pointer_cast<const Element>(shared_from_this()));
             }
@@ -398,19 +406,16 @@ namespace feather {
                     getParentNode()->removeChild(std::static_pointer_cast<Node>(shared_from_this()));
             }
 
-            inline void before(Vector<StrongPointer<Node>> insertBefore) {
-                if (getParentNode())
-                    getParentNode()->insertBeforeChildNDTCN(getSharedFromThis(), std::move(insertBefore));
+            inline void before(const Vector<StrongPointer<Node>> &insertBefore) {
+                if (getParentNode()) getParentNode()->insertBeforeChildNDTCN(getSharedFromThis(), insertBefore);
             }
 
-            inline void after(Vector<StrongPointer<Node>> insertAfter) {
-                if (getParentNode())
-                    getParentNode()->insertAfterChildNDTCN(getSharedFromThis(), std::move(insertAfter));
+            inline void after(const Vector<StrongPointer<Node>> &insertAfter) {
+                if (getParentNode()) getParentNode()->insertAfterChildNDTCN(getSharedFromThis(), insertAfter);
             }
 
-            inline void replaceWith(Vector<StrongPointer<Node>> repl) {
-                if (getParentNode())
-                    getParentNode()->replaceChildNDTCN(getSharedFromThis(), std::move(repl));
+            inline void replaceWith(const Vector<StrongPointer<Node>> &repl) {
+                if (getParentNode()) getParentNode()->replaceChildNDTCN(getSharedFromThis(), repl);
             }
 
             //ParentNode impl
@@ -443,14 +448,13 @@ namespace feather {
 
             UInt getLastTypedElementIndex() const;
 
-            StrongPointer<Node> cloneNode(bool deep) const override;
-
             bool isEqualNode(const StrongPointer<const Node> &other) const override;
 
             inline KnownElements getElementType() const { return type; }
 
         protected:
-            virtual StrongPointer<Element> virtualClone() const = 0;
+
+            void cloneElementProperties(const StrongPointer<Element> &destination, bool deep) const;
 
         private:
             KnownElements type;
@@ -464,15 +468,11 @@ namespace feather {
             HTMLCollection children;
 
             //Caches
-            mutable DOMString innerHTML;
-            mutable bool innerHTMLValid;
+            mutable observable::WatchedObservableItem<DOMString> innerHTML{}, outerHTML{};
 
-            DOMString cacheInnerHTML() const;
+            const DOMString &constructInnerHTML() const;
 
-            mutable DOMString outerHTML;
-            mutable bool outerHTMLValid;
-
-            DOMString cacheOuterHTML() const;
+            const DOMString &constructOuterHTML() const;
 
             StrongPointer<Element> thisRef;
 

@@ -10,13 +10,8 @@
 namespace feather {
     namespace dom {
         namespace html {
-            class HTMLButtonElement : public HTMLElement {
-            public:
-                inline bool isAutofocus() const { return hasAttribute("autofocus"); }
 
-                inline void setAutofocus(bool autofocus) { toggleAttribute("autofocus", autofocus); }
-                //TODO: Implement the rest
-            };
+            class HTMLFormElement;
 
             enum class InvalidStates {
                 BAD_INPUT,
@@ -77,56 +72,92 @@ namespace feather {
 
             private:
 
-                bool get(InvalidStates i) const { return (bitField & (1u << static_cast<int>(i))) != 0; }
+                bool get(InvalidStates i) const { return (bitField & (1u << static_cast<unsigned int>(i))) != 0; }
 
                 UShort bitField : static_cast<UInt>(InvalidStates::__COUNT__);
             };
 
-            class HTMLFormElement;
-
-            class HTMLFieldSetElement : public HTMLElement {
+            template<typename Derived>
+            class HTMLFormTypeElement : public HTMLElement {
             public:
-                inline bool isDisabled() const { return hasAttribute("disabled"); }
 
-                inline void setDisabled(bool disabled) { toggleAttribute("disabled", disabled); }
+                B_ATTRIBUTE(autofocus, Autofocus)
 
-                inline StrongPointer<HTMLFormControlsCollection> getElements() const { return elements; }
+                B_ATTRIBUTE(disabled, Disabled)
 
-                inline DOMString getName() const { return getAttributeSafe("name"); }
+                const DOMString &getForm() const { return id; }
 
-                inline void setName(DOMString name) { setAttribute("name", std::move(name)); }
+                ATTRIBUTE(name, Name)
 
-                inline DOMString getType() const { return "fieldset"; }
+                ATTRIBUTE(type, Type)
 
-                inline void setType(DOMString type) { setAttribute("type", std::move(type)); }
+                ATTRIBUTE(value, Value)
 
-                inline StrongPointer<ValidityState> getValidity() { return validityState; }
+                ATTRIBUTE(formaction, FormAction)
 
-                inline DOMString getValidityMessage() { return validityMessage; }
+                ATTRIBUTE(formenctype, FormEncType)
 
-                inline bool willValidate() { return false; }
+                ATTRIBUTE(formmethod, FormMethod)
 
-                inline bool checkValidity() { return !validityMessage.empty(); }
+                B_ATTRIBUTE(formnovalidate, FormNoValidate)
 
-                inline void setCustomValidity(DOMString validityMessage) {
+                ATTRIBUTE(formtarget, FormTarget)
+
+                //TODO: tabindex
+
+                inline StrongPointer<const ValidityState> getValidity() {
+                    return StrongPointer<const ValidityState>(shared_from_this(), &validityState);
+                }
+
+                inline const DOMString &getValidityMessage() { return validityMessage; }
+
+                inline bool willValidate() const { return static_cast<const Derived *>(this)->willValidate(); }
+
+                inline bool checkValidity() const { return static_cast<const Derived *>(this)->checkValidity(); }
+
+                inline void setCustomValidity(const DOMString &validityMessage) {
                     if (!validityMessage.empty()) {
-                        validityState->add(InvalidStates::CUSTOM_ERROR);
-                        this->validityMessage = std::move(validityMessage);
+                        validityState.add(InvalidStates::CUSTOM_ERROR);
+                        this->validityMessage = validityMessage;
                     } else {
-                        validityState->clear();
+                        validityState.clear();
                         this->validityMessage = "";
                     }
                 }
 
             private:
-                StrongPointer<ValidityState> validityState;
-                StrongPointer<HTMLFormControlsCollection> elements;
+                DOMString id;
+                ValidityState validityState;
                 DOMString validityMessage;
+            };
+
+            class HTMLButtonElement : public HTMLFormTypeElement<HTMLButtonElement> {
+            public:
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
+
+                //TODO: labels
+
+                //TODO: menu
+            };
+
+            class HTMLFieldSetElement : public HTMLFormTypeElement<HTMLFieldSetElement> {
+            public:
+
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
+
+                inline StrongPointer <HTMLFormControlsCollection> getElements() const { return elements; }
+
+            private:
+                StrongPointer <HTMLFormControlsCollection> elements;
             };
 
             class HTMLFormElement : public HTMLElement {
 
-                inline StrongPointer<HTMLFormControlsCollection> getElements() { return elements; }
+                inline StrongPointer <HTMLFormControlsCollection> getElements() { return elements; }
 
                 inline UInt getLength() const { return elements->size(); }
 
@@ -179,52 +210,84 @@ namespace feather {
                 bool reportValidity();
 
             private:
-                StrongPointer<HTMLFormControlsCollection> elements;
+                StrongPointer <HTMLFormControlsCollection> elements;
             };
 
-            class HTMLInputElement : public HTMLElement {
-                //TODO: Major major todo; complicated class
-            };
-
-            class HTMLLabelElement : public HTMLElement {
-                //TODO: finish
-            };
-
-            class HTMLLegendElement : public HTMLElement {
+            class HTMLInputElement : public HTMLFormTypeElement<HTMLInputElement> {
             public:
-                StrongPointer<HTMLFormElement> getForm();
-                //TODO: finish up
+                inline bool willValidate() const { return false; }//TODO: add validation
+
+                inline bool checkValidity() const { return true; }
+            };
+
+            class HTMLLabelElement : public HTMLFormTypeElement<HTMLLabelElement> {
+            public:
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
+
             private:
-                WeakPointer<observable::WatchedObservableItem<WeakPointer<HTMLFormElement>>> form;
+                observable::WatchedObservableItem <WeakPointer<HTMLElement>> control;
             };
 
-            class HTMLMeterElement : public HTMLElement {
+            class HTMLLegendElement : public HTMLFormTypeElement<HTMLLegendElement> {
+            public:
+                StrongPointer <HTMLFormElement> getForm();
+
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
+                //TODO: finish up
+            };
+
+            class HTMLMeterElement : public HTMLFormTypeElement<HTMLMeterElement> {
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
                 //TODO: write class
             };
 
-            class HTMLOptGroupElement : public HTMLElement {
+            class HTMLOptGroupElement : public HTMLFormTypeElement<HTMLOptGroupElement> {
                 //TODO: write class
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
             };
 
-            class HTMLOptionElement : public HTMLElement {
+            class HTMLOptionElement : public HTMLFormTypeElement<HTMLOptionElement> {
                 //TODO: write class
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
             };
 
             //Shut up i know this is a horrible coincidence
-            class HTMLOutputElement : public HTMLElement {
+            class HTMLOutputElement : public HTMLFormTypeElement<HTMLOutputElement> {
                 //TODO: write class
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
             };
 
-            class HTMLParamElement : public HTMLElement {
+            class HTMLParamElement : public HTMLFormTypeElement<HTMLParamElement> {
                 //TODO: write class
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
             };
 
-            class HTMLSelectElement : public HTMLElement {
+            class HTMLSelectElement : public HTMLFormTypeElement<HTMLSelectElement> {
                 //TODO: write class
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
             };
 
-            class HTMLTextAreaElement : public HTMLElement {
+            class HTMLTextAreaElement : public HTMLFormTypeElement<HTMLTextAreaElement> {
                 //TODO: write class
+                inline bool willValidate() const { return false; }
+
+                inline bool checkValidity() const { return true; }
             };
         }
     }
