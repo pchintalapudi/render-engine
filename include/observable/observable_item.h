@@ -9,88 +9,30 @@
 
 namespace feather {
     namespace observable {
-        template<typename I>
-        class WatchedObservableItem : public Invalidatable {
+
+        template<typename I, bool source, StrongPointer<Invalidatable>(*convert)(const I &) = nullptr,
+                typename required = RegularEnumSet<InvEvent>(), typename ignore = RegularEnumSet<InvEvent>()>
+        class ObservableItem : public Invalidatable {
         public:
+            ObservableItem() = default;
 
-            WatchedObservableItem() = default;
-
-            explicit WatchedObservableItem(RegularEnumSet <InvEvent> required)
-                    : required(required) {}
-
-            explicit WatchedObservableItem(RegularEnumSet <InvEvent> required, RegularEnumSet <InvEvent> anyOf)
-                    : required(required), anyOf(anyOf) {}
-
-            explicit WatchedObservableItem(I i) : i(i) {}
-
-            explicit WatchedObservableItem(I i, RegularEnumSet <InvEvent> required, RegularEnumSet <InvEvent> anyOf)
-                    : i(i), required(required), anyOf(anyOf) {}
-
-            inline const I &get() const { return i; }
-
-            inline const I &set(const I &i) {
-                this->i = i;
-                validate();
-                return i;
+            explicit ObservableItem(I i) {
+                operator=(std::move(i));
             }
 
-            inline const I &set(I &&i) {
+            inline const I &operator*() const { return i; }
+
+            inline const I *operator->() const { return &i; }
+
+            inline ObservableItem &operator=(I i) {
+                if (convert) {
+                    unbindFrom(convert(this->i));
+                    bindTo(convert(i));
+                }
                 this->i = std::move(i);
-                validate();
-                return this->i;
-            }
-
-        protected:
-            void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
-                if (s.containsAll(required)) s += InvEvent::INVALIDATE_THIS; else s -= InvEvent::INVALIDATE_THIS;
-            }
-
-        private:
-            I i{};
-            RegularEnumSet <InvEvent> required{}, anyOf{};
-        };
-
-        template<typename I>
-        class SourceObservableItem : public Invalidatable {
-        public:
-
-            SourceObservableItem() = default;
-
-            explicit SourceObservableItem(I init) : i(std::move(init)) {}
-
-            inline const I &get() const { return i; }
-
-            inline void set(I &&i) {
-                this->i = std::move(i);
-                invalidate(RegularEnumSet<InvEvent>(), this);
-            }
-
-            inline void set(const I &i) {
-                this->i = i;
-                invalidate(RegularEnumSet<InvEvent>(), this);
-            }
-
-            SourceObservableItem &operator=(I &&i) {
-                set(std::move(i));
+                if (source) invalidate(RegularEnumSet<InvEvent>(), this);
+                else validate();
                 return *this;
-            }
-
-            SourceObservableItem &operator=(const I &i) {
-                set(i);
-                return *this;
-            }
-
-            const I &operator*() const {
-                return get();
-            }
-
-            const I *operator->() const {
-                return &i;
-            }
-
-        protected:
-            void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
-                s -= InvEvent::INVALIDATE_THIS;
             }
 
         private:

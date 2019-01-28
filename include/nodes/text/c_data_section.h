@@ -9,11 +9,11 @@
 
 namespace feather {
     namespace dom {
-        class CDataSection : public Text {
-            CDataSection(DOMString baseURI, const StrongPointer<Node> &parent)
+        class CDATASection : public Text {
+            CDATASection(DOMString baseURI, const StrongPointer<Node> &parent)
                     : Text(std::move(baseURI), "#cdata-section", NodeType::CDATA_SECTION_NODE, parent) {}
 
-            CDataSection(DOMString baseURI, const StrongPointer<Node> &parent, DOMString init)
+            CDATASection(DOMString baseURI, const StrongPointer<Node> &parent, DOMString init)
                     : Text(std::move(baseURI), "#cdata-section", NodeType::CDATA_SECTION_NODE, parent,
                            std::move(init)) {}
         };

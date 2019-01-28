@@ -20,9 +20,13 @@ public:
 
     inline bool isValid() const { return valid; }
 
-    void bind(StrongPointer<const Invalidatable>) const;
+    inline void bindTo(const StrongPointer<const Invalidatable> &p) const {
+        p->bindInternal(std::static_pointer_cast<const Invalidatable>(shared_from_this()));
+    }
 
-    void unbind(StrongPointer<const Invalidatable>) const;
+    inline void unbindFrom(const StrongPointer<const Invalidatable> &p) const {
+        p->unbindInternal(std::static_pointer_cast<const Invalidatable>(shared_from_this()));
+    }
 
     void gc(unsigned char) override;
 
@@ -34,6 +38,10 @@ protected:
     virtual void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const { s += InvEvent::INVALIDATE_THIS; }
 
     void validate() const { valid = true; }
+
+    void bindInternal(StrongPointer<const Invalidatable>) const;
+
+    void unbindInternal(StrongPointer<const Invalidatable>) const;
 
 private:
     mutable bool valid = false;

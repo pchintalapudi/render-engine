@@ -16,12 +16,12 @@ void Invalidatable::invalidate(RegularEnumSet <InvEvent> s, const Invalidatable 
     valid &= s.contains(InvEvent::INVALIDATE_THIS);
 }
 
-void Invalidatable::bind(feather::StrongPointer<const feather::observable::Invalidatable> dependent) const {
+void Invalidatable::bindInternal(feather::StrongPointer<const feather::observable::Invalidatable> dependent) const {
     dependent->invalidate(RegularEnumSet<InvEvent>() + InvEvent::REBOUND, this);
     dependents.insert(dependent);
 }
 
-void Invalidatable::unbind(feather::StrongPointer<const feather::observable::Invalidatable> dependent) const {
+void Invalidatable::unbindInternal(feather::StrongPointer<const feather::observable::Invalidatable> dependent) const {
     for (auto it = dependents.begin(); it != dependents.end();) {
         if (it->expired()) it = dependents.erase(it);
         else if (it->lock() == dependent) {

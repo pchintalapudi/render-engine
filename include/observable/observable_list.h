@@ -9,133 +9,137 @@
 
 namespace feather {
     namespace observable {
-        template<typename E, typename Derived>
+
+#define invShort static_cast<Derived *>(this)->invalidate
+
+        template<typename E, typename Derived, StrongPointer<Invalidatable>(*convert)(const E &ref)
+        = std::static_pointer_cast<Invalidatable>>
         class ObservableList : public Invalidatable {
         public:
-            ObservableList() : extractor(
-                    feather::StrongPointer<feather::Function<StrongPointer<Invalidatable>(E) >>()) {}
+            inline const E &operator[](UInt idx) const { return source[idx]; }
 
-            explicit ObservableList(StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor)
-                    : extractor(std::move(extractor)) {}
+            inline const E &front() const { return source.front(); }
 
-            inline const E &get(UInt index) const { return source[index]; }
+            inline const E &back() const { return source.back(); }
 
-            bool contains(const E &val) const {
-                return std::find(source.begin(), source.end(), val);
+            inline UInt indexOf(const E &element) const {
+                auto idx = std::find(source.begin(), source.end(), element) - source.begin();
+                return idx < source.size() ? idx : ~0;
             }
+
+            inline bool contains(const E &element) const { return ~indexOf(element) != 0; }
 
             inline UInt size() const { return source.size(); }
 
-            void set(UInt index, E e) {
-                unbindE(source[index]);
-                bindE(e);
-                source[index] = std::move(e);
-                invalidate();
-            }
-
-            void add(E e) {
-                bindE(e);
-                source.push_back(std::move(e));
-                invalidate();
-            }
-
-            template<typename L>
-            void addAll(const L &vals) {
-                source.reserve(size() + vals.size());
-                for (const E &e : vals) {
-                    bindE(e);
-                    source.push_back(e);
-                }
-                invalidate();
-            }
-
-            void insert(UInt index, E e) {
-                bindE(e);
-                source.insert(source.begin() + index, std::move(e));
-                invalidate();
-            }
-
-            template<typename L>
-            void insertAll(UInt index, const L &list) {
-                std::vector<E> temp;
-                temp.reserve(list.size() + size());
-                UInt count = 0;
-                for (const auto &val : source) {
-                    if (count++ == index) {
-                        for (auto e : list) {
-                            bindE(e);
-                            temp.push_back(std::move(e));
-                        }
-                    }
-                    temp.push_back(val);
-                }
-                source.swap(temp);
-                invalidate();
-            }
-
-            inline void clear() {
-                source.clear();
-                invalidate();
-            }
-
             inline bool empty() const { return source.empty(); }
-
-            inline void reserve(UInt size) { source.reserve(size); }
-
-            E remove(UInt idx) {
-                E val = std::move(source[idx]);
-                unbindE(val);
-                source.erase(source.begin() + idx);
-                invalidate();
-                return val;
-            }
-
-            inline void removeAll(UInt start, UInt end) {
-                WeakPointer<ObservableList<E, Derived>> weakThis
-                        = std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this());
-                std::for_each(source.begin() + start, source.begin() + end,
-                              [weakThis](const E &e) { if (!weakThis.expired()) weakThis.lock()->unbindE(e); });
-                source.erase(source.begin() + start, source.begin() + end);
-                invalidate();
-            }
-
-            ~ObservableList() override = default;
 
             inline auto begin() const { return source.begin(); }
 
             inline auto end() const { return source.end(); }
 
-        protected:
-            void modify(RegularEnumSet <InvEvent> &s, const Invalidatable *) const override {
-                s -= InvEvent::INVALIDATE_THIS;
+            inline void reserve(UInt size) { source.reserve(size); }
+
+            void clear() {
+                if (convert) for (const auto &e : source) unbindFrom(e);
+                source.clear();
+                invShort();
             }
 
-            using Invalidatable::invalidate;
+            inline void add(E element) {
+                if (convert) bindTo(convert(element));
+                source.push_back(std::move(element));
+                invShort();
+            }
+
+            template<typename L>
+            inline void addAll(const L &list) {
+                reserve(list.size() + size());
+                if (convert) {
+                    for (const auto &e : list) {
+                        bindTo(convert(e));
+                        source.push_back(e);
+                    }
+                } else {
+                    source.insert(source.end(), list.begin(), list.end());
+                }
+                invShort();
+            }
+
+            template<typename L>
+            void addAll(L &&list) {
+                reserve(list.size() + size());
+                if (convert) {
+                    for (auto &e : list) {
+                        bindTo(convert(e));
+                        source.push_back(std::move(e));
+                    }
+                } else {
+                    source.insert(source.end(), std::make_move_iterator(list.begin()),
+                                  std::make_move_iterator(list.end()));
+                }
+                invShort();
+            }
+
+            void insert(UInt idx, E element) {
+                if (convert) bindTo(convert(element));
+                source.insert(source.begin() + idx, element);
+                invShort();
+            }
+
+            template<typename L>
+            void insertAll(UInt idx, const L &list) {
+                source.reserve(list.size() + size());
+                if (convert) for (const auto &e : list) bindTo(convert(e));
+                source.insert(source.begin() + idx, list.begin(), list.end());
+                invShort();
+            }
+
+            template<typename L>
+            void insertAll(UInt idx, L &&list) {
+                source.reserve(list.size() + size());
+                if (convert) for (const auto &e : list) bindTo(convert(e));
+                source.insert(source.begin() + idx, std::make_move_iterator(list.begin()),
+                              std::make_move_iterator(list.end()));
+                invShort();
+            }
+
+            void set(UInt idx, E element) {
+                if (convert) {
+                    unbindFrom(convert(source[idx]));
+                    bindTo(convert(element));
+                }
+                source[idx] = std::move(element);
+                invShort();
+            }
+
+            void remove(UInt idx) {
+                if (convert) unbindFrom(convert(source[idx]));
+                source.erase(source.begin() + idx);
+                invShort();
+            }
+
+            void removeAll(UInt start, UInt finish) {
+                if (convert) for (UInt i = start; i < finish; unbindFrom(convert(source[i++])));
+                source.erase(source.begin() + start, source.begin() + finish);
+                invShort();
+            }
+
+        protected:
+
+            void modify(RegularEnumSet <InvEvent> &s,
+                        const Invalidatable *) const override { s -= InvEvent::INVALIDATE_THIS; }
 
         private:
-
             Vector <E> source{};
-            StrongPointer <Function<StrongPointer<Invalidatable>(E)>> extractor{};
-
-            inline void bindE(const E &e) {
-                if (extractor)
-                    (*extractor)(e)->bind(std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this()));
-            }
-
-            inline void unbindE(const E &e) {
-                if (extractor)
-                    (*extractor)(e)->unbind(std::static_pointer_cast<ObservableList<E, Derived>>(shared_from_this()));
-            }
-
-            void invalidate() const {
-                static_cast<const Derived *>(this)->invShort();
-            }
         };
+
+#undef invShort
 
         template<typename Derived, typename ElementType>
         class ListWrapper : public Invalidatable {
         public:
-            inline const ElementType &get(UInt idx) const { return getVector()[idx]; }
+
+            inline const ElementType &operator[](UInt idx) const { return getVector()[idx]; }
 
             inline bool contains(const ElementType &et) const {
                 return std::find(getVector().begin(), getVector().end(), et) != getVector().end();
@@ -149,6 +153,10 @@ namespace feather {
 
             inline auto end() const { return getVector().end(); }
 
+            inline const ElementType &front() const { return getVector().front(); }
+
+            inline const ElementType &back() const { return getVector().back(); }
+
         private:
             const Vector <ElementType> &getVector() const { return static_cast<const Derived *>(this)->getSource(); }
         };
@@ -161,7 +169,7 @@ namespace feather {
         public:
             explicit SketchyObservableListWrapper(StrongPointer<const ListType> watched)
                     : watched(std::move(watched)) {
-                if (watched) watched->bind(std::static_pointer_cast<Invalidatable>(this->shared_from_this()));
+                if (watched) this->bindTo(watched);
             }
 
         private:

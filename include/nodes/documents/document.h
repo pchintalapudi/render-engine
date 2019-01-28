@@ -5,11 +5,16 @@
 #ifndef FEATHER_DOCUMENT_H
 #define FEATHER_DOCUMENT_H
 
-#include "nodes/node.h"
+#include "nodes/text/processing_instruction.h"
+#include "nodes/text/c_data_section.h"
+#include "nodes/text/comment.h"
+#include "nodes/utils/attr.h"
 #include "style/css/pseudoclass_manager.h"
 
 namespace feather {
     namespace dom {
+
+        class DocumentFragment;
 
         namespace dlists {
             class ObjectMappedList;
@@ -53,7 +58,7 @@ namespace feather {
             inline void remove() { getParentNode()->removeChild(getSharedFromThis()); }
 
         private:
-            DOMString name;
+            DOMString name{};
         };
 
         class Document : public Node, public DocumentOrShadowRoot {
@@ -103,6 +108,53 @@ namespace feather {
 
             inline DOMString getSelectedStyleSheet() const { return preferredStyleSheet; }
 
+            void adoptNode(StrongPointer<Node> other);
+
+            StrongPointer<Attr> createAttribute(DOMString attr) const;
+
+            StrongPointer<CDATASection> createCDATASection(DOMString data) const;
+
+            StrongPointer<Comment> createComment(DOMString comment) const;
+
+            StrongPointer<DocumentFragment> createDocumentFragment() const;
+
+            StrongPointer<Element> createElement(DOMString tagName) const;
+
+            StrongPointer<ProcessingInstruction> createProcessingInstruction
+                    (DOMString target, DOMString data) const;
+
+            //TODO: ranges
+
+            StrongPointer<Text> createTextNode(DOMString val) const;
+
+            //TODO: pointer lock
+
+            //TODO: dlists
+
+            //TODO: storage
+
+            void importNode(StrongPointer<Node> s);
+
+            //TODO: storage and promises
+
+            //TODO: pointer lock
+
+            StrongPointer<Element> getElementById(const DOMString &id) const;
+
+            StrongPointer<Element> querySelector(const DOMString &selector) const;
+
+            Vector<StrongPointer<Element>> querySelectorAll(const DOMString &selector) const;
+
+            inline StrongPointer<HTMLCollection> getChildren() {
+                return StrongPointer<HTMLCollection>(shared_from_this(), &children);
+            }
+
+            inline StrongPointer<const HTMLCollection> getChildren() const {
+                return StrongPointer<const HTMLCollection>(shared_from_this(), &children);
+            }
+
+            inline UInt getChildElementCount() const { return children.size(); }
+
         private:
             DOMString characterSet{};
             TriValue quirks = TriValue::NO;
@@ -110,6 +162,7 @@ namespace feather {
             bool hidden = false;
             DOMString lastStyleSheet{};
             DOMString preferredStyleSheet{};
+            HTMLCollection children;
 
             mutable StrongPointer<dlists::ObjectMappedList> objects{};
             mutable StrongPointer<dlists::FormMappedList> forms{};

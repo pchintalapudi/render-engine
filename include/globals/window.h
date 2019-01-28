@@ -31,7 +31,7 @@ namespace feather {
             double getAngle();
 
         private:
-            Orientation orientation;
+            Orientation orientation = LANDSCAPE_PRIMARY;
         };
 
         class Screen : public js::EventTarget {
@@ -49,7 +49,7 @@ namespace feather {
             double getHeight();
 
         private:
-            observable::SourceObservableItem<ScreenOrientation> orientation;
+            observable::ObservableItem<ScreenOrientation, true> orientation;
         };
 
         class Window : public js::EventTarget {
@@ -80,12 +80,12 @@ namespace feather {
 
             inline void setFullscreen(bool fullscreen) { this->fullscreen = fullscreen; }
 
-            inline StrongPointer<const observable::SourceObservableItem<bool>> getFullscreenProperty() const {
-                return StrongPointer<const observable::SourceObservableItem<bool>>(shared_from_this(), &fullscreen);
+            inline StrongPointer<const observable::ObservableItem<bool, true>> getFullscreenProperty() const {
+                return StrongPointer<const observable::ObservableItem<bool, true>>(shared_from_this(), &fullscreen);
             }
 
-            inline StrongPointer<observable::SourceObservableItem<bool>> getFullscreenProperty() {
-                return StrongPointer<observable::SourceObservableItem<bool>>(shared_from_this(), &fullscreen);
+            inline StrongPointer<observable::ObservableItem<bool, true>> getFullscreenProperty() {
+                return StrongPointer<observable::ObservableItem<bool, true>>(shared_from_this(), &fullscreen);
             }
 
             inline StrongPointer<const History> getHistory() const {
@@ -100,20 +100,20 @@ namespace feather {
 
             inline double getInnerWidth() const { return *width; }
 
-            inline StrongPointer<const observable::SourceObservableItem<double>> getHeightProperty() const {
-                return StrongPointer<const observable::SourceObservableItem<double>>(shared_from_this(), &height);
+            inline StrongPointer<const observable::ObservableItem<double, true>> getHeightProperty() const {
+                return StrongPointer<const observable::ObservableItem<double, true>>(shared_from_this(), &height);
             }
 
-            inline StrongPointer<observable::SourceObservableItem<double>> getHeightProperty() {
-                return StrongPointer<observable::SourceObservableItem<double>>(shared_from_this(), &height);
+            inline StrongPointer<observable::ObservableItem<double, true>> getHeightProperty() {
+                return StrongPointer<observable::ObservableItem<double, true>>(shared_from_this(), &height);
             }
 
-            inline StrongPointer<const observable::SourceObservableItem<double>> getWidthProperty() const {
-                return StrongPointer<const observable::SourceObservableItem<double>>(shared_from_this(), &width);
+            inline StrongPointer<const observable::ObservableItem<double, true>> getWidthProperty() const {
+                return StrongPointer<const observable::ObservableItem<double, true>>(shared_from_this(), &width);
             }
 
-            inline StrongPointer<observable::SourceObservableItem<double>> getWidthProperty() {
-                return StrongPointer<observable::SourceObservableItem<double>>(shared_from_this(), &width);
+            inline StrongPointer<observable::ObservableItem<double, true>> getWidthProperty() {
+                return StrongPointer<observable::ObservableItem<double, true>>(shared_from_this(), &width);
             }
 
             inline bool isSecureContext() const { return secureContext; }
@@ -145,14 +145,14 @@ namespace feather {
             void reload(bool force);
 
         private:
-            StrongPointer<crypto::Crypto> crypto;
+            StrongPointer<crypto::Crypto> crypto{};
             double dpr = 1;
             StrongPointer<dom::Document> document;
-            StrongPointer<js::Event> event;
+            StrongPointer<js::Event> event{};
             StrongPointer<wlists::FrameList> frameList;
-            observable::SourceObservableItem<bool> fullscreen;
+            observable::ObservableItem<bool, true> fullscreen{};
             History history{};
-            observable::SourceObservableItem<double> height, width;
+            observable::ObservableItem<double, true> height{}, width{};
             Location location{};
             bool secureContext = false;
             bool locationBarVisible = true;
@@ -161,8 +161,8 @@ namespace feather {
             bool menuBarVisible = true;
             DOMString name{};
             Navigator navigator{};
-            StrongPointer<Window> opener;
-            observable::SourceObservableItem<dom::ObservableDOMRect> outerDimensions;
+            StrongPointer<Window> opener{};
+            observable::ObservableItem<dom::ObservableDOMRect, true> outerDimensions{};
         };
     }
 }

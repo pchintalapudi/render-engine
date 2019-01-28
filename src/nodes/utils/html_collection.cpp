@@ -16,13 +16,12 @@ feather::dom::nodeToElement(const feather::StrongPointer<feather::dom::Node> &p)
 
 HTMLCollection::HTMLCollection(feather::StrongPointer<feather::dom::NodeList> nodeList)
         : SketchyObservableListWrapper(std::move(nodeList)) {
-    if (nodeList) nodeList->bind(std::static_pointer_cast<observable::Invalidatable>(shared_from_this()));
+    if (nodeList) bindTo(nodeList);
 }
 
 feather::StrongPointer<Element> HTMLCollection::getNamedItem(feather::DOMString name) const {
     StrongPointer <Element> e{};
-    for (UInt i = 0; i < size(); i++) {
-        auto child = get(i);
+    for (const auto &child : *this) {
         if (child->getId() == name) return child;
         else if (!e && compareType(e, name)) e = child;
     }

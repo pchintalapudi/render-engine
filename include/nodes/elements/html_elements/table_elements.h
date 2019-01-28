@@ -19,9 +19,8 @@ namespace feather {
 
             class HTMLTableColElement : public HTMLElement {
             public:
-                UInt getSpan() const { return std::stoul(getAttributeSafe("span")); }
 
-                void setSpan(UInt span) { setAttribute("span", std::to_string(span)); }
+                L_ATTRIBUTE(span, Span)
             };
 
             class HTMLTableElement : public HTMLElement {

@@ -36,6 +36,7 @@ namespace feather {
 
 #define ATTRIBUTE(attr, attrPascalCase) inline const DOMString &get##attrPascalCase() const {return getAttributeSafe(#attr);} inline void set##attrPascalCase(DOMString attr) {setAttribute(#attr, std::move(attr));}
 #define B_ATTRIBUTE(attr, attrPascalCase) inline bool is##attrPascalCase() const {return hasAttribute(#attr);} inline void set##attrPascalCase(bool (attr)) {toggleAttribute(#attr, attr);}
+#define L_ATTRIBUTE(attr, attrPascalCase) inline Long get##attrPascalCase() const {return std::stoull(#attr);} inline void set##attrPascalCase(Long (attr)) {setAttribute(#attr, std::to_string(attr));}
 #define STATIC_FACTORY(name) static StrongPointer<name> create(DOMString baseURI, const StrongPointer<Node> &parent) {return std::make_shared<name>(std::move(baseURI), parent);}
 #define CLONE_DEC(name) StrongPointer<Node> cloneNode(bool deep) const override;
 #define HTML_ELEMENT_CONSTRUCTOR(name, tag, id) name(DOMString baseURI, const StrongPointer<Node> &parent) : HTMLElement(std::move(baseURI), #tag, parent, id) {} STATIC_FACTORY(name) CLONE_DEC(name)
@@ -46,7 +47,7 @@ namespace feather {
                 HTMLElement(DOMString baseURI, DOMString tagName, const StrongPointer<Node> &parent,
                             KnownElements type) : Element(std::move(baseURI), std::move(tagName), parent, type),
                                                   realAccessKey(""), dataset(*getAttributes(), *this) {
-                    bind(StrongPointer<Invalidatable>(shared_from_this(), &cachedInnerText));
+                    bindTo(StrongPointer<Invalidatable>(shared_from_this(), &cachedInnerText));
                 }
 
                 ATTRIBUTE(accesskey, AccessKey)
@@ -113,7 +114,7 @@ namespace feather {
                 double offsets[4]{};
 
                 //Caches
-                mutable observable::WatchedObservableItem<DOMString> cachedInnerText;
+                mutable observable::ObservableItem<DOMString, false> cachedInnerText{};
 
                 DOMString computeInnerText() const;
             };

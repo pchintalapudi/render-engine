@@ -11,7 +11,3 @@ namespace {
     frameMapper(const feather::StrongPointer<feather::dom::Element> &ref) {
     }
 }
-class wlists::FrameList : public feather::observable::ObservableList<Window, FrameList> {
-};
-
-feather::UInt Window::getLength() const { return getFrameList()->size(); }

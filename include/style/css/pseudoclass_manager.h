@@ -150,7 +150,7 @@ namespace feather {
             Vector<feather::StrongPointer<const dom::Element>> focused = Vector<StrongPointer<const dom::Element>>();
 
             inline void invalidate() const {
-                //TODO: actually invalidate
+                //TODO: actually invShort
             }
         };
     }

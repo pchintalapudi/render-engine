@@ -13,9 +13,8 @@ namespace feather {
 
             class HTMLDataElement : public HTMLElement {
             public:
-                inline DOMString getValue() const { return getAttributeSafe("value"); }
 
-                inline void setValue(DOMString value) { setAttribute("value", std::move(value)); }
+                ATTRIBUTE(value, Value)
             };
 
             class HTMLDataListElement : public HTMLElement {
@@ -24,9 +23,8 @@ namespace feather {
 
             class HTMLLIElement : public HTMLElement {
             public:
-                inline Long getValue() const { return std::stoll(getAttributeSafe("value")); }
 
-                inline void setValue(Long l) { setAttribute("value", std::to_string(l)); }
+                L_ATTRIBUTE(value, Value)
             };
 
             class HTMLMapElement : public HTMLElement {
@@ -34,17 +32,14 @@ namespace feather {
             };
 
             class HTMLMetaElement : public HTMLElement {
-                inline DOMString getContent() const { return getAttributeSafe("content"); }
 
-                inline void setContent(DOMString content) { setAttribute("content", std::move(content)); }
+                ATTRIBUTE(content, Content)
 
                 inline DOMString getHttpEquiv() const { return getAttributeSafe("http-equiv"); }
 
                 inline void setHttpEquiv(DOMString httpEquiv) { setAttribute("http-equiv", std::move(httpEquiv)); }
 
-                inline DOMString getName() const { return getAttributeSafe("name"); }
-
-                inline void setName(DOMString name) { setAttribute("name", std::move(name)); }
+                ATTRIBUTE(name, Name)
             };
 
             class HTMLModeElement : public HTMLElement {
@@ -57,9 +52,8 @@ namespace feather {
 
             class HTMLQuoteElement : public HTMLElement {
             public:
-                inline DOMString getCite() const { return getAttributeSafe("cite"); }
 
-                inline void setCite(DOMString cite) { setAttribute("cite", std::move(cite)); }
+                ATTRIBUTE(cite, Cite)
             };
 
             class HTMLScriptElement : public HTMLElement {
@@ -75,15 +69,11 @@ namespace feather {
             };
 
             class HTMLTimeElement : public HTMLElement {
-                inline DOMString getTime() const { return getAttributeSafe("datetime"); }
-
-                inline void setTime(DOMString time) { setAttribute("datetime", std::move(time)); }
+                ATTRIBUTE(time, Time)
             };
 
             class HTMLTitleElement : public HTMLElement {
-                inline DOMString getText() const { return getAttributeSafe("text"); }
-
-                inline void setText(DOMString text) { setAttribute("text", std::move(text)); }
+                ATTRIBUTE(text, Text)
             };
         }
     }

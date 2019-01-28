@@ -60,9 +60,9 @@ namespace feather::dom::dlists {
 }
 
 feather::StrongPointer<feather::dom::html::HTMLHtmlElement> Document::getDocumentElement() const {
-    auto children = getChildNodes();
-    for (UInt i = children->size(); i-- > 0;) {
-        auto child = children->get(i);
+    auto children = *getChildNodes();
+    for (UInt i = children.size(); i-- > 0;) {
+        auto child = children[i];
         if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE &&
             std::static_pointer_cast<Element>(child)->getElementType() == KnownElements::HTMLHtmlElement)
             return std::static_pointer_cast<html::HTMLHtmlElement>(child);
@@ -73,9 +73,7 @@ feather::StrongPointer<feather::dom::html::HTMLHtmlElement> Document::getDocumen
 feather::StrongPointer<feather::dom::html::HTMLHeadElement> Document::getHead() {
     auto dElement = getDocumentElement();
     if (dElement) {
-        auto children = dElement->getChildren();
-        for (UInt i = 0; i < children->size(); i++) {
-            auto child = children->get(i);
+        for (const auto &child : *dElement->getChildren()) {
             if (child->getElementType() == KnownElements::HTMLHeadElement)
                 return std::static_pointer_cast<html::HTMLHeadElement>(child);
         }
@@ -86,9 +84,9 @@ feather::StrongPointer<feather::dom::html::HTMLHeadElement> Document::getHead() 
 feather::StrongPointer<feather::dom::html::HTMLBodyElement> Document::getBody() const {
     auto dElement = getDocumentElement();
     if (dElement) {
-        auto children = dElement->getChildren();
-        for (UInt i = children->size(); i-- > 0;) {
-            auto child = children->get(i);
+        auto children = *dElement->getChildren();
+        for (UInt i = children.size(); i-- > 0;) {
+            auto child = children[i];
             if (child->getElementType() == KnownElements::HTMLBodyElement)
                 return std::static_pointer_cast<html::HTMLBodyElement>(child);
         }

@@ -245,7 +245,7 @@ namespace feather {
             inline void setId(DOMString id) { setAttribute("id", std::move(id)); }
 
             inline const DOMString &getInnerHtml() const {
-                return innerHTML.isValid() ? innerHTML.get() : constructInnerHTML();
+                return innerHTML.isValid() ? *innerHTML : constructInnerHTML();
             }
 
             //TODO: Implement me
@@ -258,7 +258,7 @@ namespace feather {
             inline StrongPointer<Element> getNextElementSibling() const;
 
             inline const DOMString &getOuterHtml() const {
-                return outerHTML.isValid() ? outerHTML.get() : constructOuterHTML();
+                return outerHTML.isValid() ? *outerHTML : constructOuterHTML();
             }
 
             //TODO: Implement me
@@ -431,11 +431,11 @@ namespace feather {
             }
 
             inline StrongPointer<Element> getFirstElementChild() const {
-                return !children.empty() ? children.get(0) : StrongPointer<Element>();
+                return !children.empty() ? children.front() : StrongPointer<Element>();
             }
 
             inline StrongPointer<Element> getLastElementChild() const {
-                return !children.empty() ? children.get(children.size() - 1) : StrongPointer<Element>();
+                return !children.empty() ? children.back() : StrongPointer<Element>();
             }
 
             inline StrongPointer<Element> getThisRef() const { return thisRef; }
@@ -468,15 +468,15 @@ namespace feather {
             HTMLCollection children;
 
             //Caches
-            mutable observable::WatchedObservableItem<DOMString> innerHTML{}, outerHTML{};
+            mutable observable::ObservableItem<DOMString, false> innerHTML{}, outerHTML{};
 
             const DOMString &constructInnerHTML() const;
 
             const DOMString &constructOuterHTML() const;
 
-            StrongPointer<Element> thisRef;
+            StrongPointer<Element> thisRef = std::static_pointer_cast<Element>(shared_from_this());
 
-            mutable observable::WatchedObservableItem<Pair<UInt, UInt>> indeces, typedIndeces;
+            mutable observable::ObservableItem<Pair<UInt, UInt>, false> indeces, typedIndeces;
 
             void updateElementIndeces() const;
 

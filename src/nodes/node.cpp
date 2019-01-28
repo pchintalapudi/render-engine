@@ -4,23 +4,35 @@
 
 #include "nodes/node.h"
 #include "nodes/text/text.h"
+#include "nodes/documents/document.h"
 
 using namespace feather::dom;
+
+feather::StrongPointer<feather::observable::Invalidatable> feather::dom::toInvalidatable(
+        const feather::WeakPointer<feather::dom::Node> &ref) {
+    return std::static_pointer_cast<observable::Invalidatable>(ref.lock());
+}
+
+feather::StrongPointer<feather::observable::Invalidatable> feather::dom::toInvalidatable(
+        const feather::WeakPointer<feather::dom::Document> &ref) {
+    return std::static_pointer_cast<observable::Invalidatable>(ref.lock());
+}
 
 bool NodeList::deepEquals(const feather::dom::NodeList &other) const {
     if (other.size() == size()) {
         for (UInt i = 0; i < size(); i++) {
-            if (*other.get(i) != *get(i)) return false;
+            if (*other[i] != *(*this)[i]) return false;
         }
         return true;
     }
     return false;
 }
 
-void NodeList::invShort() const {
-    invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_CHILDREN_CHANGE, this);
-    invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_NODE_INDEX_CHANGE +
-               observable::InvEvent::PROPAGATE_DOWNWARD, this);
+void NodeList::invalidate() const {
+    Invalidatable::invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_CHILDREN_CHANGE,
+                              this);
+    Invalidatable::invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_NODE_INDEX_CHANGE +
+                              observable::InvEvent::PROPAGATE_DOWNWARD, this);
 }
 
 void NodeList::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
@@ -29,34 +41,34 @@ void NodeList::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
 }
 
 feather::UInt Node::getIndex() const {
-    if (nodeIndex.isValid()) return nodeIndex.get();
+    if (nodeIndex.isValid()) return *nodeIndex;
     if (getParentNode()) {
         getParentNode()->updateChildIndeces();
-        return nodeIndex.get();
+        return *nodeIndex;
     } else {
-        nodeIndex.set(0);
+        nodeIndex = 0;
         return 0;
     }
 }
 
 void Node::updateChildIndeces() const {
-    for (UInt i = 0; i < childNodes.size(); i++) childNodes.get(i)->nodeIndex.set(i);
+    for (UInt i = 0; i < childNodes.size(); i++) childNodes[i]->nodeIndex = i;
 }
 
 feather::StrongPointer<Node> Node::replaceChild(feather::StrongPointer<feather::dom::Node> newChild,
                                                 feather::StrongPointer<feather::dom::Node> oldChild) {
-    if (oldChild->getParentNode().get() == this) {
+    if (oldChild->parent->lock().get() == this) {
         if (newChild->getParentNode()) newChild->getParentNode()->removeChild(newChild);
         newChild->setParentNode(getSharedFromThis());
         auto idx = oldChild->getIndex();
         oldChild->clearParentNode();
-        getChildNodes()->set(idx, newChild);
+        childNodes.set(idx, newChild);
     }
     return oldChild;
 }
 
 feather::StrongPointer<Node> Node::removeChild(feather::StrongPointer<feather::dom::Node> child) {
-    if (child->getParentNode().get() == this) {
+    if (child->parent->lock().get() == this) {
         child->clearParentNode();
         getChildNodes()->remove(child->getIndex());
         return child;
@@ -68,7 +80,7 @@ void Node::normalize() {
     UInt lastIndex = ~0u;
     DOMString temp;
     for (UInt i = childNodes.size(); i-- > 0;) {
-        const auto &child = childNodes.get(i);
+        const auto &child = childNodes[i];
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
             case NodeType::SHADOW_ROOT:
@@ -77,7 +89,7 @@ void Node::normalize() {
                 if (~lastIndex && lastIndex > i + 1) {
                     auto reserve = temp.length();
                     auto text = Text::create(getBaseURI(), getSharedFromThis(), std::move(temp));
-                    childNodes.get(lastIndex)->clearParentNode();
+                    childNodes[lastIndex]->clearParentNode();
                     childNodes.removeAll(i + 1, lastIndex);
                     childNodes.insert(i + 1, std::move(text));
                     temp = "";
@@ -100,7 +112,7 @@ void Node::normalize() {
     }
     if (~lastIndex && lastIndex > 0) {
         auto text = Text::create(getBaseURI(), getSharedFromThis(), std::move(temp));
-        childNodes.get(lastIndex)->clearParentNode();
+        childNodes[lastIndex]->clearParentNode();
         childNodes.removeAll(0, lastIndex);
         childNodes.insert(0, std::move(text));
     }
@@ -111,7 +123,7 @@ feather::StrongPointer<Node> Node::insertAfter(feather::StrongPointer<feather::d
     if (ref->getParentNode().get() == this) {
         if (add->getParentNode()) add->getParentNode()->removeChild(add);
         add->setParentNode(getSharedFromThis());
-        getChildNodes()->insert(ref->getIndex() + 1, add);
+        childNodes.insert(ref->getIndex() + 1, add);
         return add;
     }
     return StrongPointer<Node>();
@@ -122,13 +134,7 @@ feather::StrongPointer<Node> Node::insertBefore(feather::StrongPointer<feather::
     if (ref->getParentNode().get() == this) {
         if (ref->getNodeTypeInternal() == NodeType::DOCUMENT_FRAGMENT_NODE) {
             auto children = add->getChildNodes();
-            auto size = getChildNodes()->size();
-            getChildNodes()->insertAll(ref->getIndex(), *children);
-            for (UInt i = 0; i < children->size(); i++) {
-                auto child = children->get(i);
-                child->setParentNode(getSharedFromThis());
-                child->nodeIndex.set(i + size);
-            }
+            getChildNodes()->insertAll(ref->getIndex(), std::move(*children));
             children->clear();
             return add;
         } else {
@@ -170,9 +176,7 @@ namespace {
     const feather::dom::Node *
     getPrecedence(const feather::dom::Node *const &root, const feather::dom::Node *const &node1,
                   const feather::dom::Node *const &node2) {
-        const auto &children = root->getChildNodes();
-        for (feather::UInt i = 0; i < children->size(); i++) {
-            const auto &child = children->get(i);
+        for (const auto &child : *root->getChildNodes()) {
             if (child.get() == node1) return node1;
             if (child.get() == node2) return node2;
             if (child->hasChildNodes()) {
@@ -246,7 +250,7 @@ feather::DOMString Node::getTextContentInternal() const {
         case NodeType::DOCUMENT_FRAGMENT_NODE:
         case NodeType::SHADOW_ROOT: {
             DOMString temp;
-            for (UInt i = 0; i < childNodes.size(); i++) temp += childNodes.get(i)->getTextContentInternal();
+            for (const auto &child : childNodes) temp += child->getTextContentInternal();
             return temp;
         }
         default:
@@ -256,51 +260,44 @@ feather::DOMString Node::getTextContentInternal() const {
 
 feather::StrongPointer<feather::dom::Node> Node::getPrevSibling() const {
     auto idx = getIndex();
-    return idx ? childNodes.get(idx - 1) : StrongPointer<Node>();
+    return idx ? childNodes[idx - 1] : StrongPointer<Node>();
 }
 
 feather::StrongPointer<Element> Node::getParentElement() const {
     auto parent = getParentNode();
-    return parent->getNodeTypeInternal() == NodeType::ELEMENT_NODE ||
-           parent->getNodeTypeInternal() == NodeType::SHADOW_ROOT
+    return parent->getNodeTypeInternal() == NodeType::ELEMENT_NODE
            ? std::static_pointer_cast<Element>(parent)
            : StrongPointer<Element>();
 }
 
 void Node::setParentNode(const feather::StrongPointer<feather::dom::Node> &parentNode) {
-    auto ptr = StrongPointer<observable::WatchedObservableItem<UInt>>(shared_from_this(), &nodeIndex);
-    auto old = parent.get().lock();
-    if (old) old->getChildNodes()->unbind(ptr);
     parent = parentNode;
-    parentNode->getChildNodes()->bind(ptr);
 }
 
 feather::StrongPointer<feather::dom::Document> Node::getOwnerDocument() const {
-    if (ownerPtr.isValid()) return ownerPtr.get().lock();
+    if (owner.isValid()) return owner->lock();
     auto owner = getParentNode() ? getParentNode()->getOwnerDocument() : StrongPointer<Document>();
-    ownerPtr.set(owner);
+    this->owner = owner;
     return owner;
 }
 
 feather::StrongPointer<feather::dom::Node> Node::getNextSibling() const {
     auto idx = getIndex();
-    return idx < getChildNodes()->size() ? getChildNodes()->get(idx) : StrongPointer<Node>();
+    return idx < childNodes.size() ? childNodes[idx] : StrongPointer<Node>();
 }
 
 void Node::insertBeforeChildNDTCN(const feather::StrongPointer<const feather::dom::Node> &ref,
                                   const feather::Vector<std::shared_ptr<feather::dom::Node>> &add) {
     if (ref->getParentNode().get() == this) {
         UInt idx;
-        if (ref->nodeIndex.isValid()) idx = ref->nodeIndex.get();
+        if (ref->nodeIndex.isValid()) idx = *ref->nodeIndex;
         else {
             idx = ~0u;
-            while (++idx < childNodes.size() && childNodes.get(idx) != ref) childNodes.get(idx)->nodeIndex.set(idx);
+            while (++idx < childNodes.size() && childNodes[idx] != ref) childNodes[idx]->nodeIndex = idx;
         }
-        for (UInt i = 0; i < add.size(); i++) {
-            auto child = add[i];
+        for (const auto &child : add) {
             if (child->getParentNode()) child->getParentNode()->removeChild(child);
             child->setParentNode(getSharedFromThis());
-            child->nodeIndex.set(idx + i);
         }
         childNodes.insertAll(idx, add);
     }
@@ -310,16 +307,14 @@ void Node::insertAfterChildNDTCN(const feather::StrongPointer<const feather::dom
                                  const feather::Vector<std::shared_ptr<feather::dom::Node>> &add) {
     if (ref->getParentNode().get() == this) {
         UInt idx;
-        if (ref->nodeIndex.isValid()) idx = ref->nodeIndex.get() + 1;
+        if (ref->nodeIndex.isValid()) idx = *ref->nodeIndex + 1;
         else {
             idx = 0;
-            while (idx < childNodes.size() && childNodes.get(idx++) != ref);
+            while (idx < childNodes.size() && childNodes[idx++] != ref);
         }
-        for (UInt i = 0; i < add.size(); i++) {
-            auto child = add[i];
+        for (const auto &child : add) {
             if (child->getParentNode()) child->getParentNode()->removeChild(child);
             child->setParentNode(getSharedFromThis());
-            child->nodeIndex.set(idx + i);
         }
         childNodes.insertAll(idx, add);
     }
@@ -329,19 +324,18 @@ void Node::replaceChildNDTCN(const feather::StrongPointer<const feather::dom::No
                              const feather::Vector<std::shared_ptr<feather::dom::Node>> &add) {
     if (ref->getParentNode().get() == this) {
         UInt idx;
-        if (ref->nodeIndex.isValid()) idx = ref->nodeIndex.get();
+        if (ref->nodeIndex.isValid()) idx = *ref->nodeIndex;
         else {
             idx = 0;
-            while (idx < childNodes.size() && childNodes.get(idx++) != ref);
+            while (idx < childNodes.size() && childNodes[idx++] != ref);
         }
-        for (UInt i = 0; i < add.size(); i++) {
-            auto child = add[i];
+        for (const auto &child : add) {
             if (child->getParentNode()) child->getParentNode()->removeChild(child);
             child->setParentNode(getSharedFromThis());
-            child->nodeIndex.set(idx + i);
         }
         childNodes.insertAll(idx, add);
-        childNodes.remove(idx - 1)->clearParentNode();
+        childNodes[idx - 1]->clearParentNode();
+        childNodes.remove(idx - 1);
     }
 }
 
@@ -349,11 +343,11 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
            feather::StrongPointer<feather::DOMString> value,
            const feather::StrongPointer<feather::dom::Node> &parent)
         : baseURI(std::move(baseURI)), name(std::move(name)), type(type), value(std::move(value)) {
-    bind(getChildNodes());
-    this->parent.bind(feather::StrongPointer<observable::WatchedObservableItem<feather::WeakPointer<Document>>>
-                              (shared_from_this(), &ownerPtr));
-    this->parent->lock()->childNodes.bind(
-            StrongPointer<observable::WatchedObservableItem<UInt>>(shared_from_this(), &nodeIndex));
+    bindTo(getChildNodes());
+    auto parentItem = StrongPointer<observable::ObservableItem<feather::WeakPointer<feather::dom::Node>, true,
+            toInvalidatable>>(getSharedFromThis(), &this->parent);
+    owner.bindTo(parentItem);
+    nodeIndex.bindTo(parentItem);
     setParentNode(parent);
 }
 
@@ -376,7 +370,7 @@ void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
                   const feather::observable::Invalidatable *p) const {
     types += observable::InvEvent::INVALIDATE_THIS;
     if (isLocal(types)) {
-        delocalize(types);
+        if (p == &childNodes) delocalize(types);
         //TODO: Implement change-specific handling
     }
     if (types.contains(observable::InvEvent::PROPAGATE_DOWNWARD)) {

@@ -59,7 +59,7 @@ const feather::DOMString &CSSStyleDeclaration::getCssText() const {
 void CSSStyleDeclaration::setCssText(feather::DOMString cssText) {
     //TODO: parse css variables
     styleString = std::move(cssText);
-    //TODO: invalidate
+    //TODO: invShort
     validate();
 }
 

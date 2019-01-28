@@ -14,11 +14,15 @@ namespace {
 
         explicit TagNameFilter(feather::DOMString tagName) : tagName(std::move(tagName)) {}
 
-        inline void operator()(const feather::StrongPointer<const Element> &p,
-                               feather::Vector<feather::StrongPointer<Element>> &addTo) {
-            if (p->getTagName() == tagName) addTo.push_back(p->getThisRef());
-            auto children = p->getChildren();
-            for (feather::UInt i = 0; i < children->size(); (*this)(children->get(i++), addTo));
+        void filter(const feather::StrongPointer<const Element> &p,
+                    feather::Vector<feather::StrongPointer<Element>> &addTo) {
+            if (compareType(p, tagName)) addTo.push_back(p->getThisRef());
+            for (const auto &child : *p->getChildren()) filter(child, addTo);
+        }
+
+        void operator()(const feather::StrongPointer<const Element> &p,
+                        feather::Vector<feather::StrongPointer<Element>> &addTo) {
+            for (const auto &child : *p->getChildren()) filter(child, addTo);
         }
 
     private:
@@ -29,11 +33,15 @@ namespace {
     public:
         explicit ClassNameFilter(feather::DOMString className) : className(std::move(className)) {}
 
-        inline void operator()(const feather::StrongPointer<const Element> &p,
-                               feather::Vector<feather::StrongPointer<Element>> &addTo) {
+        void filter(const feather::StrongPointer<const Element> &p,
+                    feather::Vector<feather::StrongPointer<Element>> &addTo) {
             if (p->getClassList()->contains(className)) addTo.push_back(p->getThisRef());
-            auto children = p->getChildren();
-            for (feather::UInt i = 0; i < children->size(); (*this)(children->get(i++), addTo));
+            for (const auto &child : *p->getChildren()) filter(child, addTo);
+        }
+
+        void operator()(const feather::StrongPointer<const Element> &p,
+                        feather::Vector<feather::StrongPointer<Element>> &addTo) {
+            for (const auto &child : *p->getChildren()) filter(child, addTo);
         }
 
     private:
@@ -46,7 +54,7 @@ class feather::dom::elists::FilteredByTagName
 public:
     FilteredByTagName(StrongPointer<const Element> element, DOMString filter)
             : RiskyFilteredList(std::move(element), TagNameFilter(std::move(filter))) {
-        element->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+        bindTo(element);
     }
 
 protected:
@@ -61,7 +69,7 @@ class feather::dom::elists::FilteredByTagNameNS
 public:
     FilteredByTagNameNS(StrongPointer<const Element> element, const DOMString &ns, const DOMString &name)
             : RiskyFilteredList(std::move(element), TagNameFilter(ns + name)) {
-        element->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+        bindTo(element);
     }
 
 protected:
@@ -76,7 +84,7 @@ class feather::dom::elists::FilteredByClassName
 public:
     FilteredByClassName(StrongPointer<const Element> element, DOMString className)
             : RiskyFilteredList(std::move(element), ClassNameFilter(std::move(className))) {
-        element->bind(std::static_pointer_cast<Invalidatable>(shared_from_this()));
+        bindTo(element);
     }
 
 protected:
@@ -182,10 +190,10 @@ Element::Element(feather::DOMString baseURI, feather::DOMString tagName,
                  const feather::StrongPointer<feather::dom::Node> &parent, KnownElements type)
         : Node(std::move(baseURI), std::move(tagName), NodeType::ELEMENT_NODE, StrongPointer<DOMString>(), parent),
           Slotable(), type(type), children(getChildNodes()) {
-    bind(getAttributes());
-    bind(getClassList());
-    bind(StrongPointer<Invalidatable>(shared_from_this(), &innerHTML));
-    bind(StrongPointer<Invalidatable>(shared_from_this(), &outerHTML));
+    bindTo(getAttributes());
+    bindTo(getClassList());
+    innerHTML.bindTo(thisRef);
+    outerHTML.bindTo(thisRef);
 }
 
 feather::StrongPointer<feather::DOMString> Element::getAttribute(const feather::DOMString &name) const {
@@ -284,8 +292,7 @@ namespace {
 const feather::DOMString &Element::constructInnerHTML() const {
     DOMString temp;
     UInt reserve = 0;
-    for (UInt i = 0; i < getChildNodes()->size(); i++) {
-        auto child = getChildNodes()->get(i);
+    for (const auto &child : *getChildNodes()) {
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
                 //It's computed here, but the repeated call shouldn't matter since the value is cached.
@@ -303,8 +310,7 @@ const feather::DOMString &Element::constructInnerHTML() const {
         }
     }
     temp.reserve(reserve);
-    for (UInt i = 0; i < getChildNodes()->size(); i++) {
-        auto child = getChildNodes()->get(i);
+    for (const auto &child : *getChildNodes()) {
         switch (child->getNodeTypeInternal()) {
             case NodeType::ELEMENT_NODE:
                 //It's been computed before, so this is actually a very cheap call
@@ -321,7 +327,8 @@ const feather::DOMString &Element::constructInnerHTML() const {
                 break;
         }
     }
-    return innerHTML.set(std::move(temp));
+    innerHTML = std::move(temp);
+    return *innerHTML;
 }
 
 const feather::DOMString &Element::constructOuterHTML() const {
@@ -339,117 +346,115 @@ const feather::DOMString &Element::constructOuterHTML() const {
     temp += "</";
     temp += getTagName();
     temp += ">";
-    return outerHTML.set(std::move(temp));
+    outerHTML = std::move(temp);
+    return *outerHTML;
 }
 
 feather::StrongPointer<Element> Element::getNextElementSibling() const {
     auto idx = getElementIndex();
     if (getParentElement()) {
-        auto children = getParentElement()->getChildren();
-        return idx < children->size() - 1 ? children->get(idx + 1) : StrongPointer<Element>();
+        if (idx < children.size() - 1) return children[idx + 1];
     } else if (getParentNode()) {
-        auto children = getParentNode()->getChildNodes();
-        while (++idx < children->size() && children->get(idx)->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
-        return idx < children->size() ? std::static_pointer_cast<Element>(children->get(idx))
-                                      : StrongPointer<Element>();
-    } else return StrongPointer<Element>();
+        auto children = *getParentNode()->getChildNodes();
+        for (auto nidx = getIndex() + 1; nidx < children.size(); nidx++) {
+            StrongPointer <Node> child = children[nidx];
+            if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) return std::static_pointer_cast<Element>(child);
+        }
+    }
+    return StrongPointer<Element>();
 }
 
 feather::StrongPointer<Element> Element::getPreviousElementSibling() const {
     auto idx = getElementIndex();
     if (getParentElement()) {
-        auto children = getParentElement()->getChildren();
-        return idx > 0 ? children->get(idx - 1) : StrongPointer<Element>();
+        return idx > 0 ? children[idx - 1] : StrongPointer<Element>();
     } else if (getParentNode()) {
-        auto children = getParentNode()->getChildNodes();
-        while (idx-- > 0 && children->get(idx)->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
-        return idx ? std::static_pointer_cast<Element>(children->get(idx)) : StrongPointer<Element>();
+        auto children = *getParentNode()->getChildNodes();
+        while (idx-- > 0 && children[idx]->getNodeTypeInternal() != NodeType::ELEMENT_NODE);
+        return idx ? std::static_pointer_cast<Element>(children[idx]) : StrongPointer<Element>();
     } else return StrongPointer<Element>();
 }
 
 void Element::updateElementIndeces() const {
     if (getParentElement()) {
-        auto children = getParentElement()->getChildren();
-        for (UInt i = 0, ri = children->size(); ri--; i++) children->get(i)->indeces.set(std::make_pair(i, ri));
+        auto children = *getParentElement()->getChildren();
+        for (UInt i = 0, ri = children.size(); ri--; i++) children[i]->indeces = std::make_pair(i, ri);
     } else if (getParentNode()) {
         Vector <StrongPointer<Element>> v;
-        auto children = getParentNode()->getChildNodes();
-        for (UInt i = 0; i < children->size(); i++) {
-            auto child = children->get(i);
+        auto children = *getParentNode()->getChildNodes();
+        for (const auto &child : children) {
             if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE)
                 v.push_back(std::static_pointer_cast<Element>(child));
         }
-        for (UInt i = 0, ri = children->size(); ri--; i++) v[i]->indeces.set(std::make_pair(i, ri));
+        for (UInt i = 0, ri = children.size(); ri--; i++) v[i]->indeces = std::make_pair(i, ri);
     } else {
-        indeces.set(std::make_pair(0, 0));
+        indeces = std::make_pair(0, 0);
     }
 }
 
 void Element::updatedTypedIndeces() const {
     if (getParentElement()) {
-        auto children = getParentElement()->getChildren();
+        auto children = *getParentElement()->getChildren();
         Multimap <DOMString, StrongPointer<Element>> m;
-        for (UInt i = 0, ri = children->size(); ri--; i++) {
-            auto child = children->get(i);
-            child->indeces.set(std::make_pair(i, ri));
+        for (UInt i = 0, ri = children.size(); ri--; i++) {
+            auto child = children[i];
+            child->indeces = std::make_pair(i, ri);
             m.emplace(child->getTagName(), child);
         }
         Vector <StrongPointer<Element>> v;
         DOMString s;
         for (const auto &pair : m) {
             if (s != pair.first) {
-                for (UInt i = 0, ri = v.size(); ri--; i++) v[i]->typedIndeces.set(std::make_pair(i, ri));
+                for (UInt i = 0, ri = v.size(); ri--; i++) v[i]->typedIndeces = std::make_pair(i, ri);
                 v.clear();
                 s = pair.first;
             }
             v.push_back(pair.second);
         }
     } else if (getParentNode()) {
-        auto children = getParentNode()->getChildNodes();
-        Multimap < DOMString, Pair < UInt, StrongPointer < Element >> > m;
+        feather::Multimap<DOMString, feather::Pair<UInt, feather::StrongPointer<Element>>> m;
         auto size = 0;
-        for (UInt i = 0; i < children->size(); i++) {
-            auto child = children->get(i);
+        for (const auto &child : *getParentNode()->getChildNodes()) {
             if (child->getNodeTypeInternal() == NodeType::ELEMENT_NODE) {
                 auto eChild = std::static_pointer_cast<Element>(child);
                 m.emplace(eChild->getTagName(), std::make_pair(size++, eChild));
             }
         }
-        Vector < Pair < UInt, StrongPointer < Element >> > v;
+        feather::Vector<feather::Pair<UInt, feather::StrongPointer<Element>>> v;
         DOMString s;
         for (const auto &pair : m) {
             if (s != pair.first) {
                 for (UInt i = 0, ri = v.size(); ri--; i++) {
                     Pair <UInt, StrongPointer<Element>> p = v[i];
-                    p.second->typedIndeces.set(std::make_pair(i, ri));
-                    p.second->indeces.set(std::make_pair(p.first, size - p.first));
+                    p.second->typedIndeces = std::make_pair(i, ri);
+                    p.second->indeces = std::make_pair(p.first, size - p.first);
                 }
             }
         }
     } else {
-        indeces.set(std::make_pair(0, 0));
-        typedIndeces.set(std::make_pair(0, 0));
+        indeces = std::make_pair(0, 0);
+        typedIndeces = std::make_pair(0, 0);
     }
 }
 
 feather::UInt Element::getElementIndex() const {
     if (!indeces.isValid()) updateElementIndeces();
-    return indeces.get().first;
+    return indeces->first;
 }
 
 feather::UInt Element::getLastElementIndex() const {
     if (!indeces.isValid()) updateElementIndeces();
-    return indeces.get().second;
+    return indeces->second;
 }
 
 feather::UInt Element::getTypedElementIndex() const {
     if (!typedIndeces.isValid()) updatedTypedIndeces();
-    return typedIndeces.get().first;
+    return typedIndeces->first;
 }
 
 feather::UInt Element::getLastTypedElementIndex() const {
     if (!typedIndeces.isValid()) updatedTypedIndeces();
-    return typedIndeces.get().second;
+    return typedIndeces->second;
 }
 
 feather::StrongPointer<feather::DOMString>
@@ -540,13 +545,13 @@ void Element::cloneElementProperties(const feather::StrongPointer<feather::dom::
         auto children = getChildNodes();
         auto cchildren = clone->getChildNodes();
         cchildren->reserve(children->size());
-        for (UInt i = 0; i < children->size(); cchildren->add(children->get(i++)->cloneNode(true)));
+        for (const auto &child : *children) cchildren->add(child->cloneNode(true));
     }
 }
 
 bool feather::dom::compareType(const feather::StrongPointer<const feather::dom::Element> &e,
                                const feather::DOMString &type) {
     auto etype = getType(type);
-    return etype == KnownElements::HTMLCustomElement
+    return type != "*" && etype == KnownElements::HTMLCustomElement
            ? type == e->getTagName() : etype == e->getElementType();
 }

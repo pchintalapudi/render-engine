@@ -9,7 +9,7 @@
 ## Completed DOM models:
 * Text
 * Comment
-* CDataSection
+* CDATASection
 * ProcessingInstruction
 * Element
 

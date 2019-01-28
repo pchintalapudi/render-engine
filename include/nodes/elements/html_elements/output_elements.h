@@ -10,6 +10,9 @@
 namespace feather {
     namespace dom {
         namespace html {
+
+#define SIZED_ELEMENT ATTRIBUTE(height, Height) ATTRIBUTE(width, Width)
+
             class HTMLMediaElement : public HTMLElement {
                 //TODO: Oh dear god this is going to be a pain
             };
@@ -19,24 +22,17 @@ namespace feather {
 
             class HTMLVideoElement : public HTMLMediaElement {
             public:
-                inline DOMString getHeight() const { return getAttributeSafe("height"); }
 
-                inline void setHeight(DOMString height) { setAttribute("height", std::move(height)); }
-
-                inline DOMString getPoster() const { return getAttributeSafe("poster"); }
-
-                inline void setPoster(DOMString poster) { setAttribute("poster", std::move(poster)); }
+                ATTRIBUTE(poster, Poster)
 
                 inline UInt getVideoHeight() const { return vHeight; }
 
                 inline UInt getVideoWidth() const { return vWidth; }
 
-                inline DOMString getWidth() const { return getAttributeSafe("width"); }
-
-                inline void setWidth(DOMString width) { setAttribute("width", std::move(width)); }
+                SIZED_ELEMENT
 
             private:
-                UInt vHeight, vWidth;
+                UInt vHeight{}, vWidth{};
             };
 
             class HTMLCanvasElement : public HTMLElement {
@@ -45,35 +41,25 @@ namespace feather {
 
             class HTMLDialogElement : public HTMLElement {
             public:
-                inline bool isOpen() const { return hasAttribute("open"); }
 
-                inline void setOpen(bool open) { toggleAttribute("open", open); }
+                B_ATTRIBUTE(open, Open)
 
                 inline DOMString getReturnValue() const { return rValue; }
 
                 inline void setReturnValue(DOMString returnValue) { rValue = std::move(returnValue); }
 
             private:
-                DOMString rValue;
+                DOMString rValue{};
             };
 
             class HTMLEmbedElement : public HTMLElement {
             public:
-                inline DOMString getHeight() const { return getAttributeSafe("height"); }
 
-                inline void setHeight(DOMString height) { setAttribute("height", std::move(height)); }
+                SIZED_ELEMENT
 
-                inline DOMString getSrc() const { return getAttributeSafe("src"); }
+                ATTRIBUTE(src, Src)
 
-                inline void setSrc(DOMString src) { setAttribute("src", std::move(src)); }
-
-                inline DOMString getType() const { return getAttributeSafe("type"); }
-
-                inline void setType(DOMString type) { setAttribute("type", std::move(type)); }
-
-                inline DOMString getWidth() const { return getAttributeSafe("width"); }
-
-                inline void setWidth(DOMString width) { setAttribute("width", std::move(width)); }
+                ATTRIBUTE(type, Type)
             };
 
             class HTMLIframeElement : public HTMLElement {
@@ -95,6 +81,8 @@ namespace feather {
             class HTMLTrackElement : public HTMLElement {
                 //TODO: write class
             };
+
+#undef SIZED_ELEMENT
         }
     }
 }
