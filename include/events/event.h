@@ -38,19 +38,19 @@ namespace feather {
                   WeakPointer<EventTarget> &&originalTarget, Vector<StrongPointer<EventTarget>> realPath,
                   EventType type);
 
-            inline bool getBubbles() const { return properties.contains(EventProperties::BUBBLES); }
+            inline bool getBubbles() const { return properties[EventProperties::BUBBLES]; }
 
-            inline bool getCancelBubble() const { return properties.contains(EventProperties::CONSUMED); }
+            inline bool getCancelBubble() const { return properties[EventProperties::CONSUMED]; }
 
             inline void setCancelBubble(bool b) { if (b) stopPropagation(); }
 
             Vector<StrongPointer<EventTarget>> getDeepPath() const { return getComposedPath(); }
 
-            inline bool getDefaultPrevented() const { return properties.contains(EventProperties::DEFAULT); }
+            inline bool getDefaultPrevented() const { return properties[EventProperties::DEFAULT]; }
 
-            inline bool getCancelable() const { return properties.contains(EventProperties::CANCELABLE); }
+            inline bool getCancelable() const { return properties[EventProperties::CANCELABLE]; }
 
-            inline bool getComposed() const { return properties.contains(EventProperties::COMPOSED); }
+            inline bool getComposed() const { return properties[EventProperties::COMPOSED]; }
 
             StrongPointer<EventTarget> getEventTarget();
 
@@ -62,7 +62,7 @@ namespace feather {
 
             inline void setEventPhase(EventPhase phase) { this->phase = phase; }
 
-            inline bool getReturnValue() const { return properties.contains(EventProperties::DEFAULT); }
+            inline bool getReturnValue() const { return properties[EventProperties::DEFAULT]; }
 
             void setReturnValue(bool);
 
@@ -72,22 +72,22 @@ namespace feather {
 
             inline DOMString getType() const { return name; }
 
-            bool isTrusted() const { return properties.contains(EventProperties::TRUSTED); }
+            bool isTrusted() const { return properties[EventProperties::TRUSTED]; }
 
             Vector<StrongPointer<EventTarget>> getComposedPath() const;
 
-            inline void preventDefault() { properties.remove(EventProperties::DEFAULT); }
+            inline void preventDefault() { properties -= EventProperties::DEFAULT; }
 
-            inline void stopPropagation() { properties.add(EventProperties::CONSUMED); }
+            inline void stopPropagation() { properties += EventProperties::CONSUMED; }
 
             inline void stopImmediatePropagation() {
-                properties.add(EventProperties::IMMEDIATE);
-                properties.add(EventProperties::CONSUMED);
+                properties += EventProperties::IMMEDIATE;
+                properties += EventProperties::CONSUMED;
             }
 
-            inline bool consumed() { return properties.contains(EventProperties::CONSUMED); }
+            inline bool consumed() { return properties[EventProperties::CONSUMED]; }
 
-            inline bool immediate() { return properties.contains(EventProperties::IMMEDIATE); }
+            inline bool immediate() { return properties[EventProperties::IMMEDIATE]; }
 
             inline EventType getInternalType() { return type; }
 

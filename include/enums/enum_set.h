@@ -11,75 +11,69 @@ namespace feather {
 
         EnumSet() = default;
 
+        template<class... T>
+        explicit EnumSet(T... initial) {
+            std::array<E, sizeof...(initial)> arr = {initial...};
+            for (auto e : arr) this->operator+=(e);
+        }
+
         explicit EnumSet(size_type field) : field(field) {}
 
-        inline EnumSet<E, size_type> &add(E e) {
+        inline auto operator+=(E e) {
             field |= static_cast<size_type>(1) << static_cast<unsigned char>(e);
             return *this;
         }
 
-        inline auto operator+=(E e) { return add(e); }
+        inline EnumSet<E, size_type> operator+(E e) const {
+            return EnumSet(field | static_cast<size_type>(1) << static_cast<unsigned char>(e));
+        }
 
-        inline EnumSet<E, size_type> operator+(E e) const { return EnumSet(field).add(e); }
-
-        inline EnumSet<E, size_type> &remove(E e) {
+        inline auto operator-=(E e) {
             field &= ~(static_cast<size_type>(1) << static_cast<unsigned char>(e));
             return *this;
         }
 
-        inline auto operator-=(E e) { return remove(e); }
+        inline EnumSet<E, size_type> operator-(E e) const {
+            return EnumSet(field & ~(static_cast<size_type>(1) << static_cast<unsigned char>(e)));
+        }
 
-        inline EnumSet<E, size_type> operator-(E e) const { return EnumSet(field).remove(e); }
-
-        inline EnumSet<E, size_type> &addAll(const EnumSet<E, size_type> &other) {
+        inline auto operator+=(const EnumSet<E, size_type> &other) {
             field |= other.field;
             return *this;
         }
-
-        inline auto operator+=(const EnumSet<E, size_type> &other) { return addAll(other); }
 
         inline EnumSet<E, size_type> operator+(const EnumSet<E, size_type> &other) const {
             return EnumSet(field | other.field);
         }
 
-        inline EnumSet<E, size_type> removeAll(const EnumSet<E, size_type> &other) {
+        inline auto operator-=(const EnumSet<E, size_type> &other) {
             field &= ~other.field;
             return *this;
         }
-
-        inline auto operator-=(const EnumSet<E, size_type> &other) { return removeAll(other); }
 
         inline EnumSet<E, size_type> operator-(const EnumSet<E, size_type> &other) {
             return EnumSet(field & ~other.field);
         }
 
-        inline bool contains(E e) const { return (field & 1 << static_cast<unsigned char>(e)) != 0; }
-
-        inline bool containsAll(const EnumSet<E, size_type> other) const {
-            return (field & other.field) == other.field;
-        }
-
-        inline bool containsAny(const EnumSet<E, size_type> other) const { return (field & other.field) != 0; }
-
-        inline bool containsNone(const EnumSet<E, size_type> other) const { return (field & other.field) == 0; }
+        inline bool operator[](E e) const { return (field & 1 << static_cast<unsigned char>(e)) != 0; }
 
         inline bool operator==(const EnumSet<E, size_type> &other) const { return field == other.field; }
 
         inline bool operator!=(const EnumSet<E, size_type> &other) const { return field != other.field; };
 
-        inline EnumSet<E, size_type> invert() const { return EnumSet<E, size_type>(~field); }
+        inline EnumSet<E, size_type> operator~() const { return EnumSet<E, size_type>(~field); }
 
-        inline EnumSet<E, size_type> operator~() const { return invert(); }
+        inline explicit operator size_type() const { return field; }
 
-        inline size_type toBitfield() const { return field; }
-
-        inline void fromBitfield(size_type field) { this->field = field; }
+        inline EnumSet<E, size_type> &operator=(size_type field) {
+            this->field = field;
+            return *this;
+        }
 
         inline bool operator!() const { return !field; }
 
         explicit inline operator bool() const { return field != 0; }
 
-    private:
         size_type field;
     };
 }

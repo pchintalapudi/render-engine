@@ -353,16 +353,16 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
 
 namespace {
     bool isLocal(const feather::RegularEnumSet<feather::observable::InvEvent> &types) {
-        return types.toBitfield() << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
+        return feather::ULong(types) << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
     }
 
     const feather::ULong global_mask = ~(~0u
             >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__));
 
     void delocalize(feather::RegularEnumSet<feather::observable::InvEvent> &types) {
-        types.fromBitfield((types.toBitfield() & global_mask) |
-                           (types.toBitfield() << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
-                                               >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
+        types = ((feather::ULong(types) & global_mask) |
+                 (feather::ULong(types) << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
+                                        >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
     }
 }
 
@@ -373,7 +373,7 @@ void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
         if (p == &childNodes) delocalize(types);
         //TODO: Implement change-specific handling
     }
-    if (types.contains(observable::InvEvent::PROPAGATE_DOWNWARD)) {
+    if (types[observable::InvEvent::PROPAGATE_DOWNWARD]) {
         types += observable::InvEvent::STOP_PROPAGATION;
         for (const auto &child : childNodes) child->invalidate(types, p);
     }

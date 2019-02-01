@@ -59,7 +59,7 @@ public:
 
 protected:
     void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
-        if (s.contains(observable::InvEvent::CHILDREN_CHANGE)) s += observable::InvEvent::INVALIDATE_THIS;
+        if (s[observable::InvEvent::CHILDREN_CHANGE]) s += observable::InvEvent::INVALIDATE_THIS;
         else s -= observable::InvEvent::INVALIDATE_THIS;
     }
 };
@@ -74,7 +74,7 @@ public:
 
 protected:
     void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
-        if (s.contains(observable::InvEvent::CHILDREN_CHANGE)) s += observable::InvEvent::INVALIDATE_THIS;
+        if (s[observable::InvEvent::CHILDREN_CHANGE]) s += observable::InvEvent::INVALIDATE_THIS;
         else s -= observable::InvEvent::INVALIDATE_THIS;
     }
 };
@@ -89,7 +89,7 @@ public:
 
 protected:
     void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
-        if (s.contains(observable::InvEvent::CHILDREN_CHANGE) || s.contains(observable::InvEvent::CLASS_CHANGE))
+        if (s[observable::InvEvent::CHILDREN_CHANGE] || s[observable::InvEvent::CLASS_CHANGE])
             s += observable::InvEvent::INVALIDATE_THIS;
         else s -= observable::InvEvent::INVALIDATE_THIS;
     }

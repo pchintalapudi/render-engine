@@ -12,18 +12,18 @@ Event::Event(bool bubbles, bool cancelable, bool composed, feather::DOMString &&
              feather::Vector<std::shared_ptr<feather::js::EventTarget>> realPath,
              EventType type)
         : realPath(realPath), current(realPath.begin()), originalTarget(originalTarget), name(name), type(type) {
-    if (bubbles) properties.add(EventProperties::BUBBLES);
-    if (cancelable) properties.add(EventProperties::CANCELABLE);
-    if (composed) properties.add(EventProperties::COMPOSED);
+    if (bubbles) properties += EventProperties::BUBBLES;
+    if (cancelable) properties += EventProperties::CANCELABLE;
+    if (composed) properties += EventProperties::COMPOSED;
 }
 
 Event::Event(bool bubbles, bool cancelable, bool composed, bool trusted, WeakPointer <EventTarget> &&originalTarget,
              feather::Vector<std::shared_ptr<feather::js::EventTarget>> realPath, feather::js::EventType type)
         : realPath(realPath), current(realPath.begin()), originalTarget(originalTarget), name(""), type(type) {
-    if (bubbles) properties.add(EventProperties::BUBBLES);
-    if (cancelable) properties.add(EventProperties::CANCELABLE);
-    if (composed) properties.add(EventProperties::COMPOSED);
-    if (trusted) properties.add(EventProperties::TRUSTED);
+    if (bubbles) properties += EventProperties::BUBBLES;
+    if (cancelable) properties += EventProperties::CANCELABLE;
+    if (composed) properties += EventProperties::COMPOSED;
+    if (trusted) properties += EventProperties::TRUSTED;
 }
 
 feather::StrongPointer<EventTarget> Event::getEventTarget() {

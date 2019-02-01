@@ -16,6 +16,7 @@
 #include <set>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 #include "enums/enum_set.h"
 #include "enums/enum_map.h"
@@ -67,6 +68,8 @@ namespace feather {
     using List = std::list<E>;
     template<typename E>
     using Deque = std::deque<E>;
+    template<typename... T>
+    using Variant = std::variant<T...>;
 
     template<typename T>
     const StrongPointer<T> &getEmptyPtr();
@@ -87,5 +90,9 @@ namespace feather {
 
         WeakPointer<Base> getWeakPointerToThis() { return WeakPointer<Base>(this->shared_from_this()); }
     };
+
+    namespace utf8 {
+
+    }
 }
 #endif //FEATHER_TYPEDEFS_H
