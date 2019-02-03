@@ -20,7 +20,7 @@ namespace feather {
         EventType fromString(DOMString s);
 
         enum class EventProperties {
-            BUBBLES, CANCELABLE, COMPOSED, DEFAULT, TRUSTED, CONSUMED, IMMEDIATE
+            BUBBLES, CANCELABLE, COMPOSED, DEFAULT, TRUSTED, CONSUMED, IMMEDIATE, __COUNT__
         };
 
         enum class EventPhase {
@@ -108,7 +108,7 @@ namespace feather {
             const TimePoint timestamp = currentTime();
             DOMString name;
             EventPhase phase = EventPhase::CAPTURING;
-            EnumSet<EventProperties, unsigned char> properties;
+            EnumSet<EventProperties> properties;
             EventType type;
         };
     }

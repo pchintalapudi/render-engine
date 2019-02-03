@@ -11,7 +11,7 @@ namespace feather {
     namespace observable {
 
         template<typename I, bool source, StrongPointer<Invalidatable>(*convert)(const I &) = nullptr,
-                typename required = RegularEnumSet<InvEvent>(), typename ignore = RegularEnumSet<InvEvent>()>
+                typename required = EnumSet<InvEvent>(), typename ignore = EnumSet<InvEvent>()>
         class ObservableItem : public Invalidatable {
         public:
             ObservableItem() = default;
@@ -30,7 +30,7 @@ namespace feather {
                     bindTo(convert(i));
                 }
                 this->i = std::move(i);
-                if (source) invalidate(RegularEnumSet<InvEvent>(), this);
+                if (source) invalidate(EnumSet<InvEvent>(), this);
                 else validate();
                 return *this;
             }

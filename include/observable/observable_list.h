@@ -126,8 +126,9 @@ namespace feather {
 
         protected:
 
-            void modify(RegularEnumSet <InvEvent> &s,
-                        const Invalidatable *) const override { s -= InvEvent::INVALIDATE_THIS; }
+            EnumSet <InvEvent> modify(EnumSet <InvEvent> s, const Invalidatable *) const override {
+                return s - InvEvent::INVALIDATE_THIS;
+            }
 
         private:
             Vector <E> source{};

@@ -29,15 +29,15 @@ bool NodeList::deepEquals(const feather::dom::NodeList &other) const {
 }
 
 void NodeList::invalidate() const {
-    Invalidatable::invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_CHILDREN_CHANGE,
+    Invalidatable::invalidate(EnumSet<observable::InvEvent>(observable::InvEvent::LOCAL_CHILDREN_CHANGE),
                               this);
-    Invalidatable::invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_NODE_INDEX_CHANGE +
-                              observable::InvEvent::PROPAGATE_DOWNWARD, this);
+    Invalidatable::invalidate(EnumSet<observable::InvEvent>(observable::InvEvent::LOCAL_NODE_INDEX_CHANGE,
+                                                            observable::InvEvent::PROPAGATE_DOWNWARD), this);
 }
 
-void NodeList::modify(feather::RegularEnumSet<feather::observable::InvEvent> &s,
-                      const feather::observable::Invalidatable *) const {
-    s -= observable::InvEvent::INVALIDATE_THIS;
+feather::EnumSet<feather::observable::InvEvent> NodeList::modify
+        (feather::EnumSet<feather::observable::InvEvent> s, const feather::observable::Invalidatable *) const {
+    return s - observable::InvEvent::INVALIDATE_THIS;
 }
 
 feather::UInt Node::getIndex() const {
@@ -352,22 +352,25 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
 }
 
 namespace {
-    bool isLocal(const feather::RegularEnumSet<feather::observable::InvEvent> &types) {
-        return feather::ULong(types) << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
+    bool isLocal(const feather::EnumSet<feather::observable::InvEvent> &types) {
+        return feather::EnumSet<feather::observable::InvEvent>::size_type(types)
+                       << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
     }
 
     const feather::ULong global_mask = ~(~0u
             >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__));
 
-    void delocalize(feather::RegularEnumSet<feather::observable::InvEvent> &types) {
-        types = ((feather::ULong(types) & global_mask) |
-                 (feather::ULong(types) << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
-                                        >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
+    void delocalize(feather::EnumSet<feather::observable::InvEvent> &types) {
+        types = ((feather::EnumSet<feather::observable::InvEvent>::size_type(types) & global_mask) |
+                 (feather::EnumSet<feather::observable::InvEvent>::size_type(types)
+                         << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
+                         >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
     }
 }
 
-void Node::modify(feather::RegularEnumSet<feather::observable::InvEvent> &types,
-                  const feather::observable::Invalidatable *p) const {
+feather::EnumSet<feather::observable::InvEvent> Node::modify(
+        feather::EnumSet<feather::observable::InvEvent> types,
+        const feather::observable::Invalidatable *p) const {
     types += observable::InvEvent::INVALIDATE_THIS;
     if (isLocal(types)) {
         if (p == &childNodes) delocalize(types);

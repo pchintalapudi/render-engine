@@ -33,9 +33,11 @@ public:
     virtual ~Invalidatable() = default;
 
 protected:
-    void invalidate(RegularEnumSet<InvEvent>, const Invalidatable *) const;
+    void invalidate(EnumSet<InvEvent>, const Invalidatable *) const;
 
-    virtual void modify(RegularEnumSet<InvEvent> &s, const Invalidatable *) const { s += InvEvent::INVALIDATE_THIS; }
+    virtual EnumSet<InvEvent> modify(EnumSet<InvEvent> s, const Invalidatable *) const {
+        return s + InvEvent::INVALIDATE_THIS;
+    }
 
     void validate() const { valid = true; }
 

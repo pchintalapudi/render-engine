@@ -44,7 +44,8 @@ namespace feather {
             ~NodeList() override = default;
 
         protected:
-            void modify(RegularEnumSet<observable::InvEvent> &s, const Invalidatable *p) const override;
+            feather::EnumSet<observable::InvEvent>
+            modify(EnumSet<observable::InvEvent> s, const Invalidatable *p) const override;
         };
 
         class Document;
@@ -183,7 +184,8 @@ namespace feather {
         protected:
             inline StrongPointer<DOMString> getValuePointer() const { return value; }
 
-            void modify(RegularEnumSet<observable::InvEvent> &types, const Invalidatable *source) const override;
+            EnumSet<observable::InvEvent>
+            modify(EnumSet<observable::InvEvent> types, const Invalidatable *source) const override;
 
         private:
             DOMString baseURI{};

@@ -55,8 +55,9 @@ namespace feather {
             const List<DOMString> *getInsertionOrder() const { return &insertionOrder; }
 
         protected:
-            void modify(RegularEnumSet<observable::InvEvent> &s, const observable::Invalidatable *) const override {
-                s -= observable::InvEvent::INVALIDATE_THIS;
+            EnumSet<observable::InvEvent>
+            modify(EnumSet<observable::InvEvent> s, const observable::Invalidatable *) const override {
+                return s - observable::InvEvent::INVALIDATE_THIS;
             }
 
         private:
@@ -65,7 +66,7 @@ namespace feather {
 
             void invalidate() {
                 observable::Invalidatable::invalidate(
-                        RegularEnumSet<observable::InvEvent>() += observable::InvEvent::ATTRIBUTE_SIZE_CHANGE,
+                        EnumSet<observable::InvEvent>(observable::InvEvent::ATTRIBUTE_SIZE_CHANGE),
                         this);
             }
         };

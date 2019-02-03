@@ -46,8 +46,8 @@ namespace feather {
                 MISSING_NAME, MISSING_PUBLIC_ID, MISSING_SYSTEM_ID, FORCE_QUIRKS, __COUNT__
             };
 
-            EnumSet<DOCTYPE_PROPS, unsigned char> props
-                    = EnumSet<DOCTYPE_PROPS, unsigned char>((unsigned char) 0b111);
+            EnumSet<DOCTYPE_PROPS> props
+                    = EnumSet<DOCTYPE_PROPS>((unsigned char) 0b111);
 
         public:
 
@@ -183,6 +183,11 @@ namespace feather {
                 tempBuf.clear();
             }
 
+            void resetAttr() {
+                attr.clear();
+                val.clear();
+            }
+
             bool dumpBuf() {
                 emit(ltToken(), solidusToken());
                 emitted.reserve(emitLength = 2 + tempBuf.size());
@@ -254,6 +259,7 @@ namespace feather {
             DOMString lastStart;
             Vector<DOMString> tempBuf;
             DOMString name, attr, val;
+            Map<DOMString, DOMString> attributes;
             Vector<Token> emitted;
             UInt emitLength;
         };

@@ -22,16 +22,6 @@
 #include "enums/enum_map.h"
 
 namespace feather {
-    typedef std::string DOMString;
-    typedef std::int_fast16_t Short;
-    typedef std::int_fast32_t Int;
-    typedef std::int_fast64_t Long;
-    typedef std::uint_fast16_t UShort;
-    typedef std::uint_fast32_t UInt;
-    typedef std::uint_fast64_t ULong;
-    //Nonstandard gcc extended integer sizes
-    typedef __int128 Huge;
-    typedef unsigned __int128 UHuge;
     template<typename E>
     using Vector = std::vector<E>;
     template<typename K, typename V>
@@ -58,10 +48,6 @@ namespace feather {
     using WeakSet = std::set<WeakPointer<E>, std::owner_less<WeakPointer<E>>>;
     template<typename E>
     using WeakMap = std::map<WeakPointer<E>, std::owner_less<WeakPointer<E>>>;
-    template<typename E>
-    using RegularEnumSet = EnumSet<E, ULong>;
-    template<typename E>
-    using JumboEnumSet = EnumSet<E, UHuge>;
     template<typename E, typename V>
     using EnumMap = EnumMapRaw<E, StrongPointer<V>>;
     template<typename E>
@@ -92,7 +78,7 @@ namespace feather {
     };
 
     namespace utf8 {
-
+        unsigned char charSize(char c);
     }
 }
 #endif //FEATHER_TYPEDEFS_H

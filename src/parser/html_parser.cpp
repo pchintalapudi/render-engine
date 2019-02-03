@@ -594,7 +594,71 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
             }
         case ParserState::BEFORE_ATTRIBUTE_NAME:
             if (c.length > 1) {
-
+                def18:
+                resetAttr();
+                reconsume = true;
+                dataState = ParserState::ATTRIBUTE_NAME;
+                return false;
+            }
+            switch (*c.nextChar) {
+                case WHITESPACE:
+                    return false;
+                case '/':
+                case '>':
+                    reconsume = true;
+                    dataState = ParserState::AFTER_ATTRIBUTE_NAME;
+                    return false;
+                case '=':
+                    resetAttr();
+                    attr = '=';
+                    dataState = ParserState::ATTRIBUTE_NAME;
+                    return false;
+                default:
+                    goto def18;
+            }
+        case ParserState::ATTRIBUTE_NAME:
+            if (c.length > 1) {
+                attr += DOMString(c.nextChar, c.length);
+                return false;
+            }
+            switch (*c.nextChar) {
+                case WHITESPACE:
+                case '/':
+                case '>':
+                case EOF:
+                    reconsume = true;
+                    dataState = ParserState::AFTER_ATTRIBUTE_NAME;
+                    return false;
+                case '=':
+                    dataState = ParserState::BEFORE_ATTRIBUTE_VALUE;
+                    return false;
+                case 0:
+                    attr += "\uFFFD";
+                    return false;
+                case ASCII_UPPER_ALPHA:
+                    attr += char(*c.nextChar + 0x0020);
+                    return false;
+                case '"':
+                case '\'':
+                case '<':
+                default:
+                    attr += *c.nextChar;
+                    return false;
+            }
+        case ParserState::AFTER_ATTRIBUTE_NAME:
+            if (c.length > 1) {
+                goto def18;
+            }
+            switch (*c.nextChar) {
+                case WHITESPACE:
+                    return false;
+                case '/':
+                    dataState = ParserState::SELF_CLOSING_START_TAG;
+                    return false;
+                case '=':
+                    dataState = ParserState::BEFORE_ATTRIBUTE_VALUE;
+//                        case '>':
+//
             }
     }
 }

@@ -26,7 +26,7 @@ void CSSStyleDeclaration::setProperty(const feather::DOMString &property, feathe
         indeces[property] = props.size();
         props.push_back({property, std::move(value), priority});
     }
-    invalidate(RegularEnumSet<observable::InvEvent>() + observable::InvEvent::LOCAL_STYLE_PROPERTY_CHANGE, this);
+    invalidate(EnumSet<observable::InvEvent>(observable::InvEvent::LOCAL_STYLE_PROPERTY_CHANGE), this);
 }
 
 feather::DOMString CSSStyleDeclaration::removeProperty(const DOMString &property) {

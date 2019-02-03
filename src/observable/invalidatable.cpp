@@ -6,8 +6,8 @@
 
 using namespace feather::observable;
 
-void Invalidatable::invalidate(RegularEnumSet <InvEvent> s, const Invalidatable *i) const {
-    modify(s, i);
+void Invalidatable::invalidate(EnumSet <InvEvent> s, const Invalidatable *i) const {
+    s = modify(s, i);
     if (!s[InvEvent::STOP_PROPAGATION]) {
         for (auto it = dependents.begin(); it != dependents.end();) {
             if (it->expired()) it = dependents.erase(it); else it++->lock()->invalidate(s, this);
@@ -17,7 +17,7 @@ void Invalidatable::invalidate(RegularEnumSet <InvEvent> s, const Invalidatable 
 }
 
 void Invalidatable::bindInternal(feather::StrongPointer<const feather::observable::Invalidatable> dependent) const {
-    dependent->invalidate(RegularEnumSet<InvEvent>() + InvEvent::REBOUND, this);
+    dependent->invalidate(EnumSet<InvEvent>(InvEvent::REBOUND), this);
     dependents.insert(dependent);
 }
 

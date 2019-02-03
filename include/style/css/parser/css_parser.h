@@ -67,9 +67,10 @@ namespace feather {
                     RIGHT_PARENTHESIS,
                     LEFT_BRACKED,
                     RIGHT_BRACKET,
-                    EOF_TOKEN
+                    EOF_TOKEN,
+                    __COUNT__
                 };
-                typedef feather::EnumSet<Token, size_t> TokenSet;
+                typedef feather::EnumSet<Token> TokenSet;
 
 
                 CSSTokenizer();

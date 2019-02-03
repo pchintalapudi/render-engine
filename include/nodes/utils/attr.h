@@ -74,7 +74,7 @@ namespace feather {
 
             void invalidate() {
                 observable::Invalidatable::invalidate(
-                        RegularEnumSet<observable::InvEvent>() += observable::InvEvent::ATTRIBUTE_INTERNAL_CHANGE,
+                        EnumSet<observable::InvEvent>(observable::InvEvent::ATTRIBUTE_INTERNAL_CHANGE),
                         this);
             }
         };
