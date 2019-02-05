@@ -1,0 +1,5 @@
+add_subdirectory(documents)
+add_subdirectory(elements)
+add_subdirectory(text)
+add_subdirectory(utils)
+target_sources(feather PUBLIC node.cpp)

@@ -1,0 +1,1 @@
+target_sources(feather PUBLIC pseudoclass_manager.cpp)

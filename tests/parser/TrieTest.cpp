@@ -3,6 +3,7 @@
 //
 
 #include "TrieTest.h"
+using namespace feather::parser;
 
 // NOLINT
 TEST_F(TrieTest, TestFeed) {

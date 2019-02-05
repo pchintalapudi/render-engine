@@ -1,0 +1,1 @@
+target_sources(feather PUBLIC text.cpp)

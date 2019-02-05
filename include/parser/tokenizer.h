@@ -9,9 +9,9 @@
 
 using namespace std;
 
-class Tokenizer {
+class tokenizer {
 public:
-    Tokenizer();
+    tokenizer();
 };
 
 #endif //FEATHER_TOKENIZER_H
