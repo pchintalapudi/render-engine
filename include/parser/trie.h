@@ -20,7 +20,7 @@ namespace feather {
             }
 
             Derived *feed(const std::string &word) {
-                return static_cast<Derived*>(this)->feed(word);
+                return static_cast<Derived*>(this)->feed(word, 0);
             }
 
             void add(const std::string &first, T item) {
@@ -68,7 +68,7 @@ namespace feather {
 
         private:
             std::map<char, DefaultTrie<T> *> m;
-            bool here;
+            bool isHere;
             T t;
 
         public:
@@ -94,11 +94,12 @@ namespace feather {
             void add(const std::string &s, T item, size_t index) {
                 if (index == s.length()) {
                     this->t = item;
+                    this->isHere = true;
                     return;
                 }
                 if (this->m.find(s[index]) == this->m.end())
                     this->m[s[index]] = new DefaultTrie<T>();
-                (*this->m[s[index]]).add(s, t, index + 1);
+                this->m[s[index]]->add(s, t, index + 1);
             }
 
             void add(char *word, size_t size, T item, size_t index) {
@@ -123,12 +124,16 @@ namespace feather {
             using Trie<T, DefaultTrie<T>>::remove;
 
             DefaultTrie() {
-                this->here = false;
+                this->isHere = false;
                 this->m = std::map<char, DefaultTrie<T> *>();
             }
 
             inline T get() {
                 return this->t;
+            }
+
+            inline bool here() {
+                return this->isHere;
             }
 
         };

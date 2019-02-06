@@ -1,1 +1,1 @@
-target_sources(feather PUBLIC html_parser.cpp)
+target_sources(feather PUBLIC html_parser.cpp escape_codes.cpp)
