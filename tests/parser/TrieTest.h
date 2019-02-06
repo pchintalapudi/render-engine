@@ -5,12 +5,12 @@
 #ifndef FEATHER_TRIE_TEST_H
 #define FEATHER_TRIE_TEST_H
 #include "gtest/gtest.h"
-#include "parser/Trie.h"
+#include "parser/trie.h"
 
 class TrieTest : public ::testing::Test {
 protected:
-    feather::parser::Trie<bool> emptyTrie;
-    feather::parser::Trie<bool> trie;
+    feather::parser::DefaultTrie<bool> emptyTrie;
+    feather::parser::DefaultTrie<bool> trie;
 };
 
 

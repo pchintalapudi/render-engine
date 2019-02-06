@@ -34,6 +34,7 @@ namespace feather {
     using Map = std::map<K, V>;
     template<typename K, typename V>
     using Multimap = std::multimap<K, V>;
+
     template<typename E>
     using Set = std::set<E>;
     template<typename K, typename V>
