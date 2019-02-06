@@ -6,9 +6,12 @@
 #define CURL_HTML_PARSER_H
 
 #include "nodes/elements/html_elements/html_element_includes.h"
+#include "html_trie.h"
 
 namespace feather {
     namespace parser {
+
+#define UNICODE_REPL 65533
 
         enum class InsertionMode {
             INITIAL,
@@ -40,29 +43,64 @@ namespace feather {
             DOCTYPE, START, END, COMMENT, CHARACTER, END_OF_FILE
         };
 
-        struct DOCTYPE_TOKEN_DATA {
-        private:
+        constexpr bool isValidProp(int prop);
+
+        class DOCTYPE_TOKEN_DATA {
+
+        public:
             enum class DOCTYPE_PROPS {
                 MISSING_NAME, MISSING_PUBLIC_ID, MISSING_SYSTEM_ID, FORCE_QUIRKS, __COUNT__
             };
 
+            template<DOCTYPE_PROPS prop>
+            inline std::enable_if<isValidProp(static_cast<int>(prop)), bool> isMissing() const {
+                return props[prop];
+            }
+
+            inline bool isForceQuirks() const { return props[DOCTYPE_PROPS::FORCE_QUIRKS]; }
+
+            inline void setForceQuirks(bool force) {
+                if (force) props += DOCTYPE_PROPS::FORCE_QUIRKS; else props -= DOCTYPE_PROPS::FORCE_QUIRKS;
+            }
+
+            inline const DOMString &getName() const {
+                return name;
+            }
+
+            inline void setName(DOMString name) {
+                DOCTYPE_TOKEN_DATA::name = std::move(name);
+                props -= DOCTYPE_PROPS::MISSING_NAME;
+            }
+
+            inline const DOMString &getPublicID() const {
+                return publicID;
+            }
+
+            inline void setPublicID(DOMString publicID) {
+                DOCTYPE_TOKEN_DATA::publicID = std::move(publicID);
+                props -= DOCTYPE_PROPS::MISSING_PUBLIC_ID;
+            }
+
+            inline const DOMString &getSystemID() const {
+                return systemID;
+            }
+
+            inline void setSystemID(DOMString systemID) {
+                DOCTYPE_TOKEN_DATA::systemID = std::move(systemID);
+                props -= DOCTYPE_PROPS::MISSING_SYSTEM_ID;
+            }
+
+        private:
+
             EnumSet<DOCTYPE_PROPS> props
                     = EnumSet<DOCTYPE_PROPS>((unsigned char) 0b111);
 
-        public:
-
-            DOCTYPE_TOKEN_DATA() = default;
-
             DOMString name, publicID, systemID;
-
-            bool isMissingName() const { return props[DOCTYPE_PROPS::MISSING_NAME]; }
-
-            bool isMissingPubliID() const { return props[DOCTYPE_PROPS::MISSING_PUBLIC_ID]; }
-
-            bool isMissingSystemID() const { return props[DOCTYPE_PROPS::MISSING_SYSTEM_ID]; }
-
-            bool isForceQuirks() const { return props[DOCTYPE_PROPS::FORCE_QUIRKS]; }
         };
+
+        constexpr bool isValidProp(int prop) {
+            return prop < static_cast<int>(DOCTYPE_TOKEN_DATA::DOCTYPE_PROPS::FORCE_QUIRKS);
+        }
 
         struct REGULAR_TOKEN_DATA {
 
@@ -71,12 +109,11 @@ namespace feather {
             Vector<UnaryPair<DOMString>> attributes;
         };
 
-        struct CHARACTER_TOKEN_DATA {
+        typedef UInt CHARACTER_TOKEN_DATA;
+        typedef DOMString COMMENT_TOKEN_DATA;
 
-            DOMString data;
-        };
-
-        typedef Variant<DOCTYPE_TOKEN_DATA, REGULAR_TOKEN_DATA, CHARACTER_TOKEN_DATA> TokenData;
+        typedef Variant<DOCTYPE_TOKEN_DATA, REGULAR_TOKEN_DATA,
+                CHARACTER_TOKEN_DATA, COMMENT_TOKEN_DATA> TokenData;
 
         struct Token {
             TokenType type;
@@ -166,16 +203,13 @@ namespace feather {
             NUMERIC_CHARACTER_REFERENCE_END
         };
 
-        struct UTF_8_CHARACTER {
-            const char *nextChar;
-            unsigned char length : 2;
-
-            operator DOMString() { return DOMString(nextChar, length); }
-        };
+        constexpr bool isAttributeState(ParserState state) {
+            return state != ParserState::DATA && state != ParserState::RCDATA;
+        }
 
         class HTMLStateMachine {
 
-            bool operator<<(UTF_8_CHARACTER c);
+            bool operator<<(char *c);
 
         private:
 
@@ -184,84 +218,112 @@ namespace feather {
             }
 
             void resetAttr() {
+                checkAddAttr();
                 attr.clear();
                 val.clear();
             }
 
             bool dumpBuf() {
-                emit(ltToken(), solidusToken());
-                emitted.reserve(emitLength = 2 + tempBuf.size());
-                for (auto &chr : tempBuf)
-                    emitted.push_back(Token{TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{std::move(chr)}}});
-                reconsume = true;
+                for (UInt i = 0, size = utf8::charSize(tempBuf[i]); i < tempBuf.length();
+                     size = utf8::charSize(tempBuf[i += size])) {
+                    emitted.push_back(Token{TokenType::CHARACTER,
+                                            TokenData{utf8::toCodePoint(tempBuf.c_str() + i, (unsigned char) size)}});
+                }
                 return true;
             }
 
             template<class... T>
             bool emit(T... tokens) {
-                emitLength = sizeof...(tokens);
                 std::array<Token, sizeof...(tokens)> arr = {tokens...};
                 std::copy(arr.begin(), arr.end(), emitted.begin());
                 return true;
             }
 
-            inline Token bangToken() const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{"!"}}};
-            }
+#define TOKENDEF(prefix, symbol) inline Token prefix##Token() const {return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{symbol}}};}
 
-            inline Token solidusToken() const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{"/"}}};
-            }
+            TOKENDEF(bang, '!')
 
-            inline Token ltToken() const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{"<"}}};
-            }
+            TOKENDEF(solidus, '/')
 
-            inline Token gtToken() const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{">"}}};
-            }
+            TOKENDEF(lt, '<')
 
-            inline Token dashToken() const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{"-"}}};
-            }
+            TOKENDEF(gt, '>')
 
-            inline Token replacementToken() const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{"\uFFFD"}}};
-            }
+            TOKENDEF(dash, '-')
 
-            inline Token eofToken() const {
-                return {TokenType::END_OF_FILE, TokenData()};
-            }
+            TOKENDEF(replacement, UNICODE_REPL);
 
-            inline Token defaultToken(DOMString c) const {
-                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{std::move(c)}}};
+            TOKENDEF(eof, (UInt) EOF);
+
+            TOKENDEF(rb, ']');
+
+#undef TOKENDEF
+
+            inline Token defaultToken(char *c) const {
+                return {TokenType::CHARACTER, TokenData{CHARACTER_TOKEN_DATA{utf8::toCodePoint(c)}}};
             }
 
             inline bool isGoodEndTag() {
-                return !name.empty() && name == lastStart;
+                return !name.empty() && name == lastStart.back();
             }
 
             inline Token endTagToken() {
+                lastStart.pop_back();
                 return {TokenType::END, TokenData{REGULAR_TOKEN_DATA{std::move(name), true, {}}}};
             }
 
-            inline DOMString stringify() {
-                DOMString string;
-                UInt reserve = 0;
-                for (const auto &str : tempBuf) reserve += str.length();
-                string.reserve(reserve);
-                for (const auto &str : tempBuf) string += str;
-                return string;
+            inline Token startTagToken() {
+                if (!selfClosing) lastStart.push_back(name);
+                return {TokenType::START, TokenData{REGULAR_TOKEN_DATA{std::move(name), selfClosing, getAttrVec()}}};
+            }
+
+            inline Token commentToken() {
+                return {TokenType::COMMENT, TokenData{COMMENT_TOKEN_DATA{std::move(comment)}}};
+            }
+
+            Vector<UnaryPair<DOMString>> getAttrVec() {
+                if (!attr.empty() || !val.empty()) checkAddAttr();
+                Vector<UnaryPair<DOMString>> vec{};
+                vec.reserve(attributes.size());
+                for (auto &pair : attributes) vec.push_back(std::move(pair));
+                attributes.clear();
+                return vec;
+            }
+
+            void checkAddAttr() {
+                if (!attr.empty() && !val.empty()) {
+                    if (attributes.find(attr) != attributes.end()) {
+                        attributes[attr] = std::move(val);
+                    }
+                    resetAttr();
+                }
+            }
+
+            void resetDoctype() {
+                forceQuirks = !(nameMissing = publicIDMissing = systemIDMissing = true);
+                name.clear();
+                systemID.clear();
+                publicID.clear();
+            }
+
+            inline Token doctypeToken() {
+                DOCTYPE_TOKEN_DATA data{};
+                if (!nameMissing) data.setName(std::move(name));
+                if (!publicIDMissing) data.setPublicID(std::move(publicID));
+                if (!systemIDMissing) data.setSystemID(std::move(systemID));
+                data.setForceQuirks(forceQuirks);
+                return {TokenType::DOCTYPE, TokenData{data}};
             }
 
             ParserState dataState, returnState;
-            bool reconsume;
-            DOMString lastStart;
-            Vector<DOMString> tempBuf;
-            DOMString name, attr, val;
+            bool reconsume, selfClosing, reconsumeMarkup, forceQuirks,
+                    publicIDMissing, systemIDMissing, nameMissing;
+            TriValue markupType;
+            DOMString tempBuf, name, attr, val, comment, markup, publicID, systemID;
             Map<DOMString, DOMString> attributes;
             Vector<Token> emitted;
-            UInt emitLength;
+            Vector<DOMString> lastStart;
+            EscapeCodeTrieTraverser traverser{nullptr};
         };
     }
 }

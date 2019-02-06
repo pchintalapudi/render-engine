@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <deque>
 #include <functional>
 #include <list>
@@ -18,10 +19,15 @@
 #include <utility>
 #include <variant>
 #include <vector>
+#include "engine.h"
 #include "enums/enum_set.h"
 #include "enums/enum_map.h"
 
+#define DEBUG_MODE
+
 namespace feather {
+    template<typename E, UInt length>
+    using Array = std::array<E, length>;
     template<typename E>
     using Vector = std::vector<E>;
     template<typename K, typename V>
@@ -70,6 +76,12 @@ namespace feather {
     typedef std::chrono::time_point<std::chrono::system_clock> TimePoint;
     const auto currentTime = std::chrono::system_clock::now;
 
+    namespace profile {
+        UInt profileStart();
+
+        void profileEnd(UInt id, DOMString name = "");
+    }
+
     class Base : public std::enable_shared_from_this<Base> {
     public:
         virtual void gc(unsigned char) {}
@@ -79,6 +91,16 @@ namespace feather {
 
     namespace utf8 {
         unsigned char charSize(char c);
+
+        UInt toCodePoint(const char *c);
+
+        UInt toCodePoint(const char *c, unsigned char size);
+
+        void appendCodePoint(DOMString &str, const char *c);
+
+        void appendCodePoint(DOMString &str, UInt codePoint);
+
+        bool isAscii(char c);
     }
 }
 #endif //FEATHER_TYPEDEFS_H

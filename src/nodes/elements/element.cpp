@@ -184,9 +184,9 @@ feather::DOMString feather::dom::encodeType(const feather::DOMString &input) {
 KnownElements feather::dom::getType(const feather::DOMString &encoded) {
     std::stringstream stream;
     stream << encoded;
-    UShort s = ~0u;
+    auto s = UShort(~0u);
     stream >> s;
-    return stream && ~s ? static_cast<KnownElements>(s) : KnownElements::HTMLCustomElement;
+    return stream && UShort(~s) ? static_cast<KnownElements>(s) : KnownElements::HTMLCustomElement;
 }
 
 Element::Element(feather::DOMString baseURI, feather::DOMString tagName,

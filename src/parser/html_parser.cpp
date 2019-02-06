@@ -3,6 +3,7 @@
 //
 
 #include "parser/html_parser.h"
+#include "parser/html_escape_codes.h"
 
 using namespace feather::parser;
 
@@ -12,46 +13,15 @@ case'y':case'z'
 #define ASCII_UPPER_ALPHA 'A':case'B':case'C':case'D':case'E':case'F':case'G':case'H':case'I':case'J':case'K':case'L':\
 case'M':case'N':case'O':case'P':case'Q':case'R':case'S':case'T':case'U':case'V':case'W':case'X':case'Y':case'Z'
 #define WHITESPACE '\t':case'\n':case'\f':case' '
+#define ASCII_NUMERALS '0':case '1':case'2':case'3':case'4':case'5':case'6':case'7':case'8':case'9'
+#define le(lowercase, uppercase, fail) if (*c != lowercase && *c != uppercase) goto fail; markup += lowercase; break;
 
-#define END_TAG_SWITCH(label)\
-switch (*c.nextChar) {\
-case WHITESPACE:\
-if (isGoodEndTag()) {\
-dataState = ParserState::BEFORE_ATTRIBUTE_NAME;\
-return false;\
-}\
-goto label;\
-case '/':\
-if (isGoodEndTag()) {\
-dataState = ParserState::SELF_CLOSING_START_TAG;\
-return false;\
-}\
-goto label;\
-case '>':\
-if (isGoodEndTag()) {\
-dataState = ParserState::DATA;\
-return emit(endTagToken());\
-}\
-goto label;\
-case ASCII_UPPER_ALPHA: {\
-name += char(*c.nextChar + 0x0020);\
-tempBuf.push_back(DOMString() + *c.nextChar);\
-return false;\
-}\
-case ASCII_LOWER_ALPHA: {\
-char chr = *c.nextChar;\
-name += chr;\
-tempBuf.push_back(DOMString() + chr);\
-return false;\
-}\
-}
-
-bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
+bool HTMLStateMachine::operator<<(char *c) {
     reconsume = false;
+    emitted.clear();
     switch (dataState) {
         case ParserState::DATA:
-            if (c.length > 1) return emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 case 0:
                 default:
                     return emit(defaultToken(c));
@@ -66,8 +36,7 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(eofToken());
             }
         case ParserState::RCDATA:
-            if (c.length > 1) return emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
                     return emit(defaultToken(c));
                 case '&':
@@ -83,8 +52,7 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(replacementToken());
             }
         case ParserState::RAWTEXT:
-            if (c.length > 1) return emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
                     return emit(defaultToken(c));
                 case EOF:
@@ -94,8 +62,7 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return false;
             }
         case ParserState::SCRIPT_DATA:
-            if (c.length > 1) return emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
                     return emit(defaultToken(c));
                 case EOF:
@@ -107,8 +74,7 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return false;
             }
         case ParserState::PLAINTEXT:
-            if (c.length > 1) return emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
                     return emit(defaultToken(c));
                 case EOF:
@@ -117,10 +83,10 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(replacementToken());
             }
         case ParserState::TAG_OPEN:
-            if (c.length > 1) return emit(ltToken());
-            switch (*c.nextChar) {
+            switch (*c) {
                 case '!':
                     dataState = ParserState::MARKUP_DECLARATION_OPEN;
+                    markup.clear();
                     return false;
                 case '/':
                     dataState = ParserState::END_TAG_OPEN;
@@ -142,13 +108,7 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(ltToken());
             }
         case ParserState::END_TAG_OPEN:
-            if (c.length > 1) {
-                def1:
-                dataState = ParserState::BOGUS_COMMENT;
-                reconsume = true;
-                return false;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case ASCII_LOWER_ALPHA:
                 case ASCII_UPPER_ALPHA:
                     dataState = ParserState::TAG_NAME;
@@ -161,15 +121,12 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                 case EOF:
                     return emit(ltToken(), solidusToken());
                 default:
-                    goto def1;
+                    dataState = ParserState::BOGUS_COMMENT;
+                    reconsume = true;
+                    return false;
             }
         case ParserState::TAG_NAME:
-            if (c.length > 1) {
-                tempBuf[0].reserve(tempBuf[0].length() + c.length);
-                while (c.length--) tempBuf[0] += *c.nextChar++;
-                return false;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case WHITESPACE:
                     dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
                     return false;
@@ -177,40 +134,30 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     dataState = ParserState::SELF_CLOSING_START_TAG;
                     return false;
                 case ASCII_UPPER_ALPHA:
-                    tempBuf[0] += (char) (*c.nextChar + 0x0020);
+                    name += char(*c + 0x0020);
                     return false;
                 case 0:
-                    tempBuf[0] += "\uFFFD";
+                    utf8::appendCodePoint(name, UNICODE_REPL);
                     return false;
                 case EOF:
                     return emit(eofToken());
                 default:
-                    tempBuf[0] += *c.nextChar;
+                    utf8::appendCodePoint(name, c);
                     return false;
             }
         case ParserState::RCDATA_LESS_THAN_SIGN:
-            if (c.length > 1) {
-                def2:
-                reconsume = true;
-                dataState = ParserState::RCDATA;
-                return emit(ltToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case '/':
                     resetBuf();
                     dataState = ParserState::RCDATA_END_TAG_OPEN;
                     return false;
                 default:
-                    goto def2;
+                    reconsume = true;
+                    dataState = ParserState::RCDATA;
+                    return emit(ltToken());
             }
         case ParserState::RCDATA_END_TAG_OPEN:
-            if (c.length > 1) {
-                def3:
-                reconsume = true;
-                dataState = ParserState::RCDATA;
-                return emit(ltToken(), solidusToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case ASCII_LOWER_ALPHA:
                 case ASCII_UPPER_ALPHA:
                     resetBuf();
@@ -218,69 +165,59 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     dataState = ParserState::RCDATA_END_TAG_NAME;
                     return false;
                 default:
-                    goto def3;
+                    reconsume = true;
+                    dataState = ParserState::RCDATA;
+                    return emit(ltToken(), solidusToken());
             }
         case ParserState::RCDATA_END_TAG_NAME:
-            if (c.length > 1) {
-                def4:
-                dataState = ParserState::RCDATA;
-                return dumpBuf();
-            }
-            switch (*c.nextChar) {
-                default:
-                    goto def4;
+            switch (*c) {
                 case WHITESPACE:
                     if (isGoodEndTag()) {
                         dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
                         return false;
                     }
-                    goto def4;
+                    [[fallthrough]];
                 case '/':
                     if (isGoodEndTag()) {
                         dataState = ParserState::SELF_CLOSING_START_TAG;
                         return false;
                     }
-                    goto def4;
+                    [[fallthrough]];
                 case '>':
                     if (isGoodEndTag()) {
                         dataState = ParserState::DATA;
                         return emit(endTagToken());
                     }
-                    goto def4;
+                    [[fallthrough]];
+                default:
+                    dataState = ParserState::RCDATA;
+                    reconsume = true;
+                    emit(ltToken(), solidusToken());
+                    return dumpBuf();
                 case ASCII_UPPER_ALPHA: {
-                    name += char(*c.nextChar + 0x0020);
-                    tempBuf.push_back(DOMString() + *c.nextChar);
+                    name += char(*c + 0x0020);
+                    tempBuf += *c;
                     return false;
                 }
                 case ASCII_LOWER_ALPHA: {
-                    name += *c.nextChar;
-                    tempBuf.push_back(DOMString() + *c.nextChar);
+                    name += *c;
+                    tempBuf += *c;
                     return false;
                 }
             }
         case ParserState::RAWTEXT_LESS_THAN_SIGN:
-            if (c.length > 1) {
-                def5:
-                reconsume = true;
-                dataState = ParserState::RAWTEXT;
-                return emit(ltToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def5;
+                    reconsume = true;
+                    dataState = ParserState::RAWTEXT;
+                    return emit(ltToken());
                 case '/':
                     resetBuf();
                     dataState = ParserState::RAWTEXT_END_TAG_OPEN;
                     return false;
             }
         case ParserState::RAWTEXT_END_TAG_OPEN:
-            if (c.length > 1) {
-                def0:
-                dataState = ParserState::RAWTEXT;
-                reconsume = true;
-                return emit(ltToken(), solidusToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case ASCII_UPPER_ALPHA:
                 case ASCII_LOWER_ALPHA:
                     dataState = ParserState::RAWTEXT_END_TAG_NAME;
@@ -288,26 +225,53 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     name.clear();
                     return false;
                 default:
-                    goto def0;
+                    dataState = ParserState::RAWTEXT;
+                    reconsume = true;
+                    return emit(ltToken(), solidusToken());
             }
         case ParserState::RAWTEXT_END_TAG_NAME:
-            if (c.length > 1) {
-                def6:
-                reconsume = true;
-                dataState = ParserState::RAWTEXT;
-                return dumpBuf();
-            }
-            END_TAG_SWITCH(def6);
-        case ParserState::SCRIPT_DATA_LESS_THAN_SIGN:
-            if (c.length > 1) {
-                def7:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA;
-                return emit(ltToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
+                case WHITESPACE:
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                        return false;
+                    }
+                    [[fallthrough]];
+                case '/':
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::SELF_CLOSING_START_TAG;
+                        return false;
+                    }
+                    [[fallthrough]];
+                case '>':
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::DATA;
+                        return emit(endTagToken());
+                    }
+                    [[fallthrough]];
                 default:
-                    goto def7;
+                    reconsume = true;
+                    dataState = ParserState::RAWTEXT;
+                    emit(ltToken(), solidusToken());
+                    return dumpBuf();
+                case ASCII_UPPER_ALPHA: {
+                    name += char(*c + 0x0020);
+                    tempBuf += *c;
+                    return false;
+                }
+                case ASCII_LOWER_ALPHA: {
+                    char chr = *c;
+                    name += chr;
+                    tempBuf += chr;
+                    return false;
+                }
+            }
+        case ParserState::SCRIPT_DATA_LESS_THAN_SIGN:
+            switch (*c) {
+                default:
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA;
+                    return emit(ltToken());
                 case '/':
                     resetBuf();
                     dataState = ParserState::SCRIPT_DATA_END_TAG_OPEN;
@@ -317,15 +281,11 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(ltToken(), bangToken());
             }
         case ParserState::SCRIPT_DATA_END_TAG_OPEN:
-            if (c.length > 1) {
-                def8:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA;
-                return emit(ltToken(), solidusToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def8;
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA;
+                    return emit(ltToken(), solidusToken());
                 case ASCII_LOWER_ALPHA:
                 case ASCII_UPPER_ALPHA:
                     name.clear();
@@ -334,41 +294,56 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return false;
             }
         case ParserState::SCRIPT_DATA_END_TAG_NAME:
-            if (c.length > 1) {
-                def9:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA;
-                return dumpBuf();
+            switch (*c) {
+                case WHITESPACE:
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                        return false;
+                    }
+                    [[fallthrough]];
+                case '/':
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::SELF_CLOSING_START_TAG;
+                        return false;
+                    }
+                    [[fallthrough]];
+                case '>':
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::DATA;
+                        return emit(endTagToken());
+                    }
+                    [[fallthrough]];
+                default:
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA;
+                    emit(ltToken(), solidusToken());
+                    return dumpBuf();
+                case ASCII_UPPER_ALPHA: {
+                    name += char(*c + 0x0020);
+                    tempBuf += *c;
+                    return false;
+                }
+                case ASCII_LOWER_ALPHA: {
+                    name += *c;
+                    tempBuf += *c;
+                    return false;
+                }
             }
-            END_TAG_SWITCH(def9);
         case ParserState::SCRIPT_DATA_ESCAPE_START:
-            if (c.length > 1) {
-                def10:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA;
-                return false;
-            }
-            switch (*c.nextChar) {
-                case '-':
-                    dataState = ParserState::SCRIPT_DATA_ESCAPE_START_DASH;
-                    return emit(dashToken());
-                default:
-                    goto def10;
-            }
         case ParserState::SCRIPT_DATA_ESCAPE_START_DASH:
-            if (c.length > 1) {
-                goto def10;
-            }
-            switch (*c.nextChar) {
-                default:
-                    goto def10;
+            switch (*c) {
                 case '-':
-                    dataState = ParserState::SCRIPT_DATA_ESCAPE_DASH_DASH;
+                    dataState = dataState == ParserState::SCRIPT_DATA_ESCAPE_START
+                                ? ParserState::SCRIPT_DATA_ESCAPE_START_DASH
+                                : ParserState::SCRIPT_DATA_ESCAPE_DASH_DASH;
                     return emit(dashToken());
+                default:
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA;
+                    return false;
             }
         case ParserState::SCRIPT_DATA_ESCAPE:
-            if (c.length > 1) return emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
                     return emit(defaultToken(c));
                 case '-':
@@ -383,14 +358,10 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(eofToken());
             }
         case ParserState::SCRIPT_DATA_ESCAPE_DASH:
-            if (c.length > 1) {
-                def11:
-                dataState = ParserState::SCRIPT_DATA_ESCAPE;
-                return emit(defaultToken(c));
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def11;
+                    dataState = ParserState::SCRIPT_DATA_ESCAPE;
+                    return emit(defaultToken(c));
                 case 0:
                     dataState = ParserState::SCRIPT_DATA_ESCAPE;
                     return emit(replacementToken());
@@ -401,14 +372,13 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(dashToken());
                 case '<':
                     dataState = ParserState::SCRIPT_DATA_ESCAPE_LESS_THAN_SIGN;
+                    return false;
             }
         case ParserState::SCRIPT_DATA_ESCAPE_DASH_DASH:
-            if (c.length > 1) {
-                goto def11;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def11;
+                    dataState = ParserState::SCRIPT_DATA_ESCAPE;
+                    return emit(defaultToken(c));
                 case '-':
                     return emit(dashToken());
                 case 0:
@@ -424,15 +394,11 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(gtToken());
             }
         case ParserState::SCRIPT_DATA_ESCAPE_LESS_THAN_SIGN:
-            if (c.length > 1) {
-                def12:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA_ESCAPE;
-                return emit(ltToken());
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def12;
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA_ESCAPE;
+                    return emit(ltToken());
                 case '/':
                     dataState = ParserState::SCRIPT_DATA_ESCAPE_END_TAG_OPEN;
                     resetBuf();
@@ -445,62 +411,81 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(ltToken());
             }
         case ParserState::SCRIPT_DATA_ESCAPE_END_TAG_OPEN:
-            if (c.length > 1) {
-                def13:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA_ESCAPE;
-                return emit(ltToken(), solidusToken());
-            }
-            switch (*c.nextChar) {
+            reconsume = true;
+            switch (*c) {
                 case ASCII_UPPER_ALPHA:
                 case ASCII_LOWER_ALPHA:
-                    reconsume = true;
                     name.clear();
                     dataState = ParserState::SCRIPT_DATA_ESCAPE_END_TAG_NAME;
                     return false;
                 default:
-                    goto def13;
+                    dataState = ParserState::SCRIPT_DATA_ESCAPE;
+                    return emit(ltToken(), solidusToken());
             }
         case ParserState::SCRIPT_DATA_ESCAPE_END_TAG_NAME:
-            if (c.length > 1) {
-                def14:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA_ESCAPE;
-                return dumpBuf();
-            }
-            END_TAG_SWITCH(def14);
-        case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_START:
-            if (c.length > 1) {
-                def15:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA_ESCAPE;
-                return false;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
+                case WHITESPACE:
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                        return false;
+                    }
+                    [[fallthrough]];
+                case '/':
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::SELF_CLOSING_START_TAG;
+                        return false;
+                    }
+                    [[fallthrough]];
+                case '>':
+                    if (isGoodEndTag()) {
+                        dataState = ParserState::DATA;
+                        return emit(endTagToken());
+                    }
+                    [[fallthrough]];
                 default:
-                    goto def15;
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA_ESCAPE;
+                    emit(ltToken(), solidusToken());
+                    return dumpBuf();
+                case ASCII_UPPER_ALPHA: {
+                    name += char(*c + 0x0020);
+                    tempBuf += *c;
+                    return false;
+                }
+                case ASCII_LOWER_ALPHA: {
+                    char chr = *c;
+                    name += chr;
+                    tempBuf += chr;
+                    return false;
+                }
+            }
+        case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_START:
+            switch (*c) {
+                default:
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA_ESCAPE;
+                    return false;
                 case WHITESPACE:
                 case '/':
                 case '>':
-                    dataState = tempBuf.size() == 6 && stringify() == "script"
+                    dataState = tempBuf.size() == 6 && tempBuf == "script"
                                 ? ParserState::SCRIPT_DATA_ESCAPE
                                 : ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
                     return emit(defaultToken(c));
                 case ASCII_UPPER_ALPHA: {
-                    char chr = char(*c.nextChar + 0x0020);
-                    tempBuf.push_back(DOMString() + chr);
+                    char chr = char(*c + 0x0020);
+                    tempBuf += chr;
                     return emit(defaultToken(c));
                 }
                 case ASCII_LOWER_ALPHA: {
-                    tempBuf.push_back(DOMString() + *c.nextChar);
+                    tempBuf += *c;
                     return emit(defaultToken(c));
                 }
             }
         case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE:
-            if (c.length > 1) emit(defaultToken(c));
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    emit(defaultToken(c));
+                    return emit(defaultToken(c));
                 case '-':
                     dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_DASH;
                     return emit(dashToken());
@@ -513,14 +498,10 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(eofToken());
             }
         case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_DASH:
-            if (c.length > 1) {
-                def16:
-                dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
-                return emit(defaultToken(c));
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def16;
+                    dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
+                    return emit(defaultToken(c));
                 case '-':
                     dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_DASH_DASH;
                     return emit(dashToken());
@@ -534,12 +515,10 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(eofToken());
             }
         case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_DASH_DASH:
-            if (c.length > 1) {
-                goto def16;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def16;
+                    dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
+                    return emit(defaultToken(c));
                 case '-':
                     return emit(dashToken());
                 case '<':
@@ -555,52 +534,40 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return emit(eofToken());
             }
         case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_LESS_THAN_SIGN:
-            if (c.length > 1) {
-                def17:
-                reconsume = true;
-                dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
-                return false;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def17;
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
+                    return false;
                 case '/':
                     resetBuf();
                     dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_END;
                     return emit(solidusToken());
             }
         case ParserState::SCRIPT_DATA_DOUBLE_ESCAPE_END:
-            if (c.length > 1) {
-                goto def17;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 default:
-                    goto def17;
+                    reconsume = true;
+                    dataState = ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
+                    return false;
                 case WHITESPACE:
                 case '/':
                 case '>':
-                    dataState = stringify() == "script"
+                    dataState = tempBuf == "script"
                                 ? ParserState::SCRIPT_DATA_ESCAPE
                                 : ParserState::SCRIPT_DATA_DOUBLE_ESCAPE;
                     return emit(defaultToken(c));
                 case ASCII_UPPER_ALPHA: {
-                    tempBuf.push_back(DOMString() + char(*c.nextChar + 0x0020));
+                    tempBuf += char(*c + 0x0020);
                     return emit(defaultToken(c));
                 }
                 case ASCII_LOWER_ALPHA: {
-                    tempBuf.push_back(DOMString() + *c.nextChar);
+                    tempBuf += *c;
                     return emit(defaultToken(c));
                 }
             }
         case ParserState::BEFORE_ATTRIBUTE_NAME:
-            if (c.length > 1) {
-                def18:
-                resetAttr();
-                reconsume = true;
-                dataState = ParserState::ATTRIBUTE_NAME;
-                return false;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case WHITESPACE:
                     return false;
                 case '/':
@@ -614,14 +581,13 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     dataState = ParserState::ATTRIBUTE_NAME;
                     return false;
                 default:
-                    goto def18;
+                    resetAttr();
+                    reconsume = true;
+                    dataState = ParserState::ATTRIBUTE_NAME;
+                    return false;
             }
         case ParserState::ATTRIBUTE_NAME:
-            if (c.length > 1) {
-                attr += DOMString(c.nextChar, c.length);
-                return false;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case WHITESPACE:
                 case '/':
                 case '>':
@@ -633,23 +599,20 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     dataState = ParserState::BEFORE_ATTRIBUTE_VALUE;
                     return false;
                 case 0:
-                    attr += "\uFFFD";
+                    utf8::appendCodePoint(attr, UNICODE_REPL);
                     return false;
                 case ASCII_UPPER_ALPHA:
-                    attr += char(*c.nextChar + 0x0020);
+                    attr += char(*c + 0x0020);
                     return false;
                 case '"':
                 case '\'':
                 case '<':
                 default:
-                    attr += *c.nextChar;
+                    utf8::appendCodePoint(attr, c);
                     return false;
             }
         case ParserState::AFTER_ATTRIBUTE_NAME:
-            if (c.length > 1) {
-                goto def18;
-            }
-            switch (*c.nextChar) {
+            switch (*c) {
                 case WHITESPACE:
                     return false;
                 case '/':
@@ -657,8 +620,767 @@ bool HTMLStateMachine::operator<<(UTF_8_CHARACTER c) {
                     return false;
                 case '=':
                     dataState = ParserState::BEFORE_ATTRIBUTE_VALUE;
-//                        case '>':
-//
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(startTagToken());
+                case EOF:
+                    return emit(eofToken());
+                default:
+                    resetAttr();
+                    reconsume = true;
+                    dataState = ParserState::ATTRIBUTE_NAME;
+                    return false;
             }
+        case ParserState::BEFORE_ATTRIBUTE_VALUE:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case '"':
+                    dataState = ParserState::DQUOTE_ATTRIBUTE_VALUE;
+                    return false;
+                case '\'':
+                    dataState = ParserState::SQUOTE_ATTRIBUTE_VALUE;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(startTagToken());
+                default:
+                    reconsume = true;
+                    dataState = ParserState::UQUOTE_ATTRIBUTE_VALUE;
+                    return false;
+            }
+        case ParserState::DQUOTE_ATTRIBUTE_VALUE:
+            switch (*c) {
+                case '"':
+                    dataState = ParserState::QUOTE_AFTER_ATTRIBUTE_VALUE;
+                    return false;
+                case '&':
+                    returnState = ParserState::DQUOTE_ATTRIBUTE_VALUE;
+                    dataState = ParserState::CHARACTER_REFERENCE;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(val, UNICODE_REPL);
+                    return false;
+                case EOF:
+                    return emit(eofToken());
+                default:
+                    utf8::appendCodePoint(val, c);
+                    return false;
+            }
+        case ParserState::SQUOTE_ATTRIBUTE_VALUE:
+            switch (*c) {
+                case '\'':
+                    dataState = ParserState::QUOTE_AFTER_ATTRIBUTE_VALUE;
+                    return false;
+                case '&':
+                    returnState = ParserState::SQUOTE_ATTRIBUTE_VALUE;
+                    dataState = ParserState::CHARACTER_REFERENCE;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(val, UNICODE_REPL);
+                    return false;
+                case EOF:
+                    return emit(eofToken());
+                default:
+                    utf8::appendCodePoint(val, c);
+                    return false;
+            }
+        case ParserState::UQUOTE_ATTRIBUTE_VALUE:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                    return false;
+                case '&':
+                    returnState = ParserState::UQUOTE_ATTRIBUTE_VALUE;
+                    dataState = ParserState::CHARACTER_REFERENCE;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(val, UNICODE_REPL);
+                    return false;
+                case EOF:
+                    return emit(eofToken());
+                case '"':
+                case '\'':
+                case '<':
+                case '=':
+                case '`':
+                    val += *c;
+                    return false;
+                default:
+                    utf8::appendCodePoint(val, c);
+                    return false;
+            }
+        case ParserState::QUOTE_AFTER_ATTRIBUTE_VALUE:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                    return false;
+                case '/':
+                    dataState = ParserState::SELF_CLOSING_START_TAG;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(startTagToken());
+                case EOF:
+                    return emit(eofToken());
+                default:
+                    reconsume = true;
+                    dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                    return false;
+            }
+        case ParserState::SELF_CLOSING_START_TAG:
+            switch (*c) {
+                case '>':
+                    selfClosing = true;
+                    dataState = ParserState::DATA;
+                    return emit(startTagToken());
+                case EOF:
+                    return emit(eofToken());
+                default:
+                    reconsume = true;
+                    dataState = ParserState::BEFORE_ATTRIBUTE_NAME;
+                    return false;
+            }
+        case ParserState::BOGUS_COMMENT:
+            switch (*c) {
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(commentToken());
+                case EOF:
+                    return emit(commentToken(), eofToken());
+                case 0:
+                    utf8::appendCodePoint(comment, UNICODE_REPL);
+                    return false;
+                default:
+                    utf8::appendCodePoint(comment, c);
+                    return false;
+            }
+        case ParserState::MARKUP_DECLARATION_OPEN:
+            if (markup.empty()) {
+                switch (*c) {
+                    case '-':
+                        markup += '-';
+                        markupType = TriValue::AUTO;
+                        break;
+                    case 'D':
+                    case 'd':
+                        markup += 'd';
+                        markupType = TriValue::YES;
+                        break;
+                    case '[':
+                        markup += '[';
+                        markupType = TriValue::NO;
+                        break;
+                    default:
+                        goto failMarkup;
+                }
+                return false;
+            }
+            switch (markupType) {
+                case TriValue::AUTO:
+                    if (*c != '-') {
+                        markup += '-';
+                        reconsumeMarkup = true;
+                        dataState = ParserState::BOGUS_COMMENT;
+                        break;
+                    } else {
+                        comment.clear();
+                        dataState = ParserState::COMMENT_START;
+                        break;
+                    }
+                    break;
+                case TriValue::YES:
+                    switch (markup.length()) {
+                        case 1:
+                        le('o', 'O', failMarkup);
+                        case 2:
+                        le('c', 'C', failMarkup);
+                        case 3:
+                        le('t', 'T', failMarkup);
+                        case 4:
+                        le('y', 'Y', failMarkup);
+                        case 5:
+                        le('p', 'P', failMarkup);
+                        case 6:
+                            if (*c != 'y' && *c != 'Y') goto failMarkup;
+                            markup.clear();
+                            dataState = ParserState::DOCTYPE;
+                            break;
+                    }
+                    break;
+                case TriValue::NO:
+                    switch (markup.length()) {
+                        case 1:
+                            if (*c != 'C') goto failMarkup;
+                            markup += 'C';
+                            break;
+                        case 2:
+                            if (*c != 'D') goto failMarkup;
+                            markup += 'D';
+                            break;
+                        case 3:
+                            if (*c != 'A') goto failMarkup;
+                            markup += 'A';
+                            break;
+                        case 4:
+                            if (*c != 'T') goto failMarkup;
+                            markup += 'T';
+                            break;
+                        case 5:
+                            if (*c != 'A') goto failMarkup;
+                            markup += 'A';
+                            break;
+                        case 6:
+                            if (*c != '[') goto failMarkup;
+                            markup.clear();
+                            dataState = ParserState::CDATA_SECTION;
+                            break;
+                    }
+                    break;
+            }
+            return false;
+        failMarkup:
+            reconsumeMarkup = true;
+            dataState = ParserState::BOGUS_COMMENT;
+            return false;
+        case ParserState::COMMENT_START:
+            switch (*c) {
+                case '-':
+                    dataState = ParserState::COMMENT_START_DASH;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(commentToken());
+                default:
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+        case ParserState::COMMENT_START_DASH:
+            switch (*c) {
+                case '-':
+                    dataState = ParserState::COMMENT_END;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(commentToken());
+                case EOF:
+                    return emit(commentToken(), eofToken());
+                default:
+                    comment += '-';
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+        case ParserState::COMMENT:
+            switch (*c) {
+                case '<':
+                    comment += '<';
+                    dataState = ParserState::COMMENT_LESS_THAN_SIGN;
+                    return false;
+                case '-':
+                    dataState = ParserState::COMMENT_END_DASH;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(comment, UNICODE_REPL);
+                    return false;
+                case EOF:
+                    return emit(commentToken(), eofToken());
+                default:
+                    utf8::appendCodePoint(comment, c);
+                    return false;
+            }
+        case ParserState::COMMENT_LESS_THAN_SIGN:
+            switch (*c) {
+                case '!':
+                    comment += '!';
+                    dataState = ParserState::COMMENT_LESS_THAN_SIGN_BANG;
+                    return false;
+                case '<':
+                    comment += '<';
+                    return false;
+                default:
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+        case ParserState::COMMENT_LESS_THAN_SIGN_BANG:
+            switch (*c) {
+                case '-':
+                    dataState = ParserState::COMMENT_LESS_THAN_SIGN_BANG_DASH;
+                    return false;
+                default:
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+        case ParserState::COMMENT_LESS_THAN_SIGN_BANG_DASH:
+            switch (*c) {
+                case '-':
+                    dataState = ParserState::COMMENT_LESS_THAN_SIGN_BANG_DASH_DASH;
+                    return false;
+                default:
+                    reconsume = true;
+                    dataState = ParserState::COMMENT_END_DASH;
+                    return false;
+            }
+        case ParserState::COMMENT_LESS_THAN_SIGN_BANG_DASH_DASH:
+            switch (*c) {
+                case '>':
+                case EOF:
+                default:
+                    reconsume = true;
+                    dataState = ParserState::COMMENT_END;
+                    return false;
+            }
+        case ParserState::COMMENT_END_DASH:
+            switch (*c) {
+                case '-':
+                    dataState = ParserState::COMMENT_END;
+                    return false;
+                case EOF:
+                    return emit(commentToken(), eofToken());
+                default:
+                    comment += '-';
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+        case ParserState::COMMENT_END:
+            switch (*c) {
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(commentToken());
+                case '!':
+                    dataState = ParserState::COMMENT_END_BANG;
+                    return false;
+                case '-':
+                    comment += '-';
+                    return false;
+                case EOF:
+                    return emit(commentToken(), eofToken());
+                default:
+                    comment += '-';
+                    comment += '-';
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+        case ParserState::COMMENT_END_BANG:
+            switch (*c) {
+                case '-':
+                    comment += "--!";
+                    dataState = ParserState::COMMENT_END_DASH;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(commentToken());
+                case EOF:
+                    return emit(commentToken(), eofToken());
+                default:
+                    comment += "--!";
+                    reconsume = true;
+                    dataState = ParserState::COMMENT;
+                    return false;
+            }
+#define edoc case EOF: forceQuirks = true; return emit(doctypeToken(), eofToken())
+#define gdoc case '>': forceQuirks = true; dataState = ParserState::DATA; return emit(doctypeToken())
+#define ddoc default: forceQuirks = true; reconsume = true; dataState = ParserState::BOGUS_DOCTYPE; return false
+        case ParserState::DOCTYPE:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::BEFORE_DOCTYPE_NAME;
+                    return false;
+                case '>':
+                default:
+                    reconsume = true;
+                    dataState = ParserState::BEFORE_DOCTYPE_NAME;
+                    return false;
+                edoc;
+            }
+        case ParserState::BEFORE_DOCTYPE_NAME:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case ASCII_UPPER_ALPHA:
+                    resetDoctype();
+                    name += char(*c + 0x0020);
+                    nameMissing = false;
+                    dataState = ParserState::DOCTYPE_NAME;
+                    return false;
+                case 0:
+                    resetDoctype();
+                    utf8::appendCodePoint(name, UNICODE_REPL);
+                    nameMissing = false;
+                    dataState = ParserState::DOCTYPE_NAME;
+                    return false;
+                case '>':
+                    resetDoctype();
+                    forceQuirks = true;
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                case EOF:
+                    resetDoctype();
+                    forceQuirks = true;
+                    return emit(doctypeToken(), eofToken());
+                default:
+                    resetDoctype();
+                    utf8::appendCodePoint(name, c);
+                    nameMissing = false;
+                    dataState = ParserState::DOCTYPE_NAME;
+                    return false;
+            }
+        case ParserState::DOCTYPE_NAME:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::AFTER_DOCTYPE_NAME;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                case ASCII_UPPER_ALPHA:
+                    name += char(*c + 0x0020);
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(name, UNICODE_REPL);
+                    return false;
+                edoc;
+                default:
+                    utf8::appendCodePoint(name, c);
+                    return false;
+            }
+        case ParserState::AFTER_DOCTYPE_NAME:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                case EOF:
+                    forceQuirks = true;
+                    return emit(doctypeToken(), eofToken());
+                default:
+                    if (markup.empty()) {
+                        if (*c == 'p' || *c == 'P')markup += 'p';
+                        else if (*c == 's' || *c == 'S')markup += 's';
+                        else goto failName;
+                    } else {
+                        switch (markup.length()) {
+                            case 1:
+                                if (markup.back() == 'p' && (*c == 'u' || *c == 'U')) markup += 'u';
+                                else if (*c == 'y' || *c == 'Y') markup += 'y';
+                                else goto failName;
+                                break;
+                            case 2:
+                                if (markup.back() == 'u' && (*c == 'b' || *c == 'B')) markup += 'b';
+                                else if (*c == 's' || *c == 'S') markup += 's';
+                                else goto failName;
+                                break;
+                            case 3:
+                                if (markup.back() == 'b' && (*c == 'l' || *c == 'L')) markup += 'l';
+                                else if (*c == 't' || *c == 'T') markup += 't';
+                                else goto failName;
+                                break;
+                            case 4:
+                                if (markup.back() == 'l' && (*c == 'i' || *c == 'I')) markup += 'i';
+                                else if (*c == 'e' || *c == 'E') markup += 'e';
+                                else goto failName;
+                                break;
+                            case 5:
+                                if (markup.back() == 'i' && (*c == 'c' || *c == 'C')) {
+                                    markup.clear();
+                                    dataState = ParserState::AFTER_DOCTYPE_PUBLIC_KEYWORD;
+                                } else if (*c == 'm' || *c == 'M') {
+                                    markup.clear();
+                                    dataState = ParserState::AFTER_DOCTYPE_SYSTEM_KEYWORD;
+                                } else goto failName;
+                                break;
+                            default:
+                                goto failName;
+                        }
+                    }
+                    return false;
+                failName:
+                    forceQuirks = true;
+                    reconsumeMarkup = true;
+                    dataState = ParserState::BOGUS_DOCTYPE;
+                    return false;
+            }
+        case ParserState::AFTER_DOCTYPE_PUBLIC_KEYWORD:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::BEFORE_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                case '"':
+                    publicIDMissing = false;
+                    dataState = ParserState::DQUOTE_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                case '\'':
+                    publicIDMissing = false;
+                    dataState = ParserState::SQUOTE_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                gdoc;
+                edoc;
+                ddoc;
+            }
+        case ParserState::BEFORE_DOCTYPE_PUBLIC_IDENTIFIER:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case '"':
+                    publicIDMissing = false;
+                    dataState = ParserState::DQUOTE_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                case '\'':
+                    publicIDMissing = false;
+                    dataState = ParserState::SQUOTE_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                gdoc;
+                edoc;
+                ddoc;
+            }
+        case ParserState::DQUOTE_DOCTYPE_PUBLIC_IDENTIFIER:
+            switch (*c) {
+                case '"':
+                    dataState = ParserState::AFTER_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(publicID, UNICODE_REPL);
+                    return false;
+                gdoc;
+                edoc;
+                default:
+                    utf8::appendCodePoint(publicID, c);
+                    return false;
+            }
+        case ParserState::SQUOTE_DOCTYPE_PUBLIC_IDENTIFIER:
+            switch (*c) {
+                case '\'':
+                    dataState = ParserState::AFTER_DOCTYPE_PUBLIC_IDENTIFIER;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(publicID, UNICODE_REPL);
+                    return false;
+                gdoc;
+                edoc;
+                default:
+                    utf8::appendCodePoint(publicID, c);
+                    return false;
+            }
+        case ParserState::AFTER_DOCTYPE_PUBLIC_IDENTIFIER:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS;
+                    return false;
+                case '"':
+                    systemIDMissing = false;
+                    dataState = ParserState::DQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case '\'':
+                    systemIDMissing = false;
+                    dataState = ParserState::SQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                edoc;
+                ddoc;
+            }
+        case ParserState::BETWEEN_DOCTYPE_PUBLIC_AND_SYSTEM_IDENTIFIERS:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                case '"':
+                    systemIDMissing = false;
+                    dataState = ParserState::DQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case '\'':
+                    systemIDMissing = false;
+                    dataState = ParserState::SQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                edoc;
+                ddoc;
+            }
+        case ParserState::AFTER_DOCTYPE_SYSTEM_KEYWORD:
+            switch (*c) {
+                case WHITESPACE:
+                    dataState = ParserState::BEFORE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case '"':
+                    systemIDMissing = false;
+                    dataState = ParserState::DQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case '\'':
+                    systemIDMissing = false;
+                    dataState = ParserState::SQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                gdoc;
+                edoc;
+                ddoc;
+            }
+        case ParserState::BEFORE_DOCTYPE_SYSTEM_IDENTIFIER:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case '"':
+                    systemIDMissing = false;
+                    dataState = ParserState::DQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case '\'':
+                    systemIDMissing = false;
+                    dataState = ParserState::SQUOTE_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                gdoc;
+                edoc;
+                ddoc;
+            }
+        case ParserState::DQUOTE_DOCTYPE_SYSTEM_IDENTIFIER:
+            switch (*c) {
+                case '"':
+                    dataState = ParserState::AFTER_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(systemID, UNICODE_REPL);
+                    return false;
+                gdoc;
+                edoc;
+                default:
+                    utf8::appendCodePoint(systemID, c);
+                    return false;
+            }
+        case ParserState::SQUOTE_DOCTYPE_SYSTEM_IDENTIFIER:
+            switch (*c) {
+                case '\'':
+                    dataState = ParserState::AFTER_DOCTYPE_SYSTEM_IDENTIFIER;
+                    return false;
+                case 0:
+                    utf8::appendCodePoint(systemID, UNICODE_REPL);
+                    return false;
+                gdoc;
+                edoc;
+                default:
+                    utf8::appendCodePoint(systemID, c);
+                    return false;
+            }
+        case ParserState::AFTER_DOCTYPE_SYSTEM_IDENTIFIER:
+            switch (*c) {
+                case WHITESPACE:
+                    return false;
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                edoc;
+                default:
+                    reconsume = true;
+                    dataState = ParserState::BOGUS_DOCTYPE;
+                    return false;
+            }
+        case ParserState::BOGUS_DOCTYPE:
+            switch (*c) {
+                case '>':
+                    dataState = ParserState::DATA;
+                    return emit(doctypeToken());
+                case 0:
+                default:
+                    return false;
+                case EOF:
+                    return emit(doctypeToken(), eofToken());
+            }
+        case ParserState::CDATA_SECTION:
+            switch (*c) {
+                case ']':
+                    dataState = ParserState::CDATA_SECTION_BRACKET;
+                    return false;
+                case EOF:
+                    return emit(eofToken());
+                default:
+                    return emit(defaultToken(c));
+            }
+        case ParserState::CDATA_SECTION_BRACKET:
+            switch (*c) {
+                case ']':
+                    dataState = ParserState::CDATA_SECTION_END;
+                    return false;
+                default:
+                    reconsume = true;
+                    dataState = ParserState::CDATA_SECTION;
+                    return emit(rbToken());
+            }
+        case ParserState::CDATA_SECTION_END:
+            switch (*c) {
+                case ']':
+                    return emit(rbToken());
+                case '>':
+                    dataState = ParserState::DATA;
+                    return false;
+                default:
+                    reconsume = true;
+                    dataState = ParserState::CDATA_SECTION;
+                    return emit(rbToken(), rbToken());
+            }
+        case ParserState::CHARACTER_REFERENCE:
+            tempBuf.clear();
+            tempBuf += '&';
+            switch (*c) {
+                case ASCII_UPPER_ALPHA:
+                case ASCII_LOWER_ALPHA:
+                case ASCII_NUMERALS:
+                    reconsume = true;
+                    dataState = ParserState::NAMED_CHARACTER_REFERENCE;
+                    return false;
+                case '#':
+                    tempBuf += '#';
+                    dataState = ParserState::NUMERIC_CHARACTER_REFERENCE;
+                    return false;
+                default:
+                    switch (returnState) {
+                        case ParserState::DATA:
+                        case ParserState::RCDATA:
+                            return dumpBuf();
+                        default:
+                            val += tempBuf;
+                            tempBuf.clear();
+                            return false;
+                    }
+            }
+        case ParserState::NAMED_CHARACTER_REFERENCE: {
+            bool valid = false;
+            if (utf8::isAscii(*c)) {
+                if (tempBuf.empty()) {
+                    markup.clear();
+                    traverser = EscapeCodeTrieTraverser(
+                            &headNodes[(*c > 'Z' ? *c - ('a' - ('Z' - 'A')) + 1 : *c) - 'A']
+                    );
+                    tempBuf += *c;
+                    return false;
+                } else {
+                    if (traverser << *c) {
+                        if (traverser) markup = tempBuf;
+                        return false;
+                    } else if (!markup.empty()) {
+                        goto successCRef;
+                    }
+                }
+            } else utf8::appendCodePoint(tempBuf, c);
+            failCRef:
+            successCRef:
+            if (markup.back() != ';' && isAttributeState(returnState)) {
+                dataState = returnState;
+                return dumpBuf();
+            } else {
+                DOMString ref;
+                ref.reserve(tempBuf.length());
+                utf8::appendCodePoint(ref, getEscapeCodeMap().at(markup));
+                tempBuf = tempBuf.substr(markup.length());
+                markup.swap(ref);
+                markup.swap(tempBuf);
+                dataState = returnState;
+                return dumpBuf();
+            }
+        }
     }
 }

@@ -20,10 +20,9 @@ add_library(feather ${SOURCE_FILES} src/observable/invalidatable.cpp src/events/
         src/nodes/utils/named_node_map.cpp src/nodes/utils/html_collection.cpp src/nodes/elements/element.cpp
         src/css/pseudoclass_manager.cpp src/nodes/elements/selectors/css_selector.cpp
         src/nodes/elements/html_elements/html_element.cpp src/nodes/documents/document.cpp
-        src/parser/html_parser.cpp
-        include/globals/window.h src/globals/window.cpp
+        src/parser/html_parser.cpp include/globals/window.h src/globals/window.cpp
         tests/nonstandard/node/elements/selectors/css_selector_test.cpp
-        src/nodes/elements/html_elements/html_element_impl_1.cpp)
+        src/nodes/elements/html_elements/html_element_impl_1.cpp src/parser/html_parser.cpp)
 target_include_directories(feather PUBLIC include)
 add_subdirectory(src)
 
