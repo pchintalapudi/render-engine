@@ -18,7 +18,9 @@ namespace feather {
 
         const Map<DOMString, UInt> &getEscapeCodeMap();
 
-        Array<Node, 52> headNodes{};
+        const Array<Node, 52> &getHeadNodes();
+
+        const Array<int, 27> &getNumericEscapeCodes();
 
         class EscapeCodeTrieTraverser {
         public:

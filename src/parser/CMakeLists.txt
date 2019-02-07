@@ -1,1 +1,1 @@
-target_sources(feather PUBLIC html_parser.cpp escape_codes.cpp)
+target_sources(feather PUBLIC html_tokenizer.cpp escape_codes.cpp)

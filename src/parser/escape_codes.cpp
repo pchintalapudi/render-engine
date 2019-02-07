@@ -2241,7 +2241,7 @@ namespace feather {
                 {"zwj;",                             8205},
                 {"zwnj;",                            8204}};
 
-        const Map<DOMString, UInt> &parser::getEscapeCodeMap() { return escapeCodeMap; }
+        const Map<DOMString, UInt> &getEscapeCodeMap() { return escapeCodeMap; }
 
         static const std::array namedEscapeCodes = makeLiteralArray(
                 Pair<DOMString, UInt>{"AElig", 198},
@@ -4479,39 +4479,51 @@ namespace feather {
 
         constexpr UInt arraySize() { return namedEscapeCodes.size(); }
 
-#ifdef RECONSTRUCT_ESCAPE_CODES
-                                                                                                                                Node constructNode(UnaryPair<UInt> bounds, char chr, UInt index) {
-            std::cout << '{' << chr;
-            Node n;
-            n.end = namedEscapeCodes[bounds.first].first.length() == ++index;
-            if (n.end) std::cout << "]";
-            n.c = chr;
-            UInt last = bounds.first;
-            for (char c = 'A'; c <= 'Z'; c++) {
-                auto cBounds = getBounds(namedEscapeCodes, c, index, last, bounds.second);
-                if (~cBounds.first) {
-                    last = cBounds.second;
-                    n.children.push_back(constructNode(cBounds, c, index));
-                }
-            }
-            if (last < bounds.second) {
-                for (char c = 'a'; c <= 'z'; c++) {
-                    auto cBounds = getBounds(namedEscapeCodes, c, index, last, bounds.second);
-                    if (~cBounds.first) {
-                        last = cBounds.second;
-                        n.children.push_back(constructNode(cBounds, c, index));
-                    }
-                }
-            }
-            if (last < bounds.second) {
-                auto cBounds = getBounds(namedEscapeCodes, ';', index, last, bounds.second);
-                if (~cBounds.first) {
-                    n.children.push_back(constructNode(cBounds, ';', index));
-                }
-            }
-            std::cout << '}';
-            return n;
+        Array<Node, 52> headNodes;
+
+        const Array<Node, 52> &getHeadNodes() { return headNodes; }
+
+        std::array numericEscapeCodes = {0x20AC, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160,
+                                         0x2039, 0x0152, 0x017D, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014,
+                                         0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0x017E, 0x0178};
+
+        const Array<int, 27> &getNumericEscapeCodes() {
+            return numericEscapeCodes;
         }
+
+#ifdef RECONSTRUCT_ESCAPE_CODES
+        Node constructNode(UnaryPair<UInt> bounds, char chr, UInt index) {
+    std::cout << '{' << chr;
+    Node n;
+    n.end = namedEscapeCodes[bounds.first].first.length() == ++index;
+    if (n.end) std::cout << "]";
+    n.c = chr;
+    UInt last = bounds.first;
+    for (char c = 'A'; c <= 'Z'; c++) {
+    auto cBounds = getBounds(namedEscapeCodes, c, index, last, bounds.second);
+    if (~cBounds.first) {
+    last = cBounds.second;
+    n.children.push_back(constructNode(cBounds, c, index));
+    }
+    }
+    if (last < bounds.second) {
+    for (char c = 'a'; c <= 'z'; c++) {
+    auto cBounds = getBounds(namedEscapeCodes, c, index, last, bounds.second);
+    if (~cBounds.first) {
+    last = cBounds.second;
+    n.children.push_back(constructNode(cBounds, c, index));
+    }
+    }
+    }
+    if (last < bounds.second) {
+    auto cBounds = getBounds(namedEscapeCodes, ';', index, last, bounds.second);
+    if (~cBounds.first) {
+    n.children.push_back(constructNode(cBounds, ';', index));
+    }
+    }
+    std::cout << '}';
+    return n;
+    }
 #else
 
         static const char *str = "\
@@ -4797,18 +4809,18 @@ h{c{y{;]}}}}{i{g{r{a{r{r{;]}}}}}}}{o{p{f{;]}}}}{s{c{r{;]}}}}{w{j{;]}}{n{j{;]}}}}
         void initEscapeCodes() {
             UInt id = profile::profileStart();
 #ifdef RECONSTRUCT_ESCAPE_CODES
-                                                                                                                                    UInt last = 0;
-            for (char c = 'A'; c <= 'Z'; c++) {
-                auto bounds = getBounds(namedEscapeCodes, c, 0, last, namedEscapeCodes.size());
-                headNodes[c - 'A'] = constructNode(bounds, c, 0);
-                last = bounds.second;
+            UInt last = 0;
+    for (char c = 'A'; c <= 'Z'; c++) {
+    auto bounds = getBounds(namedEscapeCodes, c, 0, last, namedEscapeCodes.size());
+    headNodes[c - 'A'] = constructNode(bounds, c, 0);
+    last = bounds.second;
 
-            }
-            for (char c = 'a'; c <= 'z'; c++) {
-                auto bounds = getBounds(namedEscapeCodes, c, 0, last, namedEscapeCodes.size());
-                headNodes[c - 'a' + ('Z' - 'A' + 1)] = constructNode(bounds, c, 0);
-                last = bounds.second;
-            }
+    }
+    for (char c = 'a'; c <= 'z'; c++) {
+    auto bounds = getBounds(namedEscapeCodes, c, 0, last, namedEscapeCodes.size());
+    headNodes[c - 'a' + ('Z' - 'A' + 1)] = constructNode(bounds, c, 0);
+    last = bounds.second;
+    }
 #else
             for (auto &ref : headNodes) {
                 lastIndex++;

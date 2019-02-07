@@ -102,6 +102,10 @@ namespace feather {
             return prop < static_cast<int>(DOCTYPE_TOKEN_DATA::DOCTYPE_PROPS::FORCE_QUIRKS);
         }
 
+        constexpr bool isNoncharacter(UInt chr) {
+            return (chr >= 0xfdd0 && chr <= 0xfdef) || ((chr & 0xffff) == 0xfffe || (chr & 0xffff) == 0xffff);
+        }
+
         struct REGULAR_TOKEN_DATA {
 
             DOMString tagName;
@@ -120,7 +124,7 @@ namespace feather {
             TokenData data;
         };
 
-        enum class ParserState {
+        enum class TokenizerState {
             DATA,
             RCDATA,
             RAWTEXT,
@@ -203,8 +207,8 @@ namespace feather {
             NUMERIC_CHARACTER_REFERENCE_END
         };
 
-        constexpr bool isAttributeState(ParserState state) {
-            return state != ParserState::DATA && state != ParserState::RCDATA;
+        constexpr bool isAttributeState(TokenizerState state) {
+            return state != TokenizerState::DATA && state != TokenizerState::RCDATA;
         }
 
         class HTMLStateMachine {
@@ -278,7 +282,7 @@ namespace feather {
             }
 
             inline Token commentToken() {
-                return {TokenType::COMMENT, TokenData{COMMENT_TOKEN_DATA{std::move(comment)}}};
+                return {TokenType::COMMENT, TokenData{COMMENT_TOKEN_DATA{std::move(name)}}};
             }
 
             Vector<UnaryPair<DOMString>> getAttrVec() {
@@ -302,24 +306,54 @@ namespace feather {
             void resetDoctype() {
                 forceQuirks = !(nameMissing = publicIDMissing = systemIDMissing = true);
                 name.clear();
-                systemID.clear();
-                publicID.clear();
+                val.clear();
+                attr.clear();
             }
 
             inline Token doctypeToken() {
                 DOCTYPE_TOKEN_DATA data{};
                 if (!nameMissing) data.setName(std::move(name));
-                if (!publicIDMissing) data.setPublicID(std::move(publicID));
-                if (!systemIDMissing) data.setSystemID(std::move(systemID));
+                if (!publicIDMissing) data.setPublicID(std::move(attr));
+                if (!systemIDMissing) data.setSystemID(std::move(val));
                 data.setForceQuirks(forceQuirks);
                 return {TokenType::DOCTYPE, TokenData{data}};
             }
 
-            ParserState dataState, returnState;
+            inline bool skipCode(char c) {
+                return markup.back() != ';' && isAttributeState(returnState) && (c != '=' && !isalpha(c));
+            }
+
+            bool fakeFlushChars(char *c) {
+                dataState = returnState;
+                utf8::appendCodePoint(tempBuf, c);
+                markup.clear();
+                markup.swap(tempBuf);
+                reconsumeMarkup = true;
+                return false;
+            }
+
+            bool flushChars() {
+                if (isAttributeState(returnState)) {
+                    val += tempBuf;
+                    resetBuf();
+                    return false;
+                }
+                return dumpBuf();
+            }
+
+            //More convenience methods
+            bool reconsumeChar(TokenizerState newState) {
+                reconsume = true;
+                dataState = newState;
+                return false;
+            }
+
+            TokenizerState dataState, returnState;
             bool reconsume, selfClosing, reconsumeMarkup, forceQuirks,
                     publicIDMissing, systemIDMissing, nameMissing;
             TriValue markupType;
-            DOMString tempBuf, name, attr, val, comment, markup, publicID, systemID;
+            DOMString tempBuf, name, attr, val, markup;
+            UInt crc;
             Map<DOMString, DOMString> attributes;
             Vector<Token> emitted;
             Vector<DOMString> lastStart;
