@@ -354,17 +354,17 @@ Node::Node(feather::DOMString baseURI, feather::DOMString name, feather::dom::No
 namespace {
     bool isLocal(const feather::EnumSet<feather::observable::InvEvent> &types) {
         return feather::EnumSet<feather::observable::InvEvent>::size_type(types)
-                       << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
+                       << static_cast<unsigned int>(feather::observable::InvEvent::__MANGLE__LOCAL__) != 0u;
     }
 
     const feather::ULong global_mask = ~(~0u
-            >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__));
+            >> static_cast<unsigned int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__));
 
     void delocalize(feather::EnumSet<feather::observable::InvEvent> &types) {
         types = ((feather::EnumSet<feather::observable::InvEvent>::size_type(types) & global_mask) |
                  (feather::EnumSet<feather::observable::InvEvent>::size_type(types)
-                         << static_cast<int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
-                         >> static_cast<int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
+                         << static_cast<unsigned int>(feather::observable::InvEvent::__MANGLE__LOCAL__)
+                         >> static_cast<unsigned int>(feather::observable::InvEvent::__MANGLE_NONLOCAL__)));
     }
 }
 
@@ -380,4 +380,5 @@ feather::EnumSet<feather::observable::InvEvent> Node::modify(
         types += observable::InvEvent::STOP_PROPAGATION;
         for (const auto &child : childNodes) child->invalidate(types, p);
     }
+    return types;
 }
