@@ -16,25 +16,25 @@ add_library(feather)
 target_include_directories(feather PUBLIC include)
 add_subdirectory(src)
 
-add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp src/typedefs.cpp)
+add_executable(render-engine ${PROJECT_SOURCE_DIR}/src/main.cpp)
 
 target_include_directories(render-engine PRIVATE include)
 target_link_libraries(render-engine feather)
 
 
-#configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
-#execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-#        RESULT_VARIABLE result
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download)
-#if (result)
-#    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
-#endif ()
-#execute_process(COMMAND ${CMAKE_COMMAND} --build .
-#        RESULT_VARIABLE result
-#        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download)
-#if (result)
-#    message(FATAL_ERROR "Build step for googletest failed: ${result}")
-#endif ()
+configure_file(CMakeLists.txt.in googletest-download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download)
+if (result)
+    message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+endif ()
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+        RESULT_VARIABLE result
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest-download)
+if (result)
+    message(FATAL_ERROR "Build step for googletest failed: ${result}")
+endif ()
 
 # Prevent overriding the parent project's compiler/linker
 # settings on Windows

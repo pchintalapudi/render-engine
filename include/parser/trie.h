@@ -9,6 +9,7 @@
 #include <map>
 #include <vector>
 #include <math.h>
+#include <iostream>
 
 namespace feather {
     namespace parser {
@@ -79,7 +80,7 @@ namespace feather {
                 }
                 if (this->m.find(c[index]) == this->m.end())
                     return nullptr;
-                return this->m[c[index]].feed(c, t, index + 1);
+                return this->m[c[index]].feed(c, length, index + 1);
             }
 
             DefaultTrie<T> *feed(const std::string &s, size_t index) {
@@ -99,7 +100,7 @@ namespace feather {
                 }
                 if (this->m.find(s[index]) == this->m.end())
                     this->m[s[index]] = new DefaultTrie<T>();
-                this->m[s[index]]->add(s, t, index + 1);
+                this->m[s[index]]->add(s, item, index + 1);
             }
 
             void add(char *word, size_t size, T item, size_t index) {
@@ -109,7 +110,7 @@ namespace feather {
                 }
                 if (this->m.find(word[index]) == this->m.end())
                     this->m[word[index]] = new DefaultTrie<T>();
-                (*this->m[word[index]]).add(word, t, index + 1);
+                (*this->m[word[index]]).add(word, item, index + 1);
             }
 
             void remove(const std::string &word, size_t index) {
