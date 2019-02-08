@@ -90,7 +90,11 @@ namespace feather {
                 StrongPointer <HTMLFormElement> getFormElement() const {
                     auto owner = getOwnerDocument();
                     if (owner) {
+                        const StrongPointer<Element> &e = owner->getElementById(id);
+                        if (e && e->getElementType() == KnownElements::HTMLFormElement)
+                            return std::static_pointer_cast<HTMLFormElement>(e);
                     }
+                    return StrongPointer<HTMLFormElement>();
                 }
 
                 ATTRIBUTE(name, Name)
