@@ -17,50 +17,107 @@ namespace feather {
         class Trie {
         public:
             Derived *feed(char *word, size_t size) {
-                return static_cast<Derived*>(this)->feed(word, size, 0);
+                return static_cast<Derived *>(this)->feed(word, size, 0);
             }
 
             Derived *feed(const std::string &word) {
-                return static_cast<Derived*>(this)->feed(word, 0);
+                return static_cast<Derived *>(this)->feed(word, 0);
             }
 
             void add(const std::string &first, T item) {
-                static_cast<Derived*>(this)->add(first, item, 0);
+                static_cast<Derived *>(this)->add(first, item, 0);
             }
 
             void add(char *word, size_t size, T item) {
-                static_cast<Derived*>(this)->add(word, size, item, 0);
+                static_cast<Derived *>(this)->add(word, size, item, 0);
             }
 
             void remove(const std::string &word) {
-                static_cast<Derived*>(this)->remove(word);
+                static_cast<Derived *>(this)->remove(word);
             }
 
             Trie<T, Derived> operator[](const std::string &word) {
-                return static_cast<Derived*>(this)->feed(word);
+                return static_cast<Derived *>(this)->feed(word);
             }
         };
 
+        /**
+         * FlatTrie represents a more space efficient representation of the Trie at the cost of computational
+         * complexity. It simply adds a size_t to represent the local state.
+         * @tparam T The type that the Trie holds
+         */
         template<typename T>
         class FlatTrie : public Trie<T, FlatTrie<T>> {
         private:
-            std::vector<std::tuple<char *, int>> sequence;
-            std::vector<T> elements;
-            int currentLocalIndex;
+            // Item if it exists will be at the last element
+            T item;
+            bool isHere;
+            char *sequence;
+
+            size_t length;
+            size_t currentLocalIndex;
+
             std::map<char, FlatTrie<T>> map;
 
+            void clear() {
+                this->currentLocalIndex = 0;
+            }
 
-            Trie<T, FlatTrie<T>> *feed(char *s, size_t length, size_t index) {
-                this->currentLocalIndex += std::min(sequence.size(), length - index);
-                this->index += std::min(sequence.size(), length - index);
-                if (currentLocalIndex < sequence.size() && index == length - 1) {
+            FlatTrie<T> *feed(char *s, size_t length, size_t index) {
+                // We first need to determine how far the currentLocalIndex advances. This means we first
+                // look at the minimum of the remaining length and the size of the sequence. If the remaining characters
+                // is smaller, we should increment simply by the length of the sequence as we will not overflow this
+                // node. Otherwise, we should simply finish off the remaining sequence.
+
+                auto cmpLength = std::min(sequence.size() - this->currentLocalIndex, length - index);
+
+                if (!strcmp(sequence, s + index, cmpLength)) {
+                    return nullptr;
+                }
+
+                this->currentLocalIndex += cmpLength;
+                index += cmpLength;
+
+                if (this->currentLocalIndex < sequence.size() && index == length - 1) {
                     return this;
                 }
+
                 if (currentLocalIndex == sequence.size() - 1 && index < length &&
                     this->map.find(s[index]) != this->map.end()) {
-                    return this->map[s[index]].feed(s, length, index);
+                    auto e = this->map[s[index]].feed(s, length, index + 1);
+                    e.clear();
+                    return;
                 }
+
                 return nullptr;
+            }
+
+            FlatTrie<T> *feed(const std::string &s, size_t index) {
+                return nullptr;
+            }
+
+            void add(const std::string &s, T item, size_t index) {
+                if (index == s.length()) {
+                    this->t = item;
+                    this->isHere = true;
+                    return;
+                }
+                if (this->m.find(s[index]) == this->m.end())
+                    this->m[s[index]] = new FlatTrie<T>();
+                this->m[s[index]]->add(s, item, index + 1);
+            }
+
+            void split(size_t index) {
+
+            }
+
+
+            T get() {
+                return this->item;
+            }
+
+            bool here() {
+                return this->isHere;
             }
         };
 
@@ -113,11 +170,14 @@ namespace feather {
                 (*this->m[word[index]]).add(word, item, index + 1);
             }
 
-            void remove(const std::string &word, size_t index) {
+            bool remove(const std::string &word, size_t index) {
                 if (index == word.length()) {
                     this->here = false;
                     delete this->t;
+                } else {
+
                 }
+                return this->m.empty();
             }
 
             using Trie<T, DefaultTrie<T>>::feed;
@@ -125,16 +185,12 @@ namespace feather {
             using Trie<T, DefaultTrie<T>>::remove;
 
             DefaultTrie() {
-                this->isHere = false;
+                isHere = false;
                 this->m = std::map<char, DefaultTrie<T> *>();
             }
 
             inline T get() {
                 return this->t;
-            }
-
-            inline bool here() {
-                return this->isHere;
             }
 
         };

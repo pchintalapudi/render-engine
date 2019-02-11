@@ -8,7 +8,8 @@
 #include <tuple>
 #include <string>
 #include <memory>
-#include <queue>
+#include <deque>
+#include <sstream>
 #include "style/css/css_style_sheet.h"
 #include "enums/enum_set.h"
 #include "typedefs.h"
@@ -75,39 +76,46 @@ namespace feather {
                 typedef feather::EnumSet<Token> TokenSet;
 
             private:
-                std::queue<std::tuple<std::shared_ptr<char[]>, size_t>> text;
+                std::deque<std::tuple<std::shared_ptr<char[]>, size_t>> text;
                 size_t index;
                 size_t length;
                 size_t processed;
                 bool finalized;
+                std::string token;
 
                 /**
                  * Advances the character stream by one character and if necessary move to the next text sequence.
+                 * If a character is scheduled for re-consumption, this character is pushed
                  * If it is not possible, returns true for EOF. Being EOF can be invalidated if more text is later
                  * processed.
                  * @return a boolean determining whether the end of the stream has been reached。
                  */
                 inline bool advance() {
                     if (this->text.empty()) {
-                        return true;
+                        return this->finalized;
                     }
-                    size_t front_length;
-                    if ((++this->index) < (front_length = this->get_front_length())) {
+
+                    if (++this->index < this->get_front_length()) {
                         this->processed++;
                         return false;
                     }
-                    this->text.pop();
+
+                    this->text.pop_front();
                     if (!this->text.empty()) {
                         this->processed++;
-                        this->index -= front_length;
+                        this->index = 0;
                         return false;
-                    } else {
-                        return true;
                     }
+                    return this->finalized;
                 }
 
+                /**
+                 * Gets and advances the character stream by one character and if necessary move to the next text
+                 * sequence. If it is not possible, returns 0x00 for EOF (if the stream has been finalized and 0x01 for
+                 * a wait sequence
+                 * @return a character representing the next character
+                 */
                 inline char get_advance() {
-                    char current = this->get();
                     if (this->advance()) {
                         if (this->finalized) {
                             return (char)0;
@@ -115,7 +123,17 @@ namespace feather {
                             return (char)1;
                         }
                     }
-                    return current;
+                    return this->get();
+                }
+
+                inline char lookahead() {
+                    size_t nextIndex = this->index + 1;
+                    if (nextIndex < this->get_front_length() ) {
+                        return std::get<0>(this->text.front())[nextIndex];
+                    } else if (nextIndex >= this->get_front_length() && this->text.size() > 1){
+                        return std::get<0>(this->text.at(1))[0];
+                    }
+                    return (char)this->finalized;
                 }
 
 
@@ -126,6 +144,8 @@ namespace feather {
                 inline size_t get_front_length() {
                     return std::get<1>(this->text.front());
                 }
+
+                TokenSet consumeStringToken(char);
 
                 TokenSet processNumber();
                 TokenSet processUrl();
@@ -140,7 +160,7 @@ namespace feather {
                 inline void process(std::shared_ptr<char[]> elements, size_t n) {
                     if (n <= 0) return;
                     this->length += n;
-                    this->text.emplace(std::make_tuple(elements, n));
+                    this->text.emplace_back(std::make_tuple(elements, n));
                 }
 
                 Token next();

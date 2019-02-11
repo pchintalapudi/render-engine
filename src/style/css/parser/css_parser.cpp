@@ -7,36 +7,54 @@
 using namespace feather::css::parser;
 
 CSSTokenizer::CSSTokenizer() {
-    this->text = std::queue<std::tuple<std::shared_ptr<char[]>, size_t>>();
+    this->text = std::deque<std::tuple<std::shared_ptr<char[]>, size_t>>();
 }
 
 CSSTokenizer::TokenSet CSSTokenizer::processWhitespace() {
     while (std::isspace(this->get())) {
         this->advance();
     }
-    auto tokenSet =  CSSTokenizer::TokenSet();
+    auto tokenSet = CSSTokenizer::TokenSet();
     tokenSet += (CSSTokenizer::Token::WHITESPACE);
     return tokenSet;
 }
 
-CSSTokenizer::TokenSet CSSTokenizer::processQuotation() {
-    int length = 0;
-    int beginning = 0;
-    while (this->get() != '"') {
+CSSTokenizer::TokenSet CSSTokenizer::consumeStringToken(char delim) {
+    std::stringstream s;
+    auto token = CSSTokenizer::TokenSet();
+    while (this->get() != delim) {
         switch (this->get()) {
+            case '\0':
+                this->token = s.str();
+                token += CSSTokenizer::Token::STRING;
+                return token;
             case '\n':
-                break;
-            case '\\':
+                token += CSSTokenizer::Token::BAD_STRING;
+                return token;
+            case '\\': {
+                char next = this->lookahead();
+                switch (next) {
+                    case 0:
+                        break;
+                    case 1:
+                        break;
+                }
+            }
                 break;
             default:
+                s << this->get();
                 break;
         }
         this->advance();
         length++;
     }
-    auto tokenSet = CSSTokenizer::TokenSet();
-    tokenSet += CSSTokenizer::Token::STRING;
-    return tokenSet;
+    this->token = s.str();
+    token += CSSTokenizer::Token::STRING;
+    return token;
+}
+
+CSSTokenizer::TokenSet CSSTokenizer::processQuotation() {
+    return this->consumeStringToken('"');
 }
 
 
